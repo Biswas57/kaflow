@@ -2,20 +2,17 @@
 
 ## Preliminary Design - Task 1
 ### Analysis of Engineering Requirements
-**General Structure of System**
-1. Content Structure:
-       Tributary Cluster -> Topics -> Partitions -> Messages
-2. Consumer Structure:
-       Tributary Cluster -> Consumer Groups -> Consumers
-4. Producer Structure:
-       Tributary Cluster -> Producers (are their own thing and inside Tributary Cluster)
+**General Structure**
+Tributary Cluster -> Topics -> Partitions -> Messages
+Tributary Cluster -> Consumer Groups -> Consumers
+Tributary Cluster -> Producers (are their own thing and inside Tributary Cluster)
 
 - **Tributary Cluster:** The top-level component that covers the entire system.
     - **Topics:** Categories or channels within the Tributary Cluster where messages are allocated based on their content or purpose.
         - **Partitions:** Subsets within each topic where messages are stored.
             - Partitions help in distributing the data load and allow for parallel processing.
             - **Producers:** Entities that publish messages to specific partitions within topics.
-                   - **Messages:** Include a timestamp, an identifier, payload type, a key, and the actual data (value).
+                **Messages:** Include a timestamp, an identifier, payload type, a key, and the actual data (value).
             - **Consumer Groups:** these are groups of consumers that work together to process messages from all partitions of a topic.
                 - **Consumers:** Individuals within consumer groups who actually process the messages.
 
@@ -50,16 +47,11 @@ Rebalancing (Message Distribution) Strategies:
 - Round Robin Rebalancing: Partitions are allocated in a rotating manner to ensure even distribution of workload among consumers.
 
 **Message Replay**
-Messages from a certain offset onwards are processed, until the most recent message at the latest offset is reached
-- Controlled Replay: Consumers can replay messages from a specific offset to catch errors and failures or for processing historical data.
-       - This feature is crucial for when a system feature may not be working as it's supposed to.
+- Messages from a certain offset onwards are processed, until the most recent message at the latest offset is reached
+- Controlled Replay: Consumers can replay messages from a specific offset to catch errors and failures or for processing historical data. 
+    - This feature is crucial for when a system feature may not be working as it's supposed to.
 
-**Synchronous Data Processing**
-- Concurrency: Java synchronization to manage parallel message handling,
-       - ensuring thread-safe operations across producer and consumer threads for real-time data integrity in the event processing pipeline.
-
-**Design Considerations**
-
+**Stuff from the Lectures**
 Concurrency:
 - Thread Safety: To handle concurrent operations without issues, the system will use synchronization
 
@@ -137,7 +129,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - I am happy with the final product and the knowledge I have gained from this project.
 
 **Challenges**
-- Main challenge was the time constraint I had till I had to start studying for my exams and the fact that I was working alone, which made it difficult to get feedback and suggestions on my design.
+- Main hallenge was the time constraint and the fact that I was working alone, which made it difficult to get feedback and suggestions on my design.
 - I would have liked to have more time to implement and a bit more guidance because I really felt at times I was just winging it and on my own.
 - I also struggled with the UML diagrams and actually starting this project (felt like jumping off a cliff headfirst)
 - Unfortunately 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.

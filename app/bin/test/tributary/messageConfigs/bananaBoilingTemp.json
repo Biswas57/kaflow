@@ -1,0 +1,7 @@
+{
+    "eventId": "bananaBoilingTemp",
+    "PayloadType": "Temperature",
+    "messageContents": {
+        "temperature": 100
+    }
+}

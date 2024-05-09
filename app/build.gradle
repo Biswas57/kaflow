@@ -1,0 +1,130 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'checkstyle'
+    id 'jacoco'
+    id("org.barfuin.gradle.jacocolog") version "3.1.0"
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+
+dependencies {
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.9'
+    implementation group: 'org.json', name: 'json', version: '20230618'
+
+    // Use JUnit Jupiter for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }
+    test {
+        java {
+            srcDir 'src/test/java'
+        }
+        resources {
+            srcDir 'src/test/resources'
+        }
+    }
+}
+
+processResources {
+    duplicatesStrategy = 'INCLUDE'
+}
+
+processTestResources {
+    duplicatesStrategy = 'INCLUDE'
+}
+
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+checkstyle {
+    configFile = file("${project.rootDir}/config/checkstyle.xml")
+    toolVersion = '10.3.3'
+}
+
+task lint {
+    description("Lints the entire codebase, runs both checkstyleMain and checkstyleTest")
+    group("verification")
+    dependsOn('checkstyleMain', 'checkstyleTest')
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        csv.required = false
+    }
+
+    afterEvaluate {
+        classDirectories.from = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+               "tributary/cli/**/*"
+            ])
+        })
+    }
+
+    dependsOn test // tests are required to run before generating the report
+}
+
+jacocoTestCoverageVerification {
+    // violationRules {
+    //     rule {
+    //         limit {
+    //             counter = "BRANCH"
+    //             minimum = 0.80
+    //         }
+    //     }
+    // }
+
+    afterEvaluate {
+        classDirectories.from = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                "tributary/cli/**/*"
+            ])
+        })
+    }
+
+    dependsOn jacocoTestReport
+}
+
+task coverage {
+    description("Generate coverage report and check if above threshold if it exists")
+    group("verification")
+    dependsOn('jacocoTestCoverageVerification')
+}
+
+jacocoLogTestCoverage {
+    logAlways = true
+    counters {
+        showClassCoverage = false
+        showMethodCoverage = false
+        showInstructionCoverage = false
+        showComplexityCoverage = false
+    }
+}
+
+application {
+    mainClass = 'tributary.cli.TributaryCLI'
+}
