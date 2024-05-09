@@ -68,7 +68,7 @@ Generics:
 
 ### Initial UML Diagram
 
-[initial_design.pdf](UML + Blogging/initial_design.pdf)
+[initial_design.pdf](Blogging&Design/initial_design.pdf)
 
 ### Java API Design
 
@@ -106,7 +106,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 
 ## Final Design and Reflection - Task 3
 ### Final Usability Test List
-[UsabilityTests.md](UML + Blogging/usability_tests.md)
+[UsabilityTests.md](Blogging&Design/usability_tests.md)
 
 ### Overview of Design Patterns Used
 **Singleton Pattern for TributaryCluster:**
@@ -141,10 +141,10 @@ Usability Checklist: Using the command line interface, the checklist will be run
     - Important system that might evolve to handle more than 2 types of Event data
 
 ### Final UML Diagram
-[final_design.pdf](UML + Blogging/final_design.pdf)
+[final_design.pdf](Blogging&Design/final_design.pdf)
 
 ### Reflection
-[Ongoing Reflection](UML + Blogging/individual_progress_blog.md)
+[Ongoing Reflection](Blogging&Design/individual_progress_blog.md)
 
 **Final Reflection**
 - Overall a very important project that helped me understand the importance of system design and the different patterns that can be used to make my system not only more aesthetically pleasing but also more efficient and maintainable.
