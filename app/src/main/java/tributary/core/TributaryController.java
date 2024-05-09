@@ -1,6 +1,8 @@
 package tributary.core;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import tributary.api.Consumer;
 import tributary.api.ConsumerGroup;
@@ -8,77 +10,107 @@ import tributary.api.Message;
 import tributary.api.Partition;
 import tributary.api.Topic;
 import tributary.api.TributaryCluster;
+import tributary.api.producers.Producer;
+import tributary.core.tributaryFactory.IntegerFactory;
 import tributary.core.tributaryFactory.ObjectFactory;
+import tributary.core.tributaryFactory.StringFactory;
 
 public class TributaryController {
     private TributaryCluster tributaryCluster;
     private ObjectFactory objectFactory;
+    private Map<String, Class<?>> typeMap;
 
     public TributaryController() {
-        this.tributaryCluster = new TributaryCluster();
-        this.objectFactory = new ObjectFactory(tributaryCluster);
+        this.tributaryCluster = TributaryCluster.getInstance();
+        this.objectFactory = new StringFactory(tributaryCluster);
+        this.typeMap = new HashMap<>();
+        typeMap.put("integer", Integer.class);
+        typeMap.put("string", String.class);
     }
 
-    public void handleCreateCommand(String[] parts) {
-        String subCommand = parts[1].toLowerCase();
-        switch (subCommand) {
-        case "topic":
-            objectFactory.createTopic(parts);
-            break;
-        case "partition":
-            objectFactory.createPartition(parts);
-            break;
-        case "consumer":
-            if (parts[2].equals("group")) {
-                objectFactory.createConsumerGroup(parts);
-            } else {
-                objectFactory.createConsumer(parts);
-            }
-            break;
-        case "producer":
-            objectFactory.createProducer(parts);
-            break;
-        case "event":
-            objectFactory.createEvent(parts);
-            break;
-        default:
-            System.out.println("Unknown create command: " + subCommand);
-            break;
+    public Topic<?> getTopic(String topicId) {
+        Topic<?> topic = tributaryCluster.getTopic(topicId);
+        if (topic == null) {
+            System.out.println("Topic with ID " + topicId + " does not exist.");
+            return null;
+        }
+        return topic;
+    }
+
+    public ConsumerGroup<?> getConsumerGroup(String groupId) {
+        ConsumerGroup<?> group = tributaryCluster.getConsumerGroup(groupId);
+        if (group == null) {
+            System.out.println("Consumer group with ID " + groupId + " does not exist.");
+            return null;
+        }
+        return group;
+    }
+
+    public Producer<?> getProducer(String producerId) {
+        Producer<?> producer = tributaryCluster.getProducer(producerId);
+        if (producer == null) {
+            System.out.println("Producer with ID " + producerId + " does not exist.");
+            return null;
+        }
+        return producer;
+    }
+
+    public void setObjectFactoryType(Class<?> type) {
+        if (type.equals(Integer.class)) {
+            this.objectFactory = new IntegerFactory(tributaryCluster);
+        } else if (type.equals(String.class)) {
+            this.objectFactory = new StringFactory(tributaryCluster);
+        } else {
+            System.out.println("Unsupported type: " + type.getSimpleName());
+            this.objectFactory = new StringFactory(tributaryCluster);
         }
     }
 
-    public void handleDeleteCommand(String[] parts) {
-        String subCommand = parts[1].toLowerCase();
-        switch (subCommand) {
-        case "consumer":
-            String consumerId = parts[2];
-            deleteConsumer(consumerId);
-            break;
-        default:
-            System.out.println("Unknown delete command: " + subCommand);
-            break;
+    public void createTopic(String topicId, String type) {
+        Class<?> typeClass = typeMap.get(type);
+        setObjectFactoryType(typeClass);
+        objectFactory.createTopic(topicId);
+    }
+
+    public void createPartition(String topicId, String partitionId) {
+        Topic<?> topic = getTopic(topicId);
+        setObjectFactoryType(topic.getType());
+        objectFactory.createPartition(topicId, partitionId);
+    }
+
+    public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
+        Topic<?> topic = getTopic(topicId);
+        setObjectFactoryType(topic.getType());
+        objectFactory.createConsumerGroup(groupId, topic, rebalancing);
+    }
+
+    public void createConsumer(String consumerId, String groupId) {
+        ConsumerGroup<?> group = getConsumerGroup(groupId);
+        Topic<?> topic = group.getAssignedTopic();
+        setObjectFactoryType(topic.getType());
+        objectFactory.createConsumer(consumerId, groupId);
+    }
+
+    public void createProducer(String producerId, String type, String allocation) {
+        Class<?> typeClass = typeMap.get(type);
+        setObjectFactoryType(typeClass);
+        objectFactory.createProducer(producerId, type, allocation);
+    }
+
+    public void createEvent(String producerId, String topicId, String eventId, String partitionId) {
+        Producer<?> producer = getProducer(producerId);
+        Topic<?> topic = getTopic(topicId);
+        if(producer == null || topic == null || !(topic.getType().equals(producer.getType()))) {
+            System.out.println("Producer type does not match topic type.");
+            return;
         }
+        
+        setObjectFactoryType(topic.getType());
+        objectFactory.createEvent(producerId, topicId, eventId, partitionId);
     }
 
     public void deleteConsumer(String consumerId) {
         tributaryCluster.deleteConsumer(consumerId);
-    }
-
-    public void handleShowCommand(String[] parts) {
-        String subCommand = parts[1].toLowerCase();
-        switch (subCommand) {
-        case "topic":
-            showTopic(parts[2]);
-            break;
-        case "consumer":
-            if (parts[2].equals("group")) {
-                showGroup(parts[3]);
-            }
-            break;
-        default:
-            System.out.println("Unknown show command: " + subCommand);
-            break;
-        }
     }
 
     public void showTopic(String topicId) {
@@ -96,21 +128,6 @@ public class TributaryController {
             group.showGroup();
         } else {
             System.out.println("Group not found: " + groupId);
-        }
-    }
-
-    public void handleConsumeCommand(String[] parts) {
-        String subcommand = parts[1].toLowerCase();
-        switch (subcommand) {
-        case "event":
-            consumeEvents(parts, 1);
-            break;
-        case "events":
-            consumeEvents(parts, Integer.parseInt(parts[4]));
-            break;
-        default:
-            System.out.println("Unknown consume command: " + subcommand);
-            break;
         }
     }
 
@@ -147,16 +164,13 @@ public class TributaryController {
      * by numberOfEvents.
      * @precondition: The consumer must be assigned to the partition.
      */
-    public void consumeEvents(String[] parts, int numberOfEvents) {
-        String consumerId = parts[2];
-        String partitionId = parts[3];
-
+    public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
         Consumer<?> consumer = findConsumer(consumerId);
         Partition<?> partition = findPartition(partitionId);
-        String topicId = partition.getTopic();
-        Topic<?> topic = tributaryCluster.getTopic(topicId);
+        String topicId = partition.getAllocatedTopicId();
+        Topic<?> topic = getTopic(topicId);
 
-        if (!consumer.listAssignedPartitions().contains(partition)) {
+        if (consumer == null || partition == null || !consumer.listAssignedPartitions().contains(partition)) {
             System.out.println("Partition " + partitionId + " is not assigned to consumer " + consumerId);
             return;
         }
@@ -192,28 +206,8 @@ public class TributaryController {
         }
     }
 
-    public void handleUpdateCommand(String[] parts) {
-        String subcommand = parts[1].toLowerCase();
-        switch (subcommand) {
-        case "consumer":
-            if (parts[2].equals("group") && parts[3].equals("rebalancing")) {
-                updateRebalancing(parts);
-            }
-            break;
-        default:
-            System.out.println("Unknown update command: " + subcommand);
-            break;
-        }
-    }
-
-    public void updateRebalancing(String[] parts) {
-        String groupId = parts[4];
-        String rebalancing = parts[5].toLowerCase();
-        ConsumerGroup<?> group = tributaryCluster.getConsumerGroup(groupId);
-        if (group == null) {
-            System.out.println("Consumer group not found: " + groupId);
-            return;
-        }
+    public void updateRebalancing(String groupId, String rebalancing) {
+        ConsumerGroup<?> group = getConsumerGroup(groupId);
         group.setRebalancingMethod(rebalancing);
         group.rebalance();
         System.out.println("Updated rebalancing strategy for group: " + groupId + " to " + rebalancing);

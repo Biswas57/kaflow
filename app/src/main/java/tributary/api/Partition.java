@@ -17,7 +17,7 @@ public class Partition<T> extends TributaryObject {
         messages.add(message);
     }
 
-    public String getTopic() {
+    public String getAllocatedTopicId() {
         return allocatedTopic;
     }
 

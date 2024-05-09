@@ -10,7 +10,7 @@
 4. Producer Structure:
        Tributary Cluster -> Producers (are their own thing and inside Tributary Cluster)
 
-- **Tributary Cluster:** The top-level component that covers the entire system.
+- **Tributary Cluster:** The top-level singleton component that covers the entire system.
     - **Topics:** Categories or channels within the Tributary Cluster where messages are allocated based on their content or purpose.
         - **Partitions:** Subsets within each topic where messages are stored.
             - Partitions help in distributing the data load and allow for parallel processing.
@@ -68,7 +68,7 @@ Generics:
 
 ### Initial UML Diagram
 
-[initial_design.pdf](initial_design.pdf)
+[initial_design.pdf](UML + Blogging/initial_design.pdf)
 
 ### Java API Design
 
@@ -106,18 +106,33 @@ Usability Checklist: Using the command line interface, the checklist will be run
 
 ## Final Design and Reflection - Task 3
 ### Final Usability Test List
-[UsabilityTests.md](usability_tests.md)
+[UsabilityTests.md](UML + Blogging/usability_tests.md)
 
 ### Overview of Design Patterns Used
--  The Factory Method pattern in creating objects like topics, consumers, producers, and partitions helps centralize creation logic in the ObjectFactory class.
-    - reduces the responsibilities of the TributaryController
-    - allowing code to adhering to the Single Responsibility Principle
-- For the rebalancing of partititons across consumers in the groups, the Strategy pattern was implemented
-    - allows the system to switch between different rebalancing algorithms (Range and Round Robin) at runtime
-    - By having the rebalancing in separate strategy classes, the system can adjust its behavior without modifying the actual consumer group class to use the rebalancing feature
-- The observer Pattern was used for the following situations:
-    - Adding artitions to a topic (consumer group had to allocate said partition) 
-    - when a consumer was added or deleted (rebalancing of partitions occured)
+**Singleton Pattern for TributaryCluster:**
+- **Reason:** To ensure a single instance of the cluster and make it accessible throughout the system.
+- **Details:**
+    - The TributaryCluster serves as the central hub for managing the topics, consumer groups, and producers.
+    - Implementing the Singleton Pattern ensures data consistency across the system.
+
+**Abstract Factory Pattern for Component Creation:**
+- **Reason:** The TributaryController class had too many responsibilities, violating the Open/Closed Principle.
+- **Details:**
+    - Abstract Factory Pattern facilitates the creation of different components in the system without specifying the exact class to be created.
+    - Simplifies adding new components without modifying existing code.
+
+**Strategy Pattern for Consumer Group Rebalancing:**
+- **Reason:** Needed a flexible way to switch between different rebalancing algorithms (Range and Round Robin) at runtime.
+- **Details:**
+    - Implemented the Strategy Pattern to choose the rebalancing algorithm dynamically.
+    - Separating rebalancing strategies allows the system to adapt without modifying the core consumer group class.
+
+**Observer Pattern for Event Notification:**
+- **Reason:** Required a mechanism to handle changes in topics and consumer groups dynamically.
+- **Details:**
+    - Adding Partitions to a Topic: Consumer groups need to be notified to allocate the new partition.
+    - Adding or Deleting Consumers: Triggers rebalancing of partitions across the remaining consumers.
+    - Implemented Observer Pattern to ensure that consumers or consumer groups are informed of changes efficiently.
 
 ### Design Considerations
 - Created an Abstract Producer Class to implement the different types of Producers which have specific produceEvent methods
@@ -126,10 +141,10 @@ Usability Checklist: Using the command line interface, the checklist will be run
     - Important system that might evolve to handle more than 2 types of Event data
 
 ### Final UML Diagram
-[final_design.pdf](final_design.pdf)
+[final_design.pdf](UML + Blogging/final_design.pdf)
 
 ### Reflection
-[Ongoing Reflection](individual_progress_blog.md)
+[Ongoing Reflection](UML + Blogging/individual_progress_blog.md)
 
 **Final Reflection**
 - Overall a very important project that helped me understand the importance of system design and the different patterns that can be used to make my system not only more aesthetically pleasing but also more efficient and maintainable.

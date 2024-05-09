@@ -62,5 +62,19 @@
 - Implemented event allocation methods for Producer class after creating Messages
 
 
+## Thursday 09/05/2024
+- Due to a violation of Single Responsibility Principle:
+    - Created CLI controller because it made sense to handle the CLI commands in a separate class and not inside the core of the system
+        - This is because the core was supposed to handle the inner workings of the system and not the CLI commands
+        - The system itself is supposed to be implementable in all sorts of ways, not just through a CLI
+    - Created a class to handle the processing of messages
 
+- Singleton Pattern used for TributaryCluster because there should only be one instance of the cluster and it should be accessible from anywhere in the system
+
+- Implemented a Abstract Factory Pattern for the creation of different components in the system
+    - The problem was that I had too many responsibilities in the TributaryController class and that was not good for the system
+    - Creation methods also violated the Open/Closed Principle as it would be difficult to add to the switch/if - else statements each time a new component was to be added
+    - Chose this pattern because it allows for the creation of different types of objects without specifying the exact class of object that will be created
+- Implemented a Strategy Pattern for the rebalancing of the Consumer Group
+    - Chose this pattern because it allows for the selection of an algorithm at runtime
 

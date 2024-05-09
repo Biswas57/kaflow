@@ -6,14 +6,23 @@ import java.util.List;
 import tributary.api.producers.Producer;
 
 public class TributaryCluster {
+    private static TributaryCluster instance;
     private List<Topic<?>> topics;
     private List<ConsumerGroup<?>> consumerGroups;
     private List<Producer<?>> producers;
 
-    public TributaryCluster() {
+    private TributaryCluster() {
         this.topics = new ArrayList<>();
         this.consumerGroups = new ArrayList<>();
         this.producers = new ArrayList<>();
+    }
+
+    public static synchronized TributaryCluster getInstance() {
+        if (instance == null) {
+            instance = new TributaryCluster();
+        }
+
+        return instance;
     }
 
     public void addTopic(Topic<?> topic) {

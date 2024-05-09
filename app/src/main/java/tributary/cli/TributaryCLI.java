@@ -1,15 +1,13 @@
 package tributary.cli;
 
-import tributary.core.TributaryController;
-
 import java.util.Scanner;
 
 public class TributaryCLI {
-    private TributaryController controller;
+    private MessageHandler handler;
     private Scanner scanner;
 
     public TributaryCLI() {
-        this.controller = new TributaryController();
+        this.handler = new MessageHandler();
         this.scanner = new Scanner(System.in);
     }
 
@@ -32,19 +30,19 @@ public class TributaryCLI {
         String command = parts[0];
         switch (command) {
         case "create":
-            controller.handleCreateCommand(parts);
+            handler.handleCreateCommand(parts);
             break;
         case "delete":
-            controller.handleDeleteCommand(parts);
+            handler.handleDeleteCommand(parts);
             break;
         case "show":
-            controller.handleShowCommand(parts);
+            handler.handleShowCommand(parts);
             break;
         case "consume":
-            controller.handleConsumeCommand(parts);
+            handler.handleConsumeCommand(parts);
             break;
         case "update":
-            controller.handleUpdateCommand(parts);
+            handler.handleUpdateCommand(parts);
             break;
         default:
             System.out.println("Invalid command.");
