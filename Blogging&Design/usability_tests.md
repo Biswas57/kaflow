@@ -1,5 +1,6 @@
 # Tributary CLI inputs
-## With 1 of Every Command
+
+## Test 1: With 1 of Every Command
 ### Creating a String Topic in Tributary Cluster
 create topic banana string
 
@@ -21,7 +22,7 @@ create consumer bananaChefs deleteBeginnerChef
 ### Show Consumer Groups to check Creation
 show consumer group bananaChefs
 
-### Delete Consumer
+### Delete Consumer (Shows Consumer Groups)
 delete consumer deleteBeginnerChef
 
 ### Creating a messages in the Banana Topic
@@ -33,9 +34,7 @@ show topic banana
 ### Consume a Message in the Banana Topic
 consume event beginnerChef bananaCookingMethods
 
-
-
-## With Integer Type 
+## Test 2: With Integer Type
 ### Creating a String Topic in Tributary Cluster
 create topic banana integer
 

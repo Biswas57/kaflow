@@ -49,6 +49,10 @@ public class ConsumerGroup<T> extends TributaryObject {
         }
     }
 
+    public boolean containsConsumer(String consumerId) {
+        return getConsumer(consumerId) != null;
+    }
+
     public List<Consumer<T>> listConsumers() {
         return new ArrayList<>(consumers);
     }

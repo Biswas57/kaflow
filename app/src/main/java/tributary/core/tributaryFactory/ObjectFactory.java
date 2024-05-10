@@ -4,15 +4,7 @@ import tributary.api.Topic;
 import tributary.api.TributaryCluster;
 
 public abstract class ObjectFactory {
-    private TributaryCluster tributaryCluster;
-
-    public ObjectFactory() {
-        this.tributaryCluster = TributaryCluster.getInstance();
-    }
-
-    public TributaryCluster getCluster() {
-        return tributaryCluster;
-    }
+    protected TributaryCluster cluster = TributaryCluster.getInstance();
 
     public abstract void createTopic(String topicId);
 
@@ -20,7 +12,7 @@ public abstract class ObjectFactory {
 
     public void createConsumerGroup(String groupId, Topic<?> topic, String rebalancing) {
         ConsumerGroup<?> group = new ConsumerGroup<>(groupId, topic, rebalancing);
-        tributaryCluster.addGroup(group);
+        cluster.addGroup(group);
 
         System.out.println("Created consumer group with ID: " + groupId + " for topic: " + topic.getId()
                 + " with rebalancing strategy: " + rebalancing);

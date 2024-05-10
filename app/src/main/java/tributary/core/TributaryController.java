@@ -22,7 +22,7 @@ public class TributaryController {
 
     public TributaryController() {
         this.tributaryCluster = TributaryCluster.getInstance();
-        this.objectFactory = new StringFactory(tributaryCluster);
+        this.objectFactory = new StringFactory();
         this.typeMap = new HashMap<>();
         typeMap.put("integer", Integer.class);
         typeMap.put("string", String.class);
@@ -57,12 +57,11 @@ public class TributaryController {
 
     public void setObjectFactoryType(Class<?> type) {
         if (type.equals(Integer.class)) {
-            this.objectFactory = new IntegerFactory(tributaryCluster);
+            this.objectFactory = new IntegerFactory();
         } else if (type.equals(String.class)) {
-            this.objectFactory = new StringFactory(tributaryCluster);
+            this.objectFactory = new StringFactory();
         } else {
             System.out.println("Unsupported type: " + type.getSimpleName());
-            this.objectFactory = new StringFactory(tributaryCluster);
         }
     }
 
@@ -84,11 +83,16 @@ public class TributaryController {
         objectFactory.createConsumerGroup(groupId, topic, rebalancing);
     }
 
-    public void createConsumer(String consumerId, String groupId) {
+    public void createConsumer(String groupId, String consumerId) {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
+        if (group.containsConsumer(consumerId)) {
+            System.out.println("Consumer" + consumerId + "already exists in the group.");
+            return;
+        }
+        
         Topic<?> topic = group.getAssignedTopic();
         setObjectFactoryType(topic.getType());
-        objectFactory.createConsumer(consumerId, groupId);
+        objectFactory.createConsumer(groupId, consumerId);
     }
 
     public void createProducer(String producerId, String type, String allocation) {
@@ -100,7 +104,10 @@ public class TributaryController {
     public void createEvent(String producerId, String topicId, String eventId, String partitionId) {
         Producer<?> producer = getProducer(producerId);
         Topic<?> topic = getTopic(topicId);
-        if(producer == null || topic == null || !(topic.getType().equals(producer.getType()))) {
+        if (producer == null || topic == null) {
+            System.out.println("Producer " + producerId + " or topic " + topicId + " not found.");
+            return;
+        } else if (!topic.getType().equals(producer.getType())) {
             System.out.println("Producer type does not match topic type.");
             return;
         }
@@ -167,13 +174,16 @@ public class TributaryController {
     public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
         Consumer<?> consumer = findConsumer(consumerId);
         Partition<?> partition = findPartition(partitionId);
-        String topicId = partition.getAllocatedTopicId();
-        Topic<?> topic = getTopic(topicId);
-
-        if (consumer == null || partition == null || !consumer.listAssignedPartitions().contains(partition)) {
-            System.out.println("Partition " + partitionId + " is not assigned to consumer " + consumerId);
+        if (consumer == null || partition == null) {
+            System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.");
+            return;
+        } else if (!consumer.listAssignedPartitions().contains(partition)) {
+            System.out.println("Consumer is not assigned to the partition.");
             return;
         }
+
+        String topicId = partition.getAllocatedTopicId();
+        Topic<?> topic = getTopic(topicId);
 
         if (topic.getType().equals(Integer.class)) {
             @SuppressWarnings("unchecked")

@@ -78,3 +78,9 @@
 - Implemented a Strategy Pattern for the rebalancing of the Consumer Group
     - Chose this pattern because it allows for the selection of an algorithm at runtime
 
+## Friday 10/05/2024
+- Fixed up some bugs in the code:
+    - Fixed a bug where the Consumer Group was not being updated correctly after a rebalancing strategy was chosen
+    - Fixed a NullPointer Exception that was being thrown when trying to create a topic and the object factory wasn't initialized
+    - Fixed a bug where Partition was returning null when trying to consume an event
+

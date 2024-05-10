@@ -17,9 +17,8 @@ import tributary.api.producers.Producer;
 import tributary.api.producers.RandomProducer;
 
 public class StringFactory extends ObjectFactory {
-    TributaryCluster cluster;
-    public StringFactory(TributaryCluster tributaryCluster) {
-        super();
+    public StringFactory() {
+        this.cluster = TributaryCluster.getInstance();
     }
 
     @Override
@@ -32,7 +31,7 @@ public class StringFactory extends ObjectFactory {
     @Override
     public void createPartition(String topicId, String partitionId) {
         @SuppressWarnings("unchecked")
-        Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+        Topic<String> topic = (Topic<String>) cluster.getTopic(topicId);
         topic.addPartition(new Partition<String>(topicId, partitionId));
         System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId);
     }
@@ -40,7 +39,7 @@ public class StringFactory extends ObjectFactory {
     @Override
     public void createConsumer(String groupId, String consumerId) {
         @SuppressWarnings("unchecked")
-        ConsumerGroup<String> group = (ConsumerGroup<String>) getCluster().getConsumerGroup(groupId);
+        ConsumerGroup<String> group = (ConsumerGroup<String>) cluster.getConsumerGroup(groupId);
         Consumer<String> consumer = new Consumer<>(groupId, consumerId);
         group.addConsumer(consumer);
         group.rebalance();
@@ -61,7 +60,7 @@ public class StringFactory extends ObjectFactory {
                 System.out.println("Unsupported allocation type: " + allocation);
                 return;
         }
-        getCluster().addProducer(producer);
+        cluster.addProducer(producer);
         System.out.println("Created producer with ID: " + producerId 
                     + " that produces String events with allocation type: " + allocation);
     }
@@ -72,9 +71,9 @@ public class StringFactory extends ObjectFactory {
             JSONObject messageJsonObject = new JSONObject(
                     Files.readString(Paths.get("app/src/test/java/tributary/messageConfigs/" + eventId + ".json")));
             @SuppressWarnings("unchecked")
-            Producer<String> producer = (Producer<String>) getCluster().getProducer(producerId);
+            Producer<String> producer = (Producer<String>) cluster.getProducer(producerId);
             @SuppressWarnings("unchecked")
-            Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+            Topic<String> topic = (Topic<String>) cluster.getTopic(topicId);
             producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);
         } catch (IOException e) {
             System.out.println("Error reading the file: " + e.getMessage());

@@ -17,21 +17,21 @@ import tributary.api.producers.Producer;
 import tributary.api.producers.RandomProducer;
 
 public class IntegerFactory extends ObjectFactory {
-    public IntegerFactory(TributaryCluster tributaryCluster) {
-        super();
+    public IntegerFactory() {
+        this.cluster = TributaryCluster.getInstance();
     }
 
     @Override
     public void createTopic(String topicId) {
         Topic<Integer> topic = new Topic<>(topicId, Integer.class);
-        getCluster().addTopic(topic);
+        cluster.addTopic(topic);
         System.out.println("Created Integer topic with ID: " + topicId);
     }
 
     @Override
     public void createPartition(String topicId, String partitionId) {
         @SuppressWarnings("unchecked")
-        Topic<Integer> topic = (Topic<Integer>) getCluster().getTopic(topicId);
+        Topic<Integer> topic = (Topic<Integer>) cluster.getTopic(topicId);
         topic.addPartition(new Partition<Integer>(topicId, partitionId));
         System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId);
     }
@@ -39,7 +39,7 @@ public class IntegerFactory extends ObjectFactory {
     @Override
     public void createConsumer(String groupId, String consumerId) {
         @SuppressWarnings("unchecked")
-        ConsumerGroup<Integer> group = (ConsumerGroup<Integer>) getCluster().getConsumerGroup(groupId);
+        ConsumerGroup<Integer> group = (ConsumerGroup<Integer>) cluster.getConsumerGroup(groupId);
         Consumer<Integer> consumer = new Consumer<>(groupId, consumerId);
         group.addConsumer(consumer);
         group.rebalance();
@@ -60,7 +60,7 @@ public class IntegerFactory extends ObjectFactory {
                 System.out.println("Unsupported allocation type: " + allocation);
                 return;
         }
-        getCluster().addProducer(producer);
+        cluster.addProducer(producer);
         System.out.println("Created producer with ID: " + producerId 
                     + " that produces Integer events with allocation type: " + allocation);
     }
@@ -71,9 +71,9 @@ public class IntegerFactory extends ObjectFactory {
             JSONObject messageJsonObject = new JSONObject(
                     Files.readString(Paths.get("app/src/test/java/tributary/messageConfigs/" + eventId + ".json")));
             @SuppressWarnings("unchecked")
-            Producer<Integer> producer = (Producer<Integer>) getCluster().getProducer(producerId);
+            Producer<Integer> producer = (Producer<Integer>) cluster.getProducer(producerId);
             @SuppressWarnings("unchecked")
-            Topic<Integer> topic = (Topic<Integer>) getCluster().getTopic(topicId);
+            Topic<Integer> topic = (Topic<Integer>) cluster.getTopic(topicId);
             producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);
         } catch (IOException e) {
             System.out.println("Error reading the file: " + e.getMessage());
