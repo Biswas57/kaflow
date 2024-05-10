@@ -18,7 +18,7 @@ public class TributaryCLI {
             System.out.println("Enter command:");
             input = scanner.nextLine();
             if (input.equals("exit")) {
-                System.out.println("Exiting Tributary CLI.");
+                System.out.println("Exiting Tributary CLI.\n");
                 break;
             }
             processCommand(input);
@@ -45,7 +45,7 @@ public class TributaryCLI {
             handler.handleUpdateCommand(parts);
             break;
         default:
-            System.out.println("Invalid command.");
+            System.out.println("Invalid command.\n");
             break;
         }
 

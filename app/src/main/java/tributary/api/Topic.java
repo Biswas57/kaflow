@@ -48,5 +48,6 @@ public class Topic<T> extends TributaryObject {
             partition.listMessages().forEach(m -> System.out.print(m.getId() + ", "));
             System.out.println();
         }
+        System.out.println("\n--------------------------------------------------\n");
     }
 }

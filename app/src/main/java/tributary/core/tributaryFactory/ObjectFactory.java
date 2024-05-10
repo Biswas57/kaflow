@@ -15,7 +15,7 @@ public abstract class ObjectFactory {
         cluster.addGroup(group);
 
         System.out.println("Created consumer group with ID: " + groupId + " for topic: " + topic.getId()
-                + " with rebalancing strategy: " + rebalancing);
+                + " with " + rebalancing + " rebalancing strategy.\n");
     }
 
     public abstract void createConsumer(String groupId, String consumerId);

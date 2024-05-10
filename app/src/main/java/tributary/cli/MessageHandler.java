@@ -13,10 +13,10 @@ public class MessageHandler {
         String subCommand = parts[1].toLowerCase();
         switch (subCommand) {
         case "topic":       
-            controller.createTopic(parts[2], parts[3].toLowerCase());
+            controller.createTopic(parts[2], parts[3]);
             break;
         case "partition":
-            controller.createPartition(parts[2], parts[3].toLowerCase());
+            controller.createPartition(parts[2], parts[3]);
             break;
         case "consumer":
             if (parts[2].equals("group")) {

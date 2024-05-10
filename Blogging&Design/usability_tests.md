@@ -100,19 +100,18 @@ create event bananaFrier banana bananaFryTemp bananaCookingMethod3
 ### Creating a message in the Banana Topic
 create event bananaFrier banana bananaFryDur bananaCookingMethod4
 
+### Show Consumer Group and Topic so I know Message to Partition Relation and Partition to Consumer Relation (Gets a lil blurry here)
+show topic banana
+show consumer group bananaChefs
+
 //
 **If none of the Partitions have only have one message then do the next 2 commands**
-
 ### Creating a Producer with Manual Allocation (Just to test singular consume event)
 create producer bananaCook integer manual
 
 ### Creating a message in the Banana Topic
 create event bananaCook banana bananaCookForFun bananaCookingMethod1
 //
-
-### Show Consumer Group and Topic so I know Message to Partition Relation and Partition to Consumer Relation (Gets a lil blurry here)
-show topic banana
-show consumer group bananaChefs
 
 ### Consume a single Message in the Banana Topic
 consume event beginnerChef1 bananaCookingMethod4

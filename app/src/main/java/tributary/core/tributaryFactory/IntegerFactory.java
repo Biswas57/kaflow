@@ -25,7 +25,7 @@ public class IntegerFactory extends ObjectFactory {
     public void createTopic(String topicId) {
         Topic<Integer> topic = new Topic<>(topicId, Integer.class);
         cluster.addTopic(topic);
-        System.out.println("Created Integer topic with ID: " + topicId);
+        System.out.println("Created Integer topic with ID: " + topicId + "\n");
     }
 
     @Override
@@ -33,7 +33,7 @@ public class IntegerFactory extends ObjectFactory {
         @SuppressWarnings("unchecked")
         Topic<Integer> topic = (Topic<Integer>) cluster.getTopic(topicId);
         topic.addPartition(new Partition<Integer>(topicId, partitionId));
-        System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId);
+        System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId + "\n");
     }
 
     @Override
@@ -43,7 +43,7 @@ public class IntegerFactory extends ObjectFactory {
         Consumer<Integer> consumer = new Consumer<>(groupId, consumerId);
         group.addConsumer(consumer);
         group.rebalance();
-        System.out.println("Created consumer with ID: " + consumerId + " for group: " + groupId);
+        System.out.println("Created consumer with ID: " + consumerId + " for "+ groupId + " group\n");
     }
 
     @Override
@@ -62,7 +62,7 @@ public class IntegerFactory extends ObjectFactory {
         }
         cluster.addProducer(producer);
         System.out.println("Created producer with ID: " + producerId 
-                    + " that produces Integer events with allocation type: " + allocation);
+                    + " that produces Integer events with " + allocation + " allocation\n");
     }
 
     @Override

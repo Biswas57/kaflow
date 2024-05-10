@@ -76,6 +76,7 @@ public class ConsumerGroup<T> extends TributaryObject {
             consumer.listAssignedPartitions().forEach(p -> System.out.print(p.getId() + ", "));
             System.out.println();
         }
+        System.out.println("\n--------------------------------------------------\n");
     }
 
     public void rebalance() {

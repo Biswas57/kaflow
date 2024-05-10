@@ -17,6 +17,6 @@ public class RandomProducer<T> extends Producer<T> {
         Partition<T> selectedPartition = partitions.get(randomIndex);
         selectedPartition.addMessage(message);
         System.out.println("The event: " + message.getId() + " has been randomly allocated to partition "
-                + selectedPartition.getId());
+                + selectedPartition.getId() + "\n");
     }
 }

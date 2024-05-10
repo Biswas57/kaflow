@@ -31,7 +31,7 @@ public class TributaryController {
     public Topic<?> getTopic(String topicId) {
         Topic<?> topic = tributaryCluster.getTopic(topicId);
         if (topic == null) {
-            System.out.println("Topic with ID " + topicId + " does not exist.");
+            System.out.println("Topic with ID " + topicId + " does not exist.\n");
             return null;
         }
         return topic;
@@ -40,7 +40,7 @@ public class TributaryController {
     public ConsumerGroup<?> getConsumerGroup(String groupId) {
         ConsumerGroup<?> group = tributaryCluster.getConsumerGroup(groupId);
         if (group == null) {
-            System.out.println("Consumer group with ID " + groupId + " does not exist.");
+            System.out.println("Consumer group with ID " + groupId + " does not exist.\n");
             return null;
         }
         return group;
@@ -49,7 +49,7 @@ public class TributaryController {
     public Producer<?> getProducer(String producerId) {
         Producer<?> producer = tributaryCluster.getProducer(producerId);
         if (producer == null) {
-            System.out.println("Producer with ID " + producerId + " does not exist.");
+            System.out.println("Producer with ID " + producerId + " does not exist.\n");
             return null;
         }
         return producer;
@@ -61,7 +61,7 @@ public class TributaryController {
         } else if (type.equals(String.class)) {
             this.objectFactory = new StringFactory();
         } else {
-            System.out.println("Unsupported type: " + type.getSimpleName());
+            System.out.println("Unsupported type: " + type.getSimpleName()+ "\n");
         }
     }
 
@@ -86,7 +86,7 @@ public class TributaryController {
     public void createConsumer(String groupId, String consumerId) {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
         if (group.containsConsumer(consumerId)) {
-            System.out.println("Consumer" + consumerId + "already exists in the group.");
+            System.out.println("Consumer" + consumerId + "already exists in the group.\n");
             return;
         }
         
@@ -105,10 +105,10 @@ public class TributaryController {
         Producer<?> producer = getProducer(producerId);
         Topic<?> topic = getTopic(topicId);
         if (producer == null || topic == null) {
-            System.out.println("Producer " + producerId + " or topic " + topicId + " not found.");
+            System.out.println("Producer " + producerId + " or topic " + topicId + " not found.\n");
             return;
         } else if (!topic.getType().equals(producer.getType())) {
-            System.out.println("Producer type does not match topic type.");
+            System.out.println("Producer type does not match topic type.\n");
             return;
         }
         
@@ -125,7 +125,7 @@ public class TributaryController {
         if (topic != null) {
             topic.showTopic();
         } else {
-            System.out.println("Topic not found: " + topicId);
+            System.out.println("Topic not found: " + topicId + "\n");
         }
     }
 
@@ -134,7 +134,7 @@ public class TributaryController {
         if (group != null) {
             group.showGroup();
         } else {
-            System.out.println("Group not found: " + groupId);
+            System.out.println("Group not found: " + groupId + "\n");
         }
     }
 
@@ -175,10 +175,10 @@ public class TributaryController {
         Consumer<?> consumer = findConsumer(consumerId);
         Partition<?> partition = findPartition(partitionId);
         if (consumer == null || partition == null) {
-            System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.");
+            System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.\n");
             return;
         } else if (!consumer.listAssignedPartitions().contains(partition)) {
-            System.out.println("Consumer is not assigned to the partition.");
+            System.out.println("Consumer is not assigned to the partition.\n");
             return;
         }
 
@@ -210,9 +210,9 @@ public class TributaryController {
         }
 
         if (count < numberOfEvents) {
-            System.out.println("Not enough messages to consume. Consumed: " + count);
+            System.out.println("Not enough messages to consume.\nConsumed " + count + " messages.\n");
         } else {
-            System.out.println("Consumed " + count + " messages.");
+            System.out.println("Consumed " + count + " messages.\n");
         }
     }
 
@@ -220,7 +220,7 @@ public class TributaryController {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
         group.setRebalancingMethod(rebalancing);
         group.rebalance();
-        System.out.println("Updated rebalancing strategy for group: " + groupId + " to " + rebalancing);
+        System.out.println("Updated the rebalancing strategy for the " + groupId + " group to " + rebalancing + " rebalancing\n");
     }
 
 }

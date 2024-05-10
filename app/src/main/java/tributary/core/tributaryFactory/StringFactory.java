@@ -25,7 +25,7 @@ public class StringFactory extends ObjectFactory {
     public void createTopic(String topicId) {
         Topic<String> topic = new Topic<>(topicId, String.class);
         cluster.addTopic(topic);
-        System.out.println("Created String topic with ID: " + topicId);
+        System.out.println("Created String topic with ID: " + topicId + "\n");
     }
 
     @Override
@@ -33,7 +33,7 @@ public class StringFactory extends ObjectFactory {
         @SuppressWarnings("unchecked")
         Topic<String> topic = (Topic<String>) cluster.getTopic(topicId);
         topic.addPartition(new Partition<String>(topicId, partitionId));
-        System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId);
+        System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId + "\n");
     }
 
     @Override
@@ -43,7 +43,7 @@ public class StringFactory extends ObjectFactory {
         Consumer<String> consumer = new Consumer<>(groupId, consumerId);
         group.addConsumer(consumer);
         group.rebalance();
-        System.out.println("Created consumer with ID: " + consumerId + " for group: " + groupId);
+        System.out.println("Created consumer with ID: " + consumerId + " for group: " + groupId + "\n");
     }
 
     @Override
@@ -57,12 +57,12 @@ public class StringFactory extends ObjectFactory {
                 producer = new RandomProducer<>(producerId, String.class);
                 break;
             default:
-                System.out.println("Unsupported allocation type: " + allocation);
+                System.out.println("Unsupported allocation type: " + allocation + "\n");
                 return;
         }
         cluster.addProducer(producer);
-        System.out.println("Created producer with ID: " + producerId 
-                    + " that produces String events with allocation type: " + allocation);
+        System.out.println("Created producer with ID: " + producerId + 
+                        " that produces String events with allocation type: " + allocation + "\n");
     }
 
     @Override

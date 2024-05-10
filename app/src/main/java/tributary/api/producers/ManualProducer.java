@@ -16,7 +16,8 @@ public class ManualProducer<T> extends Producer<T> {
             if (partition.getId().equals(partitionId)) {
                 partition.addMessage(message);
                 System.out.println(
-                        "The event: " + message.getId() + " has been manually allocated to partition " + partitionId);
+                        "The event: " + message.getId() + " has been manually allocated to partition " 
+                        + partitionId + "\n");
                 return;
             }
         }
