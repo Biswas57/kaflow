@@ -1,7 +1,7 @@
 # Tributary System Design and Implementation Blog
-
 ## Preliminary Design - Task 1
 ### Analysis of Engineering Requirements
+**NOTE:** a more extensive overview of the Engineering Requirements can be found in this [file](Engineering_Requirements.md)
 **General Structure of System**
 1. Content Structure:
        Tributary Cluster -> Topics -> Partitions -> Messages
