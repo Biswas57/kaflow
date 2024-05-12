@@ -86,7 +86,7 @@ public class TributaryController {
     public void createConsumer(String groupId, String consumerId) {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
         if (group.containsConsumer(consumerId)) {
-            System.out.println("Consumer" + consumerId + "already exists in the group.\n");
+            System.out.println("Consumer " + consumerId + "already exists in the group.\n");
             return;
         }
         

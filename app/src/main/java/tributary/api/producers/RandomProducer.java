@@ -13,10 +13,14 @@ public class RandomProducer<T> extends Producer<T> {
     @Override
     public void allocateMessage(List<Partition<T>> partitions, String partitionId, Message<T> message) {
         int randomIndex = (int) (Math.random() * partitions.size());
+        Partition<T> p = partitions.get(randomIndex);
 
-        Partition<T> selectedPartition = partitions.get(randomIndex);
-        selectedPartition.addMessage(message);
+        if (p.listMessages().contains(message)) {
+            System.out.println("Message " + message.getId() + " already exists in " + partitionId + " partition.\n");
+        }
+        
+        p.addMessage(message);
         System.out.println("The event: " + message.getId() + " has been randomly allocated to partition "
-                + selectedPartition.getId() + "\n");
+                + p.getId() + ".\n");
     }
 }

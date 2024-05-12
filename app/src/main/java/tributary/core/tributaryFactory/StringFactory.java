@@ -61,8 +61,8 @@ public class StringFactory extends ObjectFactory {
                 return;
         }
         cluster.addProducer(producer);
-        System.out.println("Created producer with ID: " + producerId + 
-                        " that produces String events with allocation type: " + allocation + "\n");
+        System.out.println("Created producer with ID: " + producerId 
+                    + " that produces String events with " + allocation + " allocation\n");
     }
 
     @Override
