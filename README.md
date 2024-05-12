@@ -15,7 +15,7 @@
         - **Partitions:** Subsets within each topic where messages are stored.
             - Partitions help in distributing the data load and allow for parallel processing.
             - **Producers:** Entities that publish messages to specific partitions within topics.
-                   - **Messages:** Include a timestamp, an identifier, payload type, a key, and the actual data (value).
+                - **Messages:** Include a timestamp, an identifier, payload type, a key, and the actual data (value).
             - **Consumer Groups:** these are groups of consumers that work together to process messages from all partitions of a topic.
                 - **Consumers:** Individuals within consumer groups who actually process the messages.
 
