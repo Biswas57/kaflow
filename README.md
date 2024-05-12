@@ -148,7 +148,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 [Ongoing Reflection](Blogging&Design/individual_progress_blog.md)
 
 **Final Reflection**
-- Overall a very important project that helped me understand the importance of system design and the different patterns that can be used to make my system not only more aesthetically pleasing but also more efficient and maintainable.
+- Overall a very important project that helped me understand the importance of system design as a Backend Software Engineer and the different patterns that can be used to make a system not only more aesthetically pleasing but also more efficient and maintainable.
 - Went through a lot of struggles and put in a lot of effort to produce a system that I am proud of.
 - I am happy with the final product and the knowledge I have gained from this project.
 
