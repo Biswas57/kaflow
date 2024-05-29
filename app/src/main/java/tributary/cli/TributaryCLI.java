@@ -51,6 +51,10 @@ public class TributaryCLI {
 
     }
 
+    public MessageHandler getHandler() {
+        return handler;
+    }
+
     public static void main(String[] args) {
         new TributaryCLI().start();
     }

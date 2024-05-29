@@ -61,7 +61,7 @@ public class TributaryController {
         } else if (type.equals(String.class)) {
             this.objectFactory = new StringFactory();
         } else {
-            System.out.println("Unsupported type: " + type.getSimpleName()+ "\n");
+            System.out.println("Unsupported type: " + type.getSimpleName() + "\n");
         }
     }
 
@@ -89,7 +89,7 @@ public class TributaryController {
             System.out.println("Consumer " + consumerId + "already exists in the group.\n");
             return;
         }
-        
+
         Topic<?> topic = group.getAssignedTopic();
         setObjectFactoryType(topic.getType());
         objectFactory.createConsumer(groupId, consumerId);
@@ -111,7 +111,7 @@ public class TributaryController {
             System.out.println("Producer type does not match topic type.\n");
             return;
         }
-        
+
         setObjectFactoryType(topic.getType());
         objectFactory.createEvent(producerId, topicId, eventId, partitionId);
     }
@@ -138,7 +138,7 @@ public class TributaryController {
         }
     }
 
-    private Consumer<?> findConsumer(String consumerId) {
+    public Consumer<?> findConsumer(String consumerId) {
         Consumer<?> specifiedConsumer = null;
         for (ConsumerGroup<?> group : tributaryCluster.listConsumerGroups()) {
             for (Consumer<?> consumer : group.listConsumers()) {
@@ -150,7 +150,7 @@ public class TributaryController {
         return specifiedConsumer;
     }
 
-    private Partition<?> findPartition(String partitionId) {
+    public Partition<?> findPartition(String partitionId) {
         Partition<?> specifiedPartition = null;
         for (Topic<?> topic : tributaryCluster.listTopics()) {
             for (Partition<?> partition : topic.listPartitions()) {
@@ -220,7 +220,16 @@ public class TributaryController {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
         group.setRebalancingMethod(rebalancing);
         group.rebalance();
-        System.out.println("Updated the rebalancing strategy for the " + groupId + " group to " + rebalancing + " rebalancing\n");
+        System.out.println("Updated the rebalancing strategy for the "
+                            + groupId + " group to " + rebalancing + " rebalancing\n");
+    }
+
+    public ObjectFactory getFactory() {
+        return objectFactory;
+    }
+
+    public TributaryCluster getCluster() {
+        return tributaryCluster;
     }
 
 }

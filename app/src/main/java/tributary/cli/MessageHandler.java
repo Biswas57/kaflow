@@ -12,7 +12,7 @@ public class MessageHandler {
     public void handleCreateCommand(String[] parts) {
         String subCommand = parts[1].toLowerCase();
         switch (subCommand) {
-        case "topic":       
+        case "topic":
             controller.createTopic(parts[2], parts[3]);
             break;
         case "partition":
@@ -93,5 +93,9 @@ public class MessageHandler {
             System.out.println("Unknown update command: " + subcommand);
             break;
         }
+    }
+
+    public TributaryController getController() {
+        return controller;
     }
 }

@@ -72,4 +72,9 @@ public class TributaryCluster {
         }
         System.out.println("Consumer not found with ID: " + consumerId);
     }
+
+    // Test-friendly method to set the instance
+    public static void setInstance(TributaryCluster mockInstance) {
+        instance = mockInstance;
+    }
 }

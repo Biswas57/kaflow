@@ -8,10 +8,10 @@ public class Topic&lt;T&gt; extends TributaryObject {
     private List&lt;Partition&lt;T&gt;&gt; partitions;
 
     public Topic(String topicId, Class&lt;T&gt; type) {
-<span class="nc" id="L11">        super(topicId);</span>
-<span class="nc" id="L12">        this.type = type;</span>
-<span class="nc" id="L13">        this.partitions = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L14">    }</span>
+<span class="fc" id="L11">        super(topicId);</span>
+<span class="fc" id="L12">        this.type = type;</span>
+<span class="fc" id="L13">        this.partitions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L14">    }</span>
 
     public Class&lt;T&gt; getType() {
 <span class="nc" id="L17">        return type;</span>
@@ -48,6 +48,7 @@ public class Topic&lt;T&gt; extends TributaryObject {
 <span class="nc" id="L48">            partition.listMessages().forEach(m -&gt; System.out.print(m.getId() + &quot;, &quot;));</span>
 <span class="nc" id="L49">            System.out.println();</span>
 <span class="nc" id="L50">        }</span>
-<span class="nc" id="L51">    }</span>
+<span class="nc" id="L51">        System.out.println(&quot;\n--------------------------------------------------\n&quot;);</span>
+<span class="nc" id="L52">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>

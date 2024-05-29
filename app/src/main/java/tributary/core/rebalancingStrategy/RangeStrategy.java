@@ -8,6 +8,9 @@ import tributary.api.Partition;
 public class RangeStrategy<T> implements RebalancingStrategy<T> {
     @Override
     public void rebalance(List<Partition<T>> partitions, List<Consumer<T>> consumers) {
+        if (partitions.isEmpty() || consumers.isEmpty()) {
+            return;
+        }
         for (Consumer<T> consumer : consumers) {
             consumer.clearAssignments();
         }

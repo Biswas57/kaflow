@@ -12,14 +12,18 @@ public class ManualProducer&lt;T&gt; extends Producer&lt;T&gt; {
 
     @Override
     public void allocateMessage(List&lt;Partition&lt;T&gt;&gt; partitions, String partitionId, Message&lt;T&gt; message) {
-<span class="nc bnc" id="L15" title="All 2 branches missed.">        for (Partition&lt;T&gt; partition : partitions) {</span>
-<span class="nc bnc" id="L16" title="All 2 branches missed.">            if (partition.getId().equals(partitionId)) {</span>
-<span class="nc" id="L17">                partition.addMessage(message);</span>
-<span class="nc" id="L18">                System.out.println(</span>
-<span class="nc" id="L19">                        &quot;The event: &quot; + message.getId() + &quot; has been manually allocated to partition &quot; + partitionId);</span>
-<span class="nc" id="L20">                return;</span>
+<span class="nc bnc" id="L15" title="All 2 branches missed.">        for (Partition&lt;T&gt; p : partitions) {</span>
+<span class="nc bnc" id="L16" title="All 2 branches missed.">            if (p.getId().equals(partitionId)) {</span>
+<span class="nc bnc" id="L17" title="All 2 branches missed.">                if (p.listMessages().contains(message)) {</span>
+<span class="nc" id="L18">                    System.out.println(&quot;Message &quot; + message.getId() + &quot; already exists in &quot; + partitionId + &quot; partition&quot;);</span>
+                }
+<span class="nc" id="L20">                p.addMessage(message);</span>
+<span class="nc" id="L21">                System.out.println(</span>
+<span class="nc" id="L22">                        &quot;The event: &quot; + message.getId() + &quot; has been manually allocated to partition &quot; </span>
+                        + partitionId + &quot;\n&quot;);
+<span class="nc" id="L24">                return;</span>
             }
-<span class="nc" id="L22">        }</span>
-<span class="nc" id="L23">    }</span>
+<span class="nc" id="L26">        }</span>
+<span class="nc" id="L27">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>

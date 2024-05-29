@@ -18,7 +18,7 @@ public class RandomProducer<T> extends Producer<T> {
         if (p.listMessages().contains(message)) {
             System.out.println("Message " + message.getId() + " already exists in " + partitionId + " partition.\n");
         }
-        
+
         p.addMessage(message);
         System.out.println("The event: " + message.getId() + " has been randomly allocated to partition "
                 + p.getId() + ".\n");

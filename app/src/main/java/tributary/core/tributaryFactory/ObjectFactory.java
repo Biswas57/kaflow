@@ -4,7 +4,15 @@ import tributary.api.Topic;
 import tributary.api.TributaryCluster;
 
 public abstract class ObjectFactory {
-    protected TributaryCluster cluster = TributaryCluster.getInstance();
+    private TributaryCluster cluster = TributaryCluster.getInstance();
+
+    public TributaryCluster getCluster() {
+        return cluster;
+    }
+
+    public void setCluster(TributaryCluster cluster) {
+        this.cluster = cluster;
+    }
 
     public abstract void createTopic(String topicId);
 

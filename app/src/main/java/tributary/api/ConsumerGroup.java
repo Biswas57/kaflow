@@ -41,6 +41,10 @@ public class ConsumerGroup<T> extends TributaryObject {
         return rebalanceMethod;
     }
 
+    public String getRebalanceMethodName() {
+        return rebalanceMethod.getClass().getSimpleName();
+    }
+
     public void addConsumer(Consumer<T> consumer) {
         if (!consumers.contains(consumer)) {
             consumers.add(consumer);

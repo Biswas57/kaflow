@@ -157,5 +157,5 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - I would have liked to have more time to implement and a bit more guidance because I really felt at times I was just winging it and on my own.
 - I also struggled with the UML diagrams and actually starting this project (felt like jumping off a cliff headfirst)
 - Unfortunately 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
-
+    - Edit: Will be implementing JUnit tests from 28/05/2024
 - However I am proud of the fact that I got through to the end, with the help of the ed forum, and I will be using this project as a threshold for my ability and motivation in the future.

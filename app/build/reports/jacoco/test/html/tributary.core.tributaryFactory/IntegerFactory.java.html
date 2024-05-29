@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IntegerFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">tributary.core.tributaryFactory</a> &gt; <span class="el_source">IntegerFactory.java</span></div><h1>IntegerFactory.java</h1><pre class="source lang-java linenums">package tributary.core.tributaryFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import tributary.api.Consumer;
+import tributary.api.ConsumerGroup;
+import tributary.api.Partition;
+import tributary.api.Topic;
+import tributary.api.TributaryCluster;
+import tributary.api.producers.ManualProducer;
+import tributary.api.producers.Producer;
+import tributary.api.producers.RandomProducer;
+
+public class IntegerFactory extends ObjectFactory {
+<span class="nc" id="L20">    public IntegerFactory() {</span>
+<span class="nc" id="L21">        this.cluster = TributaryCluster.getInstance();</span>
+<span class="nc" id="L22">    }</span>
+
+    @Override
+    public void createTopic(String topicId) {
+<span class="nc" id="L26">        Topic&lt;Integer&gt; topic = new Topic&lt;&gt;(topicId, Integer.class);</span>
+<span class="nc" id="L27">        cluster.addTopic(topic);</span>
+<span class="nc" id="L28">        System.out.println(&quot;Created Integer topic with ID: &quot; + topicId + &quot;\n&quot;);</span>
+<span class="nc" id="L29">    }</span>
+
+    @Override
+    public void createPartition(String topicId, String partitionId) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L34">        Topic&lt;Integer&gt; topic = (Topic&lt;Integer&gt;) cluster.getTopic(topicId);</span>
+<span class="nc" id="L35">        topic.addPartition(new Partition&lt;Integer&gt;(topicId, partitionId));</span>
+<span class="nc" id="L36">        System.out.println(&quot;Created partition with ID: &quot; + partitionId + &quot; for topic: &quot; + topicId + &quot;\n&quot;);</span>
+<span class="nc" id="L37">    }</span>
+
+    @Override
+    public void createConsumer(String groupId, String consumerId) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L42">        ConsumerGroup&lt;Integer&gt; group = (ConsumerGroup&lt;Integer&gt;) cluster.getConsumerGroup(groupId);</span>
+<span class="nc" id="L43">        Consumer&lt;Integer&gt; consumer = new Consumer&lt;&gt;(groupId, consumerId);</span>
+<span class="nc" id="L44">        group.addConsumer(consumer);</span>
+<span class="nc" id="L45">        group.rebalance();</span>
+<span class="nc" id="L46">        System.out.println(&quot;Created consumer with ID: &quot; + consumerId + &quot; for &quot;+ groupId + &quot; group\n&quot;);</span>
+<span class="nc" id="L47">    }</span>
+
+    @Override
+    public void createProducer(String producerId, String type, String allocation) {
+        Producer&lt;Integer&gt; producer;
+<span class="nc bnc" id="L52" title="All 3 branches missed.">        switch (allocation) {</span>
+            case &quot;manual&quot;:
+<span class="nc" id="L54">                producer = new ManualProducer&lt;&gt;(producerId, Integer.class);</span>
+<span class="nc" id="L55">                break;</span>
+            case &quot;random&quot;:
+<span class="nc" id="L57">                producer = new RandomProducer&lt;&gt;(producerId, Integer.class);</span>
+<span class="nc" id="L58">                break;</span>
+            default:
+<span class="nc" id="L60">                System.out.println(&quot;Unsupported allocation type: &quot; + allocation);</span>
+<span class="nc" id="L61">                return;</span>
+        }
+<span class="nc" id="L63">        cluster.addProducer(producer);</span>
+<span class="nc" id="L64">        System.out.println(&quot;Created producer with ID: &quot; + producerId </span>
+                    + &quot; that produces Integer events with &quot; + allocation + &quot; allocation\n&quot;);
+<span class="nc" id="L66">    }</span>
+
+    @Override
+    public void createEvent(String producerId, String topicId, String eventId, String partitionId) {
+        try {
+<span class="nc" id="L71">            JSONObject messageJsonObject = new JSONObject(</span>
+<span class="nc" id="L72">                    Files.readString(Paths.get(&quot;app/src/test/java/tributary/messageConfigs/&quot; + eventId + &quot;.json&quot;)));</span>
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L74">            Producer&lt;Integer&gt; producer = (Producer&lt;Integer&gt;) cluster.getProducer(producerId);</span>
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L76">            Topic&lt;Integer&gt; topic = (Topic&lt;Integer&gt;) cluster.getTopic(topicId);</span>
+<span class="nc" id="L77">            producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);</span>
+<span class="nc" id="L78">        } catch (IOException e) {</span>
+<span class="nc" id="L79">            System.out.println(&quot;Error reading the file: &quot; + e.getMessage());</span>
+<span class="nc" id="L80">            e.printStackTrace();</span>
+<span class="nc" id="L81">        } catch (JSONException e) {</span>
+<span class="nc" id="L82">            System.out.println(&quot;Error parsing JSON content: &quot; + e.getMessage());</span>
+<span class="nc" id="L83">            e.printStackTrace();</span>
+<span class="nc" id="L84">        } catch (Exception e) {</span>
+<span class="nc" id="L85">            System.out.println(&quot;Error processing event: &quot; + e.getMessage());</span>
+<span class="nc" id="L86">            e.printStackTrace();</span>
+<span class="nc" id="L87">        }</span>
+<span class="nc" id="L88">    }</span>
+        
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>

@@ -13,11 +13,15 @@ public class RandomProducer&lt;T&gt; extends Producer&lt;T&gt; {
     @Override
     public void allocateMessage(List&lt;Partition&lt;T&gt;&gt; partitions, String partitionId, Message&lt;T&gt; message) {
 <span class="nc" id="L15">        int randomIndex = (int) (Math.random() * partitions.size());</span>
+<span class="nc" id="L16">        Partition&lt;T&gt; p = partitions.get(randomIndex);</span>
 
-<span class="nc" id="L17">        Partition&lt;T&gt; selectedPartition = partitions.get(randomIndex);</span>
-<span class="nc" id="L18">        selectedPartition.addMessage(message);</span>
-<span class="nc" id="L19">        System.out.println(&quot;The event: &quot; + message.getId() + &quot; has been randomly allocated to partition &quot;</span>
-<span class="nc" id="L20">                + selectedPartition.getId());</span>
-<span class="nc" id="L21">    }</span>
+<span class="nc bnc" id="L18" title="All 2 branches missed.">        if (p.listMessages().contains(message)) {</span>
+<span class="nc" id="L19">            System.out.println(&quot;Message &quot; + message.getId() + &quot; already exists in &quot; + partitionId + &quot; partition.\n&quot;);</span>
+        }
+        
+<span class="nc" id="L22">        p.addMessage(message);</span>
+<span class="nc" id="L23">        System.out.println(&quot;The event: &quot; + message.getId() + &quot; has been randomly allocated to partition &quot;</span>
+<span class="nc" id="L24">                + p.getId() + &quot;.\n&quot;);</span>
+<span class="nc" id="L25">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
