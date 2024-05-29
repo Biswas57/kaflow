@@ -61,11 +61,16 @@ public class TributaryCluster {
         return new ArrayList<>(consumerGroups);
     }
 
+    public List<Producer<?>> listProducers() {
+        return new ArrayList<>(producers);
+    }
+
     public void deleteConsumer(String consumerId) {
         for (ConsumerGroup<?> group : listConsumerGroups()) {
             for (Consumer<?> consumer : group.listConsumers()) {
                 if (consumer.getId().equals(consumerId)) {
                     group.removeConsumer(consumerId);
+                    group.rebalance();
                     return;
                 }
             }

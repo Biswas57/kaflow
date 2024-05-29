@@ -1,5 +1,7 @@
 package tributary.cli;
 
+import java.io.IOException;
+
 import tributary.core.TributaryController;
 
 public class MessageHandler {
@@ -29,7 +31,11 @@ public class MessageHandler {
             controller.createProducer(parts[2], parts[3].toLowerCase(), parts[4]);
             break;
         case "event":
-            controller.createEvent(parts[2], parts[3], parts[4], parts.length > 5 ? parts[5] : null);
+            try {
+                controller.createEvent(parts[2], parts[3], parts[4], parts.length > 5 ? parts[5] : null);
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
             break;
         default:
             System.out.println("Unknown create command: " + subCommand);

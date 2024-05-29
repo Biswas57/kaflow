@@ -11,55 +11,55 @@ public class Consumer&lt;T&gt; extends TributaryObject {
     private Map&lt;Partition&lt;T&gt;, Integer&gt; partitionOffsets; // Track last consumed offset for each partition
 
     public Consumer(String groupId, String consumerId) {
-<span class="nc" id="L14">        super(consumerId);</span>
-<span class="nc" id="L15">        this.groupId = groupId;</span>
-<span class="nc" id="L16">        this.assignedPartitions = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L17">        this.partitionOffsets = new HashMap&lt;&gt;();</span>
-<span class="nc" id="L18">    }</span>
+<span class="fc" id="L14">        super(consumerId);</span>
+<span class="fc" id="L15">        this.groupId = groupId;</span>
+<span class="fc" id="L16">        this.assignedPartitions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L17">        this.partitionOffsets = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L18">    }</span>
 
     public void consume(Message&lt;T&gt; message, Partition&lt;T&gt; partition) {
-<span class="nc" id="L21">        int currentOffset = partitionOffsets.getOrDefault(partition, -1) + 1;</span>
-<span class="nc" id="L22">        partitionOffsets.put(partition, currentOffset);</span>
-<span class="nc" id="L23">        StringBuilder contentBuilder = new StringBuilder();</span>
+<span class="fc" id="L21">        int currentOffset = partitionOffsets.getOrDefault(partition, -1) + 1;</span>
+<span class="fc" id="L22">        partitionOffsets.put(partition, currentOffset);</span>
+<span class="fc" id="L23">        StringBuilder contentBuilder = new StringBuilder();</span>
 
-<span class="nc bnc" id="L25" title="All 2 branches missed.">        for (Map.Entry&lt;String, T&gt; entry : message.getContent().entrySet()) {</span>
-<span class="nc" id="L26">            contentBuilder.append(entry.getKey()).append(&quot; = &quot;).append(entry.getValue()).append(&quot;\n&quot;);</span>
-<span class="nc" id="L27">        }</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        for (Map.Entry&lt;String, T&gt; entry : message.getContent().entrySet()) {</span>
+<span class="fc" id="L26">            contentBuilder.append(entry.getKey()).append(&quot; = &quot;).append(entry.getValue()).append(&quot;\n&quot;);</span>
+<span class="fc" id="L27">        }</span>
 
-<span class="nc bnc" id="L29" title="All 2 branches missed.">        if (contentBuilder.length() &gt; 0) {</span>
-<span class="nc" id="L30">            contentBuilder.setLength(contentBuilder.length() - 1);</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">        if (contentBuilder.length() &gt; 0) {</span>
+<span class="fc" id="L30">            contentBuilder.setLength(contentBuilder.length() - 1);</span>
         }
 
-<span class="nc" id="L33">        System.out.println(&quot;The event: &quot; + message.getId() + &quot; has been consumed by consumer &quot; + getId()</span>
+<span class="fc" id="L33">        System.out.println(&quot;The event: &quot; + message.getId() + &quot; has been consumed by consumer &quot; + getId()</span>
                 + &quot;. It contains the contents:\n&quot; + contentBuilder);
-<span class="nc" id="L35">    }</span>
+<span class="fc" id="L35">    }</span>
 
     public String getGroup() {
 <span class="nc" id="L38">        return groupId;</span>
     }
 
     public void assignPartition(Partition&lt;T&gt; partition) {
-<span class="nc" id="L42">        assignedPartitions.add(partition);</span>
-<span class="nc" id="L43">    }</span>
+<span class="fc" id="L42">        assignedPartitions.add(partition);</span>
+<span class="fc" id="L43">    }</span>
 
     public void unassignPartition(String partitionId) {
 <span class="nc" id="L46">        assignedPartitions.removeIf(p -&gt; p.getId().equals(partitionId));</span>
 <span class="nc" id="L47">    }</span>
 
     public List&lt;Partition&lt;T&gt;&gt; listAssignedPartitions() {
-<span class="nc" id="L50">        return assignedPartitions;</span>
+<span class="fc" id="L50">        return assignedPartitions;</span>
     }
 
     public void clearAssignments() {
-<span class="nc" id="L54">        this.assignedPartitions.clear();</span>
-<span class="nc" id="L55">    }</span>
+<span class="fc" id="L54">        this.assignedPartitions.clear();</span>
+<span class="fc" id="L55">    }</span>
 
     public void updateOffset(Partition&lt;T&gt; partition, int newOffset) {
 <span class="nc" id="L58">        partitionOffsets.put(partition, newOffset);</span>
 <span class="nc" id="L59">    }</span>
 
     public int getOffset(Partition&lt;T&gt; partition) {
-<span class="nc" id="L62">        return partitionOffsets.getOrDefault(partition, -1);</span>
+<span class="fc" id="L62">        return partitionOffsets.getOrDefault(partition, -1);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

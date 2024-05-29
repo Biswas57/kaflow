@@ -30,12 +30,12 @@ public class TributaryCluster {
 <span class="fc" id="L30">    }</span>
 
     public void addProducer(Producer&lt;?&gt; producer) {
-<span class="nc" id="L33">        producers.add(producer);</span>
-<span class="nc" id="L34">    }</span>
+<span class="fc" id="L33">        producers.add(producer);</span>
+<span class="fc" id="L34">    }</span>
 
     public void addGroup(ConsumerGroup&lt;?&gt; group) {
-<span class="nc" id="L37">        consumerGroups.add(group);</span>
-<span class="nc" id="L38">    }</span>
+<span class="fc" id="L37">        consumerGroups.add(group);</span>
+<span class="fc" id="L38">    }</span>
 
     public void removeTopic(String topicId) {
 <span class="nc" id="L41">        topics.removeIf(t -&gt; t.getId().equals(topicId));</span>
@@ -46,11 +46,11 @@ public class TributaryCluster {
     }
 
     public ConsumerGroup&lt;?&gt; getConsumerGroup(String groupId) {
-<span class="nc" id="L49">        return consumerGroups.stream().filter(g -&gt; g.getId().equals(groupId)).findFirst().orElse(null);</span>
+<span class="fc" id="L49">        return consumerGroups.stream().filter(g -&gt; g.getId().equals(groupId)).findFirst().orElse(null);</span>
     }
 
     public Producer&lt;?&gt; getProducer(String producerId) {
-<span class="nc" id="L53">        return producers.stream().filter(p -&gt; p.getId().equals(producerId)).findFirst().orElse(null);</span>
+<span class="fc" id="L53">        return producers.stream().filter(p -&gt; p.getId().equals(producerId)).findFirst().orElse(null);</span>
     }
 
     public List&lt;Topic&lt;?&gt;&gt; listTopics() {
@@ -58,19 +58,29 @@ public class TributaryCluster {
     }
 
     public List&lt;ConsumerGroup&lt;?&gt;&gt; listConsumerGroups() {
-<span class="nc" id="L61">        return new ArrayList&lt;&gt;(consumerGroups);</span>
+<span class="fc" id="L61">        return new ArrayList&lt;&gt;(consumerGroups);</span>
+    }
+
+    public List&lt;Producer&lt;?&gt;&gt; listProducers() {
+<span class="fc" id="L65">        return new ArrayList&lt;&gt;(producers);</span>
     }
 
     public void deleteConsumer(String consumerId) {
-<span class="nc bnc" id="L65" title="All 2 branches missed.">        for (ConsumerGroup&lt;?&gt; group : listConsumerGroups()) {</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">            for (Consumer&lt;?&gt; consumer : group.listConsumers()) {</span>
-<span class="nc bnc" id="L67" title="All 2 branches missed.">                if (consumer.getId().equals(consumerId)) {</span>
-<span class="nc" id="L68">                    group.removeConsumer(consumerId);</span>
-<span class="nc" id="L69">                    return;</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        for (ConsumerGroup&lt;?&gt; group : listConsumerGroups()) {</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            for (Consumer&lt;?&gt; consumer : group.listConsumers()) {</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                if (consumer.getId().equals(consumerId)) {</span>
+<span class="fc" id="L72">                    group.removeConsumer(consumerId);</span>
+<span class="fc" id="L73">                    group.rebalance();</span>
+<span class="fc" id="L74">                    return;</span>
                 }
-<span class="nc" id="L71">            }</span>
-<span class="nc" id="L72">        }</span>
-<span class="nc" id="L73">        System.out.println(&quot;Consumer not found with ID: &quot; + consumerId);</span>
-<span class="nc" id="L74">    }</span>
+<span class="fc" id="L76">            }</span>
+<span class="nc" id="L77">        }</span>
+<span class="nc" id="L78">        System.out.println(&quot;Consumer not found with ID: &quot; + consumerId);</span>
+<span class="nc" id="L79">    }</span>
+
+    // Test-friendly method to set the instance
+    public static void setInstance(TributaryCluster mockInstance) {
+<span class="fc" id="L83">        instance = mockInstance;</span>
+<span class="fc" id="L84">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

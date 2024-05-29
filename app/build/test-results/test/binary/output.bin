@@ -1,6 +1,153 @@
-%Created String topic with ID: banana
-
-Topic not found: banana
-
-%Topic with ID banana does not exist.
-
+	&Created Integer topic with ID: banana
+	
+	BCreated partition with ID: bananaCookingMethod1 for topic: banana
+	
+	BCreated partition with ID: bananaCookingMethod2 for topic: banana
+	
+	BCreated partition with ID: bananaCookingMethod3 for topic: banana
+	
+	ACreated partition with ID: bananaCookingStyle4 for topic: banana
+	
+	[Created producer with ID: bananaBoiler that produces Integer events with random allocation
+	
+	ZCreated producer with ID: bananaFrier that produces Integer events with manual allocation
+	
+	3Consumer group with ID bananaChefs does not exist.
+	
+	_Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
+	
+	+Consumer group bananaChefs already exists.
+	
+	>Created consumer with ID: beginnerChef1 for bananaChefs group
+	
+	>Created consumer with ID: beginnerChef2 for bananaChefs group
+	
+	>Created consumer with ID: beginnerChef3 for bananaChefs group
+	
+	UUpdated the rebalancing strategy for the bananaChefs group to roundrobin rebalancing
+	
+	\The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod1.
+	
+	\The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod2.
+	
+	[The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod3.
+	
+	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
+	
+	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod3
+	
+	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+	
+	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+	
+	VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
+	
+	dThe event: bananaBoilingNums has been consumed by consumer beginnerChef1. It contains the contents:
+	duration = 5
+	temperature = 100
+	Consumed 1 messages.
+	
+	`The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
+	duration = 3
+	temperature = 180
+	Consumed 1 messages.
+	
+	`The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
+	temperature = 180
+	Consumed 1 messages.
+	
+	_The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
+	duration = 3
+	Consumed 1 messages.
+	
+	 Not enough messages to consume.
+	Consumed 0 messages.
+	
+
+%Created String topic with ID: banana
+
+
+
+BCreated partition with ID: bananaCookingMethods for topic: banana
+
+
+
+ACreated partition with ID: bananaCookingStyles for topic: banana
+
+
+
+ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
+
+
+
+3Consumer group with ID bananaChefs does not exist.
+
+
+
+_Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
+
+
+
+>Created consumer with ID: beginnerChef for group: bananaChefs
+
+
+
+DCreated consumer with ID: deleteBeginnerChef for group: bananaChefs
+
+
+
+pCurrent working directory: /Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app
+
+TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
+
+
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+
+
+RThe event: fryBanana has been manually allocated to partition bananaCookingStyles
+
+
+
+-Deleted consumer with ID: deleteBeginnerChef
+
+Consumer Group ID: bananaChefs
+
+]Consumer ID: beginnerChef - Assigned Partitions: bananaCookingMethods, bananaCookingStyles, 
+
+
+
+3--------------------------------------------------
+
+
+
+Topic ID: banana
+
+<Partition ID: bananaCookingMethods - Messages: boilBanana, 
+
+:Partition ID: bananaCookingStyles - Messages: fryBanana, 
+
+
+
+3--------------------------------------------------
+
+
+
+\The event: boilBanana has been consumed by consumer beginnerChef. It contains the contents:
+
+duration = 5 minutes
+
+temperature = 100C
+
+Kdescription = Boil bananas at 100 degrees Celsius for 5 minutes to soften.
+
+Consumed 1 messages.
+
+
+
+ Not enough messages to consume.
+
+Consumed 0 messages.
+
+

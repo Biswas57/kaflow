@@ -8,25 +8,25 @@ public class Partition&lt;T&gt; extends TributaryObject {
     private String allocatedTopic;
 
     public Partition(String topicId, String partitionId) {
-<span class="nc" id="L11">        super(partitionId);</span>
-<span class="nc" id="L12">        this.allocatedTopic = topicId;</span>
-<span class="nc" id="L13">        this.messages = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L14">    }</span>
+<span class="fc" id="L11">        super(partitionId);</span>
+<span class="fc" id="L12">        this.allocatedTopic = topicId;</span>
+<span class="fc" id="L13">        this.messages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L14">    }</span>
 
     public void addMessage(Message&lt;T&gt; message) {
-<span class="nc" id="L17">        messages.add(message);</span>
-<span class="nc" id="L18">    }</span>
+<span class="fc" id="L17">        messages.add(message);</span>
+<span class="fc" id="L18">    }</span>
 
     public String getAllocatedTopicId() {
-<span class="nc" id="L21">        return allocatedTopic;</span>
+<span class="fc" id="L21">        return allocatedTopic;</span>
     }
 
     public List&lt;Message&lt;T&gt;&gt; listMessages() {
-<span class="nc" id="L25">        return messages;</span>
+<span class="fc" id="L25">        return messages;</span>
     }
 
     public Message&lt;T&gt; getMessage(String messageId) {
 <span class="nc" id="L29">        return messages.stream().filter(m -&gt; m.getId().equals(messageId)).findFirst().orElse(null);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

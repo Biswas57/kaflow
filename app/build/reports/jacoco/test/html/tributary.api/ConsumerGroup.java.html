@@ -13,74 +13,78 @@ public class ConsumerGroup&lt;T&gt; extends TributaryObject {
     private RebalancingStrategy&lt;T&gt; rebalanceMethod;
 
     public ConsumerGroup(String consumerGroupId, Topic&lt;T&gt; assignedTopic, String rebalanceMethod) {
-<span class="nc" id="L16">        super(consumerGroupId);</span>
-<span class="nc" id="L17">        this.consumers = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L18">        this.assignedTopic = assignedTopic;</span>
-<span class="nc" id="L19">        setRebalancingMethod(rebalanceMethod);</span>
-<span class="nc" id="L20">    }</span>
+<span class="fc" id="L16">        super(consumerGroupId);</span>
+<span class="fc" id="L17">        this.consumers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L18">        this.assignedTopic = assignedTopic;</span>
+<span class="fc" id="L19">        setRebalancingMethod(rebalanceMethod);</span>
+<span class="fc" id="L20">    }</span>
 
     public void setRebalancingMethod(String rebalanceMethod) {
-<span class="nc bnc" id="L23" title="All 3 branches missed.">        switch (rebalanceMethod) {</span>
+<span class="pc bpc" id="L23" title="1 of 3 branches missed.">        switch (rebalanceMethod) {</span>
         case &quot;roundrobin&quot;:
-<span class="nc" id="L25">            this.rebalanceMethod = new RoundRobinStrategy&lt;&gt;();</span>
-<span class="nc" id="L26">            break;</span>
+<span class="fc" id="L25">            this.rebalanceMethod = new RoundRobinStrategy&lt;&gt;();</span>
+<span class="fc" id="L26">            break;</span>
         case &quot;range&quot;:
-<span class="nc" id="L28">            this.rebalanceMethod = new RangeStrategy&lt;&gt;();</span>
-<span class="nc" id="L29">            break;</span>
+<span class="fc" id="L28">            this.rebalanceMethod = new RangeStrategy&lt;&gt;();</span>
+<span class="fc" id="L29">            break;</span>
         default:
 <span class="nc" id="L31">            System.out.println(&quot;Unknown rebalancing strategy: &quot; + rebalanceMethod);</span>
             break;
         }
-<span class="nc" id="L34">    }</span>
+<span class="fc" id="L34">    }</span>
 
     public Topic&lt;T&gt; getAssignedTopic() {
-<span class="nc" id="L37">        return assignedTopic;</span>
+<span class="fc" id="L37">        return assignedTopic;</span>
     }
 
     public RebalancingStrategy&lt;T&gt; getRebalanceMethod() {
 <span class="nc" id="L41">        return rebalanceMethod;</span>
     }
 
+    public String getRebalanceMethodName() {
+<span class="fc" id="L45">        return rebalanceMethod.getClass().getSimpleName();</span>
+    }
+
     public void addConsumer(Consumer&lt;T&gt; consumer) {
-<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (!consumers.contains(consumer)) {</span>
-<span class="nc" id="L46">            consumers.add(consumer);</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if (!consumers.contains(consumer)) {</span>
+<span class="fc" id="L50">            consumers.add(consumer);</span>
         } else {
-<span class="nc" id="L48">            System.out.println(&quot;Consumer already exists in the group&quot;);</span>
+<span class="nc" id="L52">            System.out.println(&quot;Consumer already exists in the group&quot;);</span>
         }
-<span class="nc" id="L50">    }</span>
+<span class="fc" id="L54">    }</span>
 
     public boolean containsConsumer(String consumerId) {
-<span class="nc bnc" id="L53" title="All 2 branches missed.">        return getConsumer(consumerId) != null;</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        return getConsumer(consumerId) != null;</span>
     }
 
     public List&lt;Consumer&lt;T&gt;&gt; listConsumers() {
-<span class="nc" id="L57">        return new ArrayList&lt;&gt;(consumers);</span>
+<span class="fc" id="L61">        return new ArrayList&lt;&gt;(consumers);</span>
     }
 
     public Consumer&lt;T&gt; getConsumer(String consumerId) {
-<span class="nc" id="L61">        return consumers.stream().filter(c -&gt; c.getId().equals(consumerId)).findFirst().orElse(null);</span>
+<span class="fc" id="L65">        return consumers.stream().filter(c -&gt; c.getId().equals(consumerId)).findFirst().orElse(null);</span>
     }
 
     public void removeConsumer(String consumerId) {
-<span class="nc" id="L65">        consumers.removeIf(c -&gt; c.getId().equals(consumerId));</span>
-<span class="nc" id="L66">        System.out.println(&quot;Deleted consumer with ID: &quot; + consumerId);</span>
-<span class="nc" id="L67">        rebalance();</span>
-<span class="nc" id="L68">        showGroup();</span>
-<span class="nc" id="L69">    }</span>
+<span class="fc" id="L69">        consumers.removeIf(c -&gt; c.getId().equals(consumerId));</span>
+<span class="fc" id="L70">        System.out.println(&quot;Deleted consumer with ID: &quot; + consumerId);</span>
+<span class="fc" id="L71">        rebalance();</span>
+<span class="fc" id="L72">        showGroup();</span>
+<span class="fc" id="L73">    }</span>
 
     public void showGroup() {
-<span class="nc" id="L72">        System.out.println(&quot;Consumer Group ID: &quot; + getId());</span>
-<span class="nc" id="L73">        List&lt;Consumer&lt;T&gt;&gt; consumers = listConsumers();</span>
-<span class="nc bnc" id="L74" title="All 2 branches missed.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
-<span class="nc" id="L75">            System.out.print(&quot;Consumer ID: &quot; + consumer.getId() + &quot; - Assigned Partitions: &quot;);</span>
-<span class="nc" id="L76">            consumer.listAssignedPartitions().forEach(p -&gt; System.out.print(p.getId() + &quot;, &quot;));</span>
-<span class="nc" id="L77">            System.out.println();</span>
-<span class="nc" id="L78">        }</span>
-<span class="nc" id="L79">        System.out.println(&quot;\n--------------------------------------------------\n&quot;);</span>
-<span class="nc" id="L80">    }</span>
+<span class="fc" id="L76">        System.out.println(&quot;Consumer Group ID: &quot; + getId());</span>
+<span class="fc" id="L77">        List&lt;Consumer&lt;T&gt;&gt; consumers = listConsumers();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
+<span class="fc" id="L79">            System.out.print(&quot;Consumer ID: &quot; + consumer.getId() + &quot; - Assigned Partitions: &quot;);</span>
+<span class="fc" id="L80">            consumer.listAssignedPartitions().forEach(p -&gt; System.out.print(p.getId() + &quot;, &quot;));</span>
+<span class="fc" id="L81">            System.out.println();</span>
+<span class="fc" id="L82">        }</span>
+<span class="fc" id="L83">        System.out.println(&quot;\n--------------------------------------------------\n&quot;);</span>
+<span class="fc" id="L84">    }</span>
 
     public void rebalance() {
-<span class="nc" id="L83">        rebalanceMethod.rebalance(getAssignedTopic().listPartitions(), listConsumers());</span>
-<span class="nc" id="L84">    }</span>
+<span class="fc" id="L87">        rebalanceMethod.rebalance(getAssignedTopic().listPartitions(), listConsumers());</span>
+<span class="fc" id="L88">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

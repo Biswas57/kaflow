@@ -12,19 +12,19 @@ public abstract class Producer&lt;T&gt; extends TributaryObject {
     private Class&lt;T&gt; type;
 
     public Producer(String producerId, Class&lt;T&gt; type) {
-<span class="nc" id="L15">        super(producerId);</span>
-<span class="nc" id="L16">        this.type = type;</span>
-<span class="nc" id="L17">    }</span>
+<span class="fc" id="L15">        super(producerId);</span>
+<span class="fc" id="L16">        this.type = type;</span>
+<span class="fc" id="L17">    }</span>
 
     public Class&lt;T&gt; getType() {
-<span class="nc" id="L20">        return type;</span>
+<span class="fc" id="L20">        return type;</span>
     }
 
     public abstract void allocateMessage(List&lt;Partition&lt;T&gt;&gt; partitions, String partitionId, Message&lt;T&gt; message);
 
     public void produceMessage(List&lt;Partition&lt;T&gt;&gt; partitions, String partitionId, JSONObject message) {
-<span class="nc" id="L26">        Message&lt;T&gt; msg = Message.fromJson(message, getType());</span>
-<span class="nc" id="L27">        allocateMessage(partitions, partitionId, msg);</span>
-<span class="nc" id="L28">    }</span>
+<span class="fc" id="L26">        Message&lt;T&gt; msg = Message.fromJson(message, getType());</span>
+<span class="fc" id="L27">        allocateMessage(partitions, partitionId, msg);</span>
+<span class="fc" id="L28">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

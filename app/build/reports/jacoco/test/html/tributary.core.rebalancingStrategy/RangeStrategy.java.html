@@ -5,26 +5,29 @@ import java.util.List;
 import tributary.api.Consumer;
 import tributary.api.Partition;
 
-<span class="nc" id="L8">public class RangeStrategy&lt;T&gt; implements RebalancingStrategy&lt;T&gt; {</span>
+<span class="fc" id="L8">public class RangeStrategy&lt;T&gt; implements RebalancingStrategy&lt;T&gt; {</span>
     @Override
     public void rebalance(List&lt;Partition&lt;T&gt;&gt; partitions, List&lt;Consumer&lt;T&gt;&gt; consumers) {
-<span class="nc bnc" id="L11" title="All 2 branches missed.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
-<span class="nc" id="L12">            consumer.clearAssignments();</span>
-<span class="nc" id="L13">        }</span>
+<span class="pc bpc" id="L11" title="2 of 4 branches missed.">        if (partitions.isEmpty() || consumers.isEmpty()) {</span>
+<span class="nc" id="L12">            return;</span>
+        }
+<span class="fc bfc" id="L14" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
+<span class="fc" id="L15">            consumer.clearAssignments();</span>
+<span class="fc" id="L16">        }</span>
 
-<span class="nc" id="L15">        int minPartitionsPerConsumer = partitions.size() / consumers.size();</span>
-<span class="nc" id="L16">        int extraPartitions = partitions.size() % consumers.size();</span>
+<span class="fc" id="L18">        int minPartitionsPerConsumer = partitions.size() / consumers.size();</span>
+<span class="fc" id="L19">        int extraPartitions = partitions.size() % consumers.size();</span>
 
-<span class="nc" id="L18">        int partitionIndex = 0;</span>
-<span class="nc bnc" id="L19" title="All 2 branches missed.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
-<span class="nc bnc" id="L20" title="All 2 branches missed.">            for (int j = 0; j &lt; minPartitionsPerConsumer; j++, partitionIndex++) {</span>
-<span class="nc" id="L21">                consumer.assignPartition(partitions.get(partitionIndex));</span>
+<span class="fc" id="L21">        int partitionIndex = 0;</span>
+<span class="fc bfc" id="L22" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">            for (int j = 0; j &lt; minPartitionsPerConsumer; j++, partitionIndex++) {</span>
+<span class="fc" id="L24">                consumer.assignPartition(partitions.get(partitionIndex));</span>
             }
-<span class="nc bnc" id="L23" title="All 2 branches missed.">            if (extraPartitions &gt; 0) {</span>
-<span class="nc" id="L24">                consumer.assignPartition(partitions.get(partitionIndex++));</span>
-<span class="nc" id="L25">                extraPartitions--;</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">            if (extraPartitions &gt; 0) {</span>
+<span class="fc" id="L27">                consumer.assignPartition(partitions.get(partitionIndex++));</span>
+<span class="fc" id="L28">                extraPartitions--;</span>
             }
-<span class="nc" id="L27">        }</span>
-<span class="nc" id="L28">    }</span>
+<span class="fc" id="L30">        }</span>
+<span class="fc" id="L31">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

@@ -1,5 +1,6 @@
 package tributary.core;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,9 @@ public class TributaryController {
         typeMap.put("string", String.class);
     }
 
+    /*
+     * All Helper methods involved in the the creation, deletion and manipulation of Tributary objects.
+     */
     public Topic<?> getTopic(String topicId) {
         Topic<?> topic = tributaryCluster.getTopic(topicId);
         if (topic == null) {
@@ -65,79 +69,6 @@ public class TributaryController {
         }
     }
 
-    public void createTopic(String topicId, String type) {
-        Class<?> typeClass = typeMap.get(type);
-        setObjectFactoryType(typeClass);
-        objectFactory.createTopic(topicId);
-    }
-
-    public void createPartition(String topicId, String partitionId) {
-        Topic<?> topic = getTopic(topicId);
-        setObjectFactoryType(topic.getType());
-        objectFactory.createPartition(topicId, partitionId);
-    }
-
-    public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
-        Topic<?> topic = getTopic(topicId);
-        setObjectFactoryType(topic.getType());
-        objectFactory.createConsumerGroup(groupId, topic, rebalancing);
-    }
-
-    public void createConsumer(String groupId, String consumerId) {
-        ConsumerGroup<?> group = getConsumerGroup(groupId);
-        if (group.containsConsumer(consumerId)) {
-            System.out.println("Consumer " + consumerId + "already exists in the group.\n");
-            return;
-        }
-
-        Topic<?> topic = group.getAssignedTopic();
-        setObjectFactoryType(topic.getType());
-        objectFactory.createConsumer(groupId, consumerId);
-    }
-
-    public void createProducer(String producerId, String type, String allocation) {
-        Class<?> typeClass = typeMap.get(type);
-        setObjectFactoryType(typeClass);
-        objectFactory.createProducer(producerId, type, allocation);
-    }
-
-    public void createEvent(String producerId, String topicId, String eventId, String partitionId) {
-        Producer<?> producer = getProducer(producerId);
-        Topic<?> topic = getTopic(topicId);
-        if (producer == null || topic == null) {
-            System.out.println("Producer " + producerId + " or topic " + topicId + " not found.\n");
-            return;
-        } else if (!topic.getType().equals(producer.getType())) {
-            System.out.println("Producer type does not match topic type.\n");
-            return;
-        }
-
-        setObjectFactoryType(topic.getType());
-        objectFactory.createEvent(producerId, topicId, eventId, partitionId);
-    }
-
-    public void deleteConsumer(String consumerId) {
-        tributaryCluster.deleteConsumer(consumerId);
-    }
-
-    public void showTopic(String topicId) {
-        Topic<?> topic = tributaryCluster.getTopic(topicId);
-        if (topic != null) {
-            topic.showTopic();
-        } else {
-            System.out.println("Topic not found: " + topicId + "\n");
-        }
-    }
-
-    public void showGroup(String groupId) {
-        ConsumerGroup<?> group = tributaryCluster.getConsumerGroup(groupId);
-        if (group != null) {
-            group.showGroup();
-        } else {
-            System.out.println("Group not found: " + groupId + "\n");
-        }
-    }
-
     public Consumer<?> findConsumer(String consumerId) {
         Consumer<?> specifiedConsumer = null;
         for (ConsumerGroup<?> group : tributaryCluster.listConsumerGroups()) {
@@ -162,9 +93,115 @@ public class TributaryController {
             if (specifiedPartition != null)
                 break;
         }
-
         return specifiedPartition;
     }
+
+    public ObjectFactory getFactory() {
+        return objectFactory;
+    }
+
+    public TributaryCluster getCluster() {
+        return tributaryCluster;
+    }
+
+    /*
+     * All creation methods.
+     * These methods are outsourced to the ObjectFactory class.
+     */
+    public void createTopic(String topicId, String type) {
+        Class<?> typeClass = typeMap.get(type);
+        setObjectFactoryType(typeClass);
+        objectFactory.createTopic(topicId);
+    }
+
+    public void createPartition(String topicId, String partitionId) {
+        Topic<?> topic = getTopic(topicId);
+        setObjectFactoryType(topic.getType());
+        objectFactory.createPartition(topicId, partitionId);
+    }
+
+    public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
+        Topic<?> topic = getTopic(topicId);
+        if (topic == null) {
+            System.out.println("Topic " + topicId + " does not exist.\n");
+            return;
+        }
+        if (getConsumerGroup(groupId) != null) {
+            System.out.println("Consumer group " + groupId + " already exists.\n");
+            return;
+        }
+        setObjectFactoryType(topic.getType());
+        objectFactory.createConsumerGroup(groupId, topic, rebalancing);
+    }
+
+    public void createConsumer(String groupId, String consumerId) {
+        ConsumerGroup<?> group = getConsumerGroup(groupId);
+        if (group.containsConsumer(consumerId)) {
+            System.out.println("Consumer " + consumerId + "already exists in the group.\n");
+            return;
+        }
+
+        Topic<?> topic = group.getAssignedTopic();
+        setObjectFactoryType(topic.getType());
+        objectFactory.createConsumer(groupId, consumerId);
+    }
+
+    public void createProducer(String producerId, String type, String allocation) {
+        Class<?> typeClass = typeMap.get(type);
+        setObjectFactoryType(typeClass);
+        objectFactory.createProducer(producerId, type, allocation);
+    }
+
+    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException{
+        Producer<?> producer = getProducer(producerId);
+        Topic<?> topic = getTopic(topicId);
+        if (producer == null || topic == null) {
+            System.out.println("Producer " + producerId + " or topic " + topicId + " not found.\n");
+            return;
+        } else if (!topic.getType().equals(producer.getType())) {
+            System.out.println("Producer type does not match topic type.\n");
+            return;
+        }
+
+        setObjectFactoryType(topic.getType());
+        objectFactory.createEvent(producerId, topicId, eventId, partitionId);
+    }
+
+
+    /*
+     * The delete consumer method is the only delete method so far.
+     * This was to demonstrate the ability for consumer groups to automatially rebalance once a consumer is deleted.
+     * Simple demonstration of the Observer Pattern implemented
+     * Ther is no added functionality when deleting other tributary objects.
+     */
+    public void deleteConsumer(String consumerId) {
+        tributaryCluster.deleteConsumer(consumerId);
+    }
+
+    /*
+     * Show the entirety of Topic and ConsumerGroup objects.
+     * Consumer Groups will show the group, the consumers and the partitions assigned to each consumer.
+     * Topics will show the topic, the partitions and the respective events in order of consumption in eahc partition.
+     */
+    public void showTopic(String topicId) {
+        Topic<?> topic = tributaryCluster.getTopic(topicId);
+        if (topic != null) {
+            topic.showTopic();
+        } else {
+            System.out.println("Topic not found: " + topicId + "\n");
+        }
+    }
+
+    public void showGroup(String groupId) {
+        ConsumerGroup<?> group = tributaryCluster.getConsumerGroup(groupId);
+        if (group != null) {
+            group.showGroup();
+        } else {
+            System.out.println("Group not found: " + groupId + "\n");
+        }
+    }
+
+    
 
     /*
      * Consume events from a partition. The number of events to consume is specified
@@ -216,6 +253,10 @@ public class TributaryController {
         }
     }
 
+    /*
+     * Update the rebalancing strategy for a consumer group.
+     * Only update method so far
+     */
     public void updateRebalancing(String groupId, String rebalancing) {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
         group.setRebalancingMethod(rebalancing);
@@ -223,13 +264,4 @@ public class TributaryController {
         System.out.println("Updated the rebalancing strategy for the "
                             + groupId + " group to " + rebalancing + " rebalancing\n");
     }
-
-    public ObjectFactory getFactory() {
-        return objectFactory;
-    }
-
-    public TributaryCluster getCluster() {
-        return tributaryCluster;
-    }
-
 }
