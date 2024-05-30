@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryTestSimple" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-05-30T02:20:20" hostname="bissi-smells.modem" time="0.005">
+<testsuite name="tributary.TributaryTestSimple" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-05-30T07:29:30" hostname="Biswass-iMac.modem" time="0.011">
   <properties/>
-  <testcase name="mainSimpleTest()" classname="tributary.TributaryTestSimple" time="0.005"/>
+  <testcase name="mainSimpleTest()" classname="tributary.TributaryTestSimple" time="0.011"/>
   <system-out><![CDATA[Created String topic with ID: banana
 
 Created partition with ID: bananaCookingMethods for topic: banana
@@ -18,7 +18,7 @@ Created consumer with ID: beginnerChef for group: bananaChefs
 
 Created consumer with ID: deleteBeginnerChef for group: bananaChefs
 
-Current working directory: /Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app
+Current working directory: /Users/biswassimkhada/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app
 The event: boilBanana has been manually allocated to partition bananaCookingMethods
 
 Created producer with ID: bananaFrier that produces String events with manual allocation

@@ -103,3 +103,10 @@
 - Implemented new tests to verify that the system gracefully handles and recovers from various types of exceptions, such as IOExceptions during event file processing and JSON parsing errors.
 - Developed tests to ensure that the system logs detailed information about exceptions, which aids in debugging and maintaining the system
 - Tested the robustness of the system under fault conditions by simulating different exception scenarios and observing the system's response to ensure that it does not crash or lose data integrity.
+
+**Future Goals**
+- Wish to add the following features in the near future:
+    - Implement a more sophisticated logging mechanism to capture detailed system events and performance metrics
+    - Enhance the CLI interface to provide more appealing output formats and user-friendly commands
+    - Adding play from offset method to allow for message replay
+    - Adding parallel functionality so more than 1 event can be consumed at a time

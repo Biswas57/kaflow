@@ -26,37 +26,27 @@
 	
 	UUpdated the rebalancing strategy for the bananaChefs group to roundrobin rebalancing
 	
-	[The event: bananaBoilingNums has been randomly allocated to partition bananaCookingStyle4.
+	\The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod3.
 	
-	[The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingStyle4.
+	\The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod2.
 	
-	[The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod1.
+	[The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod3.
 	
 	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
 	
 	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod3
 	
-	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+	dThe event: bananaBoilingNums has been consumed by consumer beginnerChef3. It contains the contents:
+	duration = 5
+	temperature = 100
+	Consumed 1 messages.
 	
-	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
-	
-	VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
-	
-	cThe event: bananaBoilingDur has been consumed by consumer beginnerChef1. It contains the contents:
+	cThe event: bananaBoilingDur has been consumed by consumer beginnerChef3. It contains the contents:
 	duration = 5
 	Consumed 1 messages.
 	
-	`The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-	duration = 3
+	`The event: bananaFryNums has been consumed by consumer beginnerChef3. It contains the contents:
 	temperature = 180
-	Consumed 1 messages.
-	
-	`The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-	temperature = 180
-	Consumed 1 messages.
-	
-	_The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
-	duration = 3
 	Consumed 1 messages.
 	
 	 Not enough messages to consume.
@@ -95,7 +85,7 @@ DCreated consumer with ID: deleteBeginnerChef for group: bananaChefs
 
 
 
-pCurrent working directory: /Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app
+sCurrent working directory: /Users/biswassimkhada/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app
 
 TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
 
