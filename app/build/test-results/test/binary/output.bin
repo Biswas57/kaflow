@@ -26,11 +26,11 @@
 	
 	UUpdated the rebalancing strategy for the bananaChefs group to roundrobin rebalancing
 	
-	\The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod1.
+	[The event: bananaBoilingNums has been randomly allocated to partition bananaCookingStyle4.
 	
-	\The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod2.
+	[The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingStyle4.
 	
-	[The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod3.
+	[The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod1.
 	
 	WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
 	
@@ -42,9 +42,8 @@
 	
 	VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
 	
-	dThe event: bananaBoilingNums has been consumed by consumer beginnerChef1. It contains the contents:
+	cThe event: bananaBoilingDur has been consumed by consumer beginnerChef1. It contains the contents:
 	duration = 5
-	temperature = 100
 	Consumed 1 messages.
 	
 	`The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:

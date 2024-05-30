@@ -61,11 +61,11 @@ public class IntegerFactory extends ObjectFactory {
         }
         getCluster().addProducer(producer);
         System.out.println("Created producer with ID: " + producerId
-                    + " that produces Integer events with " + allocation + " allocation\n");
+                + " that produces Integer events with " + allocation + " allocation\n");
     }
 
     @Override
-    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException{
+    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException {
         JSONObject messageJsonObject = new JSONObject(
                 Files.readString(Paths.get("messageConfigs/" + eventId + ".json")));
         @SuppressWarnings("unchecked")
@@ -74,5 +74,4 @@ public class IntegerFactory extends ObjectFactory {
         Topic<Integer> topic = (Topic<Integer>) getCluster().getTopic(topicId);
         producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);
     }
-
 }

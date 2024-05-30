@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryMockTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2024-05-29T13:26:29" hostname="bissi-smells.local" time="0.524">
+<testsuite name="tributary.TributaryMockTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2024-05-30T02:20:20" hostname="bissi-smells.modem" time="0.635">
   <properties/>
-  <testcase name="testEventLifeCycle()" classname="tributary.TributaryMockTest" time="0.514"/>
+  <testcase name="testEventLifeCycle()" classname="tributary.TributaryMockTest" time="0.624"/>
   <testcase name="testCreateIntegerTopicAndProducers()" classname="tributary.TributaryMockTest" time="0.002"/>
   <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryMockTest" time="0.002"/>
   <testcase name="testCreatePartitionAndShow()" classname="tributary.TributaryMockTest" time="0.001"/>

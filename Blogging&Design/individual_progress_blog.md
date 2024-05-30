@@ -84,3 +84,22 @@
     - Fixed a NullPointer Exception that was being thrown when trying to create a topic and the object factory wasn't initialized
     - Fixed a bug where Partition was returning null when trying to consume an event
 
+## Monday 27/05/2024
+**Progress**
+- Dedicated the day to refining our JUnit test suite, focusing on expanding the coverage to include edge cases and complex interaction scenarios within the Tributary system.
+- Identified and resolved several edge cases where message handling did not perform as expected, enhancing the resilience of the system
+- Integrated additional test cases to verify the integrity of the message replay feature, ensuring that events are correctly replayed from specified offsets under various system states.
+- Optimized test execution times by improving setup and teardown processes in the testing framework.
+
+## Tuesday 28/05/2024
+**Progress**
+- Conducted a thorough review of Mockito usage across our tests to ensure that all component interactions are adequately simulated, particularly focusing on the interactions between producers, consumers, and the Tributary Cluster.
+- Implemented parameterized tests to validate the system's behavior across different configurations and input data sets.
+- Enhanced the mock setups to better mimic complex operational flows, including testing the system’s response to simulated failures and network delays.
+
+## Wednesday 29/05/2024
+**Progress**
+- Focused on exception handling within the Tributary system, particularly how the system manages and logs exceptions during event processing.
+- Implemented new tests to verify that the system gracefully handles and recovers from various types of exceptions, such as IOExceptions during event file processing and JSON parsing errors.
+- Developed tests to ensure that the system logs detailed information about exceptions, which aids in debugging and maintaining the system
+- Tested the robustness of the system under fault conditions by simulating different exception scenarios and observing the system's response to ensure that it does not crash or lose data integrity.

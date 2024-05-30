@@ -33,6 +33,6 @@ public abstract class ObjectFactory {
 
     public abstract void createProducer(String producerId, String type, String allocation);
 
-    public abstract void createEvent(String producerId, String topicId, 
-                                        String eventId, String partitionId) throws IOException;
+    public abstract void createEvent(String producerId, String topicId,
+            String eventId, String partitionId) throws IOException;
 }

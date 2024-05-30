@@ -38,7 +38,7 @@ Other Notes:
 - Read and process messages from assigned partitions.
 - Message Reading: Consumers read and process messages from their assigned partitions. 
     - They make sure messages are processed in the order they are received to maintain data integrity.
-        - In a priority queue style format
+        - In a priority queue style format with a message replay and offset functionality
 - Partition Handling: Each consumer handles one partition at a time but can be assigned to multiple partitions to balance load.
 
 **Consumer Groups**
@@ -47,7 +47,7 @@ Other Notes:
     - There are 2 distinct distribution methods
 
 Rebalancing (Message Distribution) Strategies:
-- Range Rebalancing: Partitions are evenly divided among consumers, with adjustments made for odd counts.
+- Range Rebalancing: Partitions are evenly divided based on the number of consumers, with adjustments made for odd counts.
 - Round Robin Rebalancing: Partitions are allocated in a rotating manner to ensure even distribution of workload among consumers.
 
 **Message Replay**
@@ -60,12 +60,12 @@ Messages from a certain offset onwards are processed, until the most recent mess
        - ensuring thread-safe operations across producer and consumer threads for real-time data integrity in the event processing pipeline.
 
 **Design Considerations**
-
 Concurrency:
-- Thread Safety: To handle concurrent operations without issues, the system will use synchronization
+- Thread Safety: To handle concurrent operations without issues, the system will use synchronization via the Singleton Pattern for the Tributary Cluster.
 
 Generics:
 - Type Flexibility: The system uses Java generics to handle messages of any type, making the system able to adapt to different data types without duplicating code.
+    - This will be implemented using the Factory Pattern to create Objects of differing types.
 
 ### Initial UML Diagram
 
@@ -100,14 +100,37 @@ Usability Checklist: Using the command line interface, the checklist will be run
 
 ### Development Approach
 **Adopting a component-driven approach**
-- Basically testing each component individually and then integrating them together to form the final system. Much better to test overall usability and functionality.
+- Basically integrating each components individually and then testing them together to form the final system. Much better to test overall usability and functionality.
 
 ## Video Demo - Task 2
 [Youtube Video](https://youtu.be/KzwQWZhSc6M)
 
 ## Final Design and Reflection - Task 3
-### Final Usability Test List
+
+### Overview of Testing choices
+**Usability Tests**
 [UsabilityTests.md](Blogging&Design/usability_tests.md)
+- Usability test were my initial form of testing the systems functionality and usability.
+- It was a simple way of seeing if the programme worked as I intended it to and if the programme was user friendly and if the commands were easy to understand and use.
+- This was the main form of testing before I implemented the JUnit tests and Mockito tests.
+
+**JUnit Tests**
+- I've relied extensively on JUnit to validate the Tributary system's integrity and functionality. 
+- ensured that each component behaves as expected, whether it's managing messages within topics or processing them through consumers. 
+- Verified that all parts of the system integrate seamlessly and perform their roles without issues. 
+- The granularity of these tests helps pinpoint where adjustments are necessary
+    - provided clear pathway to refine and enhance the system's stability if there where any errors.
+- Had an advantage over usability tests as it was more detailed and could test the system in a more controlled environment.
+    - Some things that were picked up by the JUnit tests were:
+        - IOExceptions were not caught properly
+        - Certain files (the JSON files) were not being created properly because the testing environment couldn't reach them
+        - Certain commands were not being processed properly (like the consume event command)
+
+**Mockito Testing**
+- Mockito was a key step for isolating components and simplifying the testing of complex interactions within the Tributary system.
+-  By using mocks, I was able to simulate behaviors of intricate system interactions in isolation, focusing on specific areas without the overhead of full system operations. 
+- Was particularly effective for testing the main controller operationg by makign a mock cluster:
+    - easier to identify and address potential issues in the architecture.
 
 ### Overview of Design Patterns Used
 **Singleton Pattern for TributaryCluster:**
@@ -157,5 +180,5 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - I would have liked to have more time to implement and a bit more guidance because I really felt at times I was just winging it and on my own.
 - I also struggled with the UML diagrams and actually starting this project (felt like jumping off a cliff headfirst)
 - Unfortunately 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
-    - Edit: Will be implementing JUnit tests from 28/05/2024
+    - Edit: Will be implementing JUnit and Mockito tests from 28/05/2024
 - However I am proud of the fact that I got through to the end, with the help of the ed forum, and I will be using this project as a threshold for my ability and motivation in the future.

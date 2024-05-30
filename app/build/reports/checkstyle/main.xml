@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <checkstyle version="10.3.3">
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/main/java/tributary/core/TributaryController.java">
-<error line="147" column="118" severity="error" message="&apos;{&apos; is not preceded with whitespace." source="com.puppycrawl.tools.checkstyle.checks.whitespace.WhitespaceAroundCheck"/>
-<error line="196" severity="error" message="Line has trailing spaces." source="com.puppycrawl.tools.checkstyle.checks.regexp.RegexpSinglelineCheck"/>
 </file>
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/main/java/tributary/core/tributaryFactory/IntegerFactory.java">
-<error line="68" column="118" severity="error" message="&apos;{&apos; is not preceded with whitespace." source="com.puppycrawl.tools.checkstyle.checks.whitespace.WhitespaceAroundCheck"/>
 </file>
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/main/java/tributary/core/tributaryFactory/StringFactory.java">
-<error line="68" column="118" severity="error" message="&apos;{&apos; is not preceded with whitespace." source="com.puppycrawl.tools.checkstyle.checks.whitespace.WhitespaceAroundCheck"/>
 </file>
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/main/java/tributary/core/tributaryFactory/ObjectFactory.java">
-<error line="36" severity="error" message="Line has trailing spaces." source="com.puppycrawl.tools.checkstyle.checks.regexp.RegexpSinglelineCheck"/>
 </file>
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/main/java/tributary/core/rebalancingStrategy/RebalancingStrategy.java">
 </file>

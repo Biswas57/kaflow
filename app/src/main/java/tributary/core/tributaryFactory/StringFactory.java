@@ -61,17 +61,17 @@ public class StringFactory extends ObjectFactory {
         }
         getCluster().addProducer(producer);
         System.out.println("Created producer with ID: " + producerId
-                    + " that produces String events with " + allocation + " allocation\n");
+                + " that produces String events with " + allocation + " allocation\n");
     }
 
     @Override
-    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException{
-            JSONObject messageJsonObject = new JSONObject(
-                    Files.readString(Paths.get("messageConfigs/" + eventId + ".json")));
-            @SuppressWarnings("unchecked")
-            Producer<String> producer = (Producer<String>) getCluster().getProducer(producerId);
-            @SuppressWarnings("unchecked")
-            Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
-            producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);
+    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException {
+        JSONObject messageJsonObject = new JSONObject(
+                Files.readString(Paths.get("messageConfigs/" + eventId + ".json")));
+        @SuppressWarnings("unchecked")
+        Producer<String> producer = (Producer<String>) getCluster().getProducer(producerId);
+        @SuppressWarnings("unchecked")
+        Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+        producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);
     }
 }

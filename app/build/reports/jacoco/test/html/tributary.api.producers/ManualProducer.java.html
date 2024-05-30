@@ -16,11 +16,11 @@ public class ManualProducer&lt;T&gt; extends Producer&lt;T&gt; {
 <span class="fc bfc" id="L16" title="All 2 branches covered.">            if (p.getId().equals(partitionId)) {</span>
 <span class="pc bpc" id="L17" title="1 of 2 branches missed.">                if (p.listMessages().contains(message)) {</span>
 <span class="nc" id="L18">                    System.out.println(&quot;Message &quot; + message.getId() + &quot; already exists in &quot;</span>
-                                        + partitionId + &quot; partition&quot;);
+                            + partitionId + &quot; partition&quot;);
                 }
 <span class="fc" id="L21">                p.addMessage(message);</span>
 <span class="fc" id="L22">                System.out.println(&quot;The event: &quot; + message.getId() + &quot; has been manually allocated to partition &quot;</span>
-                                    + partitionId + &quot;\n&quot;);
+                        + partitionId + &quot;\n&quot;);
 <span class="fc" id="L24">                return;</span>
             }
 <span class="fc" id="L26">        }</span>

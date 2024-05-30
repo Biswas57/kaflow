@@ -29,24 +29,24 @@ public class TributaryCLI {
         String[] parts = input.split(" ");
         String command = parts[0];
         switch (command) {
-        case "create":
-            handler.handleCreateCommand(parts);
-            break;
-        case "delete":
-            handler.handleDeleteCommand(parts);
-            break;
-        case "show":
-            handler.handleShowCommand(parts);
-            break;
-        case "consume":
-            handler.handleConsumeCommand(parts);
-            break;
-        case "update":
-            handler.handleUpdateCommand(parts);
-            break;
-        default:
-            System.out.println("Invalid command.\n");
-            break;
+            case "create":
+                handler.handleCreateCommand(parts);
+                break;
+            case "delete":
+                handler.handleDeleteCommand(parts);
+                break;
+            case "show":
+                handler.handleShowCommand(parts);
+                break;
+            case "consume":
+                handler.handleConsumeCommand(parts);
+                break;
+            case "update":
+                handler.handleUpdateCommand(parts);
+                break;
+            default:
+                System.out.println("Invalid command.\n");
+                break;
         }
 
     }

@@ -30,7 +30,7 @@ public class TributaryTestSimple {
     public void tearDown() {
         TributaryCluster.setInstance(null);
     }
-    
+
     /*
      * This is a test I have made for testing the creation of 1 of
      * everything in the Tributary Structure
@@ -53,8 +53,7 @@ public class TributaryTestSimple {
 
         controller.createConsumer("bananaChefs", "beginnerChef");
         controller.createConsumer("bananaChefs", "deleteBeginnerChef");
-        assertEquals(cluster.getConsumerGroup("bananaChefs").listConsumers().size(), 2);{
-        
+        assertEquals(cluster.getConsumerGroup("bananaChefs").listConsumers().size(), 2);
         assertThrows(IOException.class, () -> {
             controller.createEvent("bananaBoiler", "banana", "noBanana", "bananaCookingMethods");
         });
@@ -63,32 +62,34 @@ public class TributaryTestSimple {
         assertDoesNotThrow(() -> {
             controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingMethods");
         });
-        assertEquals(1 , cluster.getTopic("banana").getPartition("bananaCookingMethods").listMessages().size());
+        assertEquals(1, cluster.getTopic("banana").getPartition("bananaCookingMethods").listMessages().size());
 
         controller.createProducer("bananaFrier", "string", "manual");
         assertDoesNotThrow(() -> {
             controller.createEvent("bananaFrier", "banana", "fryBanana", "bananaCookingStyles");
         });
-        assertEquals(1 , cluster.getTopic("banana").getPartition("bananaCookingStyles").listMessages().size());
-
+        assertEquals(1, cluster.getTopic("banana").getPartition("bananaCookingStyles").listMessages().size());
 
         assertAll(
-            "Partition assignment should be equal before Consumer deletion",
-            () -> assertEquals(cluster.getConsumerGroup("bananaChefs")
-                    .getConsumer("beginnerChef").listAssignedPartitions().size(), 1),
-            () -> assertEquals(cluster.getConsumerGroup("bananaChefs")
-                    .getConsumer("deleteBeginnerChef").listAssignedPartitions().size(), 1)
-        );
+                "Partition assignment should be equal before Consumer deletion",
+                () -> assertEquals(cluster.getConsumerGroup("bananaChefs")
+                        .getConsumer("beginnerChef").listAssignedPartitions().size(), 1),
+                () -> assertEquals(cluster.getConsumerGroup("bananaChefs")
+                        .getConsumer("deleteBeginnerChef").listAssignedPartitions().size(), 1));
 
-        // After deleting the consumer, the partition should be reassigned to the other consumer (ie. rebalanced using the Observer Patter)
+        // After deleting the consumer, the partition should be reassigned to the other
+        // consumer (ie. rebalanced using the Observer Patter)
         controller.deleteConsumer("deleteBeginnerChef");
-        assertEquals(cluster.getConsumerGroup("bananaChefs").getConsumer("beginnerChef").listAssignedPartitions().size(), 2);
+        assertEquals(
+                cluster.getConsumerGroup("bananaChefs").getConsumer("beginnerChef").listAssignedPartitions().size(),
+                2);
 
         controller.showTopic("banana");
         Partition<String> partition = (Partition<String>) controller.findPartition("bananaCookingMethods");
         Consumer<String> consumer = (Consumer<String>) controller.findConsumer("beginnerChef");
 
-        // Partition offset starts at -1 because list of Messages in Partition are 0 indexed
+        // Partition offset starts at -1 because list of Messages in Partition are 0
+        // indexed
         assertEquals(consumer.getOffset(partition), -1);
 
         controller.consumeEvents("beginnerChef", "bananaCookingMethods", 1);
@@ -97,6 +98,5 @@ public class TributaryTestSimple {
         // offset stays at 0 because there is only 1 message in the partition
         controller.consumeEvents("beginnerChef", "bananaCookingMethods", 1);
         assertEquals(consumer.getOffset(partition), 0);
-        }
     }
 }

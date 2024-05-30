@@ -2,16 +2,8 @@
 <checkstyle version="10.3.3">
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/test/java/tributary/TributaryMockTest.java">
 </file>
-<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/test/java/tributary/TributaryTest.java">
-<error line="31" severity="error" message="Line has trailing spaces." source="com.puppycrawl.tools.checkstyle.checks.regexp.RegexpSinglelineCheck"/>
-<error line="53" column="88" severity="error" message="&apos;;&apos; is not followed by whitespace." source="com.puppycrawl.tools.checkstyle.checks.whitespace.WhitespaceAfterCheck"/>
-<error line="53" column="89" severity="error" message="&apos;{&apos; is not preceded with whitespace." source="com.puppycrawl.tools.checkstyle.checks.whitespace.WhitespaceAroundCheck"/>
-<error line="53" column="89" severity="error" message="Avoid nested blocks." source="com.puppycrawl.tools.checkstyle.checks.blocks.AvoidNestedBlocksCheck"/>
-<error line="54" severity="error" message="Line has trailing spaces." source="com.puppycrawl.tools.checkstyle.checks.regexp.RegexpSinglelineCheck"/>
-<error line="62" column="24" severity="error" message="&apos;,&apos; is preceded with whitespace." source="com.puppycrawl.tools.checkstyle.checks.whitespace.NoWhitespaceBeforeCheck"/>
-<error line="68" column="24" severity="error" message="&apos;,&apos; is preceded with whitespace." source="com.puppycrawl.tools.checkstyle.checks.whitespace.NoWhitespaceBeforeCheck"/>
-<error line="79" severity="error" message="Line is longer than 120 characters (found 139)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
-<error line="81" severity="error" message="Line is longer than 120 characters (found 125)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
-<error line="88" severity="error" message="Line has trailing spaces." source="com.puppycrawl.tools.checkstyle.checks.regexp.RegexpSinglelineCheck"/>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/test/java/tributary/TributaryTestSimple.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/test/java/tributary/TributaryTestComplex.java">
 </file>
 </checkstyle>

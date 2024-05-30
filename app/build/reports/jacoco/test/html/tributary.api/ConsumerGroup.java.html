@@ -21,15 +21,15 @@ public class ConsumerGroup&lt;T&gt; extends TributaryObject {
 
     public void setRebalancingMethod(String rebalanceMethod) {
 <span class="pc bpc" id="L23" title="1 of 3 branches missed.">        switch (rebalanceMethod) {</span>
-        case &quot;roundrobin&quot;:
-<span class="fc" id="L25">            this.rebalanceMethod = new RoundRobinStrategy&lt;&gt;();</span>
-<span class="fc" id="L26">            break;</span>
-        case &quot;range&quot;:
-<span class="fc" id="L28">            this.rebalanceMethod = new RangeStrategy&lt;&gt;();</span>
-<span class="fc" id="L29">            break;</span>
-        default:
-<span class="nc" id="L31">            System.out.println(&quot;Unknown rebalancing strategy: &quot; + rebalanceMethod);</span>
-            break;
+            case &quot;roundrobin&quot;:
+<span class="fc" id="L25">                this.rebalanceMethod = new RoundRobinStrategy&lt;&gt;();</span>
+<span class="fc" id="L26">                break;</span>
+            case &quot;range&quot;:
+<span class="fc" id="L28">                this.rebalanceMethod = new RangeStrategy&lt;&gt;();</span>
+<span class="fc" id="L29">                break;</span>
+            default:
+<span class="nc" id="L31">                System.out.println(&quot;Unknown rebalancing strategy: &quot; + rebalanceMethod);</span>
+                break;
         }
 <span class="fc" id="L34">    }</span>
 

@@ -30,7 +30,8 @@ public class TributaryController {
     }
 
     /*
-     * All Helper methods involved in the the creation, deletion and manipulation of Tributary objects.
+     * All Helper methods involved in the the creation, deletion and manipulation of
+     * Tributary objects.
      */
     public Topic<?> getTopic(String topicId) {
         Topic<?> topic = tributaryCluster.getTopic(topicId);
@@ -152,7 +153,7 @@ public class TributaryController {
         objectFactory.createProducer(producerId, type, allocation);
     }
 
-    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException{
+    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException {
         Producer<?> producer = getProducer(producerId);
         Topic<?> topic = getTopic(topicId);
         if (producer == null || topic == null) {
@@ -167,10 +168,10 @@ public class TributaryController {
         objectFactory.createEvent(producerId, topicId, eventId, partitionId);
     }
 
-
     /*
      * The delete consumer method is the only delete method so far.
-     * This was to demonstrate the ability for consumer groups to automatially rebalance once a consumer is deleted.
+     * This was to demonstrate the ability for consumer groups to automatially
+     * rebalance once a consumer is deleted.
      * Simple demonstration of the Observer Pattern implemented
      * Ther is no added functionality when deleting other tributary objects.
      */
@@ -180,8 +181,10 @@ public class TributaryController {
 
     /*
      * Show the entirety of Topic and ConsumerGroup objects.
-     * Consumer Groups will show the group, the consumers and the partitions assigned to each consumer.
-     * Topics will show the topic, the partitions and the respective events in order of consumption in eahc partition.
+     * Consumer Groups will show the group, the consumers and the partitions
+     * assigned to each consumer.
+     * Topics will show the topic, the partitions and the respective events in order
+     * of consumption in eahc partition.
      */
     public void showTopic(String topicId) {
         Topic<?> topic = tributaryCluster.getTopic(topicId);
@@ -201,11 +204,10 @@ public class TributaryController {
         }
     }
 
-    
-
     /*
      * Consume events from a partition. The number of events to consume is specified
      * by numberOfEvents.
+     * The consumer must be assigned to the partition.
      * @precondition: The consumer must be assigned to the partition.
      */
     public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
@@ -262,6 +264,6 @@ public class TributaryController {
         group.setRebalancingMethod(rebalancing);
         group.rebalance();
         System.out.println("Updated the rebalancing strategy for the "
-                            + groupId + " group to " + rebalancing + " rebalancing\n");
+                + groupId + " group to " + rebalancing + " rebalancing\n");
     }
 }
