@@ -127,7 +127,8 @@ Usability Checklist: Using the command line interface, the checklist will be run
         - Certain commands were not being processed properly (like the consume event command)
 
 **Mockito Testing**
-- Mockito was a key step for isolating components and simplifying the testing of complex interactions within the Tributary system.
+- Mockito was a key step for isolating components and simplifying the testing of complex interactions within the Tributary systems
+       - Used in addition to JUnit tests when certain parts of the Tributary cluster5 were unfinished
 -  By using mocks, I was able to simulate behaviors of intricate system interactions in isolation, focusing on specific areas without the overhead of full system operations. 
 - Was particularly effective for testing the main controller operationg by makign a mock cluster:
     - easier to identify and address potential issues in the architecture.
