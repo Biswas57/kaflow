@@ -7,6 +7,7 @@ This library is based on a heavily simplified version of the event streaming inf
 
 The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel. However, our library will allow for more complex interactions than simply that of a single channel.
 
+## Structure
 A **Tributary Cluster** contains a series of **topics**. A topic contains events which are logically grouped together. For example, a cluster could contain two topics: one for images-related events and one for video-related events. You can think of them like a table in a database or a folder in a file system.
 
 <img src="images/tributaryClusterExample.png" width="400px" />
