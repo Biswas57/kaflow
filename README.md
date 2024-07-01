@@ -18,17 +18,17 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 
 **General Structure of System**
 1. Content Structure:
-       Tributary Cluster -> Topics -> Partitions -> Messages
+       Tributary Cluster -> Topics -> Partitions -> Messages.
 2. Consumer Structure:
-       Tributary Cluster -> Consumer Groups -> Consumers
+       Tributary Cluster -> Consumer Groups -> Consumers.
 4. Producer Structure:
-       Tributary Cluster -> Producers (are their own thing and inside Tributary Cluster)
+       Tributary Cluster -> Producers.
 
 - **Tributary Cluster:** The top-level singleton component that covers the entire system.
     - **Topics:** Categories or channels within the Tributary Cluster where messages are allocated based on their content or purpose.
         - **Partitions:** Subsets within each topic where messages are stored.
             - Partitions help in distributing the data load and allow for parallel processing.
-            - **Producers:** Entities that publish messages to specific partitions within topics.
+            - **Producers:** Entities that publish messages to specific partitions within a singular.
                 - **Messages:** Include a timestamp, an identifier, payload type, a key, and the actual data (value).
             - **Consumer Groups:** these are groups of consumers that work together to process messages from all partitions of a topic.
                 - **Consumers:** Individuals within consumer groups who actually process the messages.
@@ -195,4 +195,4 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - I also struggled with the UML diagrams and actually starting this project (felt like jumping off a cliff headfirst)
 - Unfortunately 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
     - Edit: Will be implementing JUnit and Mockito tests from 28/05/2024
-- However I am proud of the fact that I got through to the end, with the help of the ed forum, and I will be using this project as a threshold for my ability and motivation in the future.
+- However I am proud of the fact that I got through to the end, with the help of a specific course at UNSW's ed forum, and I will be using this project as a threshold for my ability and motivation in the future.
