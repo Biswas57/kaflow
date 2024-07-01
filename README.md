@@ -6,10 +6,11 @@ This library is based on a heavily simplified version of the event streaming inf
 
 The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel. However, our library allowed for more complex interactions than simply that of a single channel. In this Project, I accomplished the following achievements:
 
-- Constructed a Multi-Type Event Processing System API in Java, with parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
-- Incorporated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize event production consumption, and Strategy & Observer patterns to streamline event allocation.
-- Achieved \(\sim\)85% testing coverage by conducting over 75 tests in JUnit and Mockito to ensure system reliability.
-- Designed a message replay feature to allow events to be replayed from specific offsets, enabling error checking and correction without compromising system performance.
+- Constructed a Tributary Event Processing API, emulating Apache Kafka's Event Processing Platform in Java, with a function CLI, parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
+- Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
+- Achieved an 85% test coverage by conducting ∼75 tests in JUnit and Mockito to ensure the system’s reliability.
+- Designed a message replay feature that allows Events to be replayed from specific offsets, enabling error checking and correction without compromising the system’s performance.
+- Developed a dynamic event rebalancing mechanism, called Range and Round Robin Strategies within Consumer Groups, which honed my skills in algorithmic design
 
 
 ### Analysis of Engineering Requirements
