@@ -4,7 +4,7 @@ Event-Driven Architecture makes up much of the backbone of modern software. With
 
 This library is based on a heavily simplified version of the event streaming infrastructure [Apache Kafka](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this Project.
 
-The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel. However, our library allowed for more complex interactions than simply that of a single channel. In this Project, I accomplished the following achievements:
+The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, in other words a Tributary. However, our library allowed for more complex interactions than simply that of a single channel. In this Project, I accomplished the following achievements:
 
 - Constructed a Tributary Event Processing API, emulating Apache Kafka's Event Processing Platform in Java, with a function CLI, parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
 - Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
