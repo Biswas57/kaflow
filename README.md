@@ -1,7 +1,5 @@
 # Tributary System Design and Implementation Blog
-## Project Overview
-
-## Preliminary Design - Task 1
+## Task 1: Project Overview 
 ### Analysis of Engineering Requirements
 **NOTE:** A complete visual overview of the entire system is showcased in the final [UML Diagram](Blogging&Design/final_design.pdf) and a more extensive overview of the inspiration and functionality of the system can be found in the [Engineering Requirements](Engineering_Requirements.md)
 
