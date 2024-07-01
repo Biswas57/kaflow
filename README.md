@@ -1,5 +1,17 @@
 # Tributary System Design and Implementation Blog
-## Task 1: Project Overview 
+## Task 1: Project Overview
+Event-Driven Architecture makes up much of the backbone of modern software. With a move towards decentralised microservice systems, there is a need for scalable asynchronous communication between software components.
+
+This library is based on a heavily simplified version of the event streaming infrastructure [Apache Kafka](https://kafka.apache.org/), No understanding of Kafka is required to understand these engineering requirements
+
+The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel. However, our library allowed for more complex interactions than simply that of a single channel. In this Project, I accomplished the following achievements:
+
+- Constructed a Multi-Type Event Processing System API in Java, with parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
+- Incorporated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize event production consumption, and Strategy & Observer patterns to streamline event allocation.
+- Achieved \(\sim\)85% testing coverage by conducting over 75 tests in JUnit and Mockito to ensure system reliability.
+- Designed a message replay feature to allow events to be replayed from specific offsets, enabling error checking and correction without compromising system performance.
+
+
 ### Analysis of Engineering Requirements
 **NOTE:** A complete visual overview of the entire system is showcased in the final [UML Diagram](Blogging&Design/final_design.pdf) and a more extensive overview of the inspiration and functionality of the system can be found in the [Engineering Requirements](Engineering_Requirements.md)
 
