@@ -14,7 +14,7 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 
 
 ### Analysis of Engineering Requirements
-**NOTE:** A complete visual overview of the entire system is showcased in the final [UML Diagram](Blogging&Design/final_design.pdf) and a more extensive overview of the inspiration and functionality of the system can be found in the [Engineering Requirements](Engineering_Requirements.md)
+**NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [final UML Diagram](Blogging&Design/final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [Engineering Requirements](Engineering_Requirements.md)
 
 **General Structure of System**
 1. Content Structure:
