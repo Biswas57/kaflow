@@ -2,7 +2,7 @@
 ## Task 1: Project Overview
 Event-Driven Architecture makes up much of the backbone of modern software. With a move towards decentralised microservice systems, there is a need for scalable asynchronous communication between software components.
 
-This library is based on a heavily simplified version of the event streaming infrastructure [Apache Kafka](https://kafka.apache.org/), No understanding of Kafka is required to understand these engineering requirements
+This library is based on a heavily simplified version of the event streaming infrastructure [Apache Kafka](https://kafka.apache.org/), No understanding of Kafka is required to understand this Project
 
 The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel. However, our library allowed for more complex interactions than simply that of a single channel. In this Project, I accomplished the following achievements:
 
