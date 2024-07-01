@@ -3,7 +3,7 @@
 
 ## Preliminary Design - Task 1
 ### Analysis of Engineering Requirements
-**NOTE:** A complete visual overview of the entire system is showcased in the final [UML Diagram](Blogging&Design/final_design.pdf) and a more extensive overview of the inspiration and functionality of the system can be found in the [Engineering_Requirements](Engineering_Requirements.md)
+**NOTE:** A complete visual overview of the entire system is showcased in the final [UML Diagram](Blogging&Design/final_design.pdf) and a more extensive overview of the inspiration and functionality of the system can be found in the [Engineering Requirements](Engineering_Requirements.md)
 
 **General Structure of System**
 1. Content Structure:
