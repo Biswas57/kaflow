@@ -1,4 +1,4 @@
-# Tributary System Design and Implementation Blog
+# Tributary Cluster Design and Implementation Blog
 ## Task 1: Project Overview
 Event-Driven Architecture makes up much of the backbone of modern software. With a move towards decentralised microservice systems, there is a need for scalable asynchronous communication between software components.
 
