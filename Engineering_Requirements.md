@@ -323,7 +323,7 @@ As an **example** of what commands your CLI may provide, the following table has
   </tr>
   <tr>
     <td>
-      <code> parallel consume (&lt;consumer&gt;, &lt;partition&gt;) </code>
+      <code> parallel consume (&lt;consumer&gt;, &lt;partition&gt;), ... </code>
     </td>
     <td>
       <ul>
@@ -352,7 +352,7 @@ As an **example** of what commands your CLI may provide, the following table has
   </tr>
   <tr>
     <td>
-      <code>playback &lt;consumer&gt; &lt;partition&gt; &lt;offset&gt;</code>
+      <code>update consumer offset &lt;consumer&gt; &lt;partition&gt; &lt;offset&gt;</code>
     </td>
     <td>
       <ul>

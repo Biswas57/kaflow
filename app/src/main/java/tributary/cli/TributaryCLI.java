@@ -44,6 +44,8 @@ public class TributaryCLI {
             case "update":
                 handler.handleUpdateCommand(parts);
                 break;
+            case "parallel":
+                handler.handleParallelCommand(parts);
             default:
                 System.out.println("Invalid command.\n");
                 break;

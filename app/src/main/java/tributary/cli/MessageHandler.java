@@ -3,6 +3,7 @@ package tributary.cli;
 import java.io.IOException;
 
 import tributary.core.TributaryController;
+import java.util.Arrays;
 
 public class MessageHandler {
     private TributaryController controller;
@@ -93,10 +94,28 @@ public class MessageHandler {
             case "consumer":
                 if (parts[2].equals("group") && parts[3].equals("rebalancing")) {
                     controller.updateRebalancing(parts[4], parts[5].toLowerCase());
+                } else if (parts[2].equals("offset")) {
+                    // change later
+                    controller.updateConsumerOffset(parts[3], parts[4], parts[5]);
                 }
                 break;
             default:
                 System.out.println("Unknown update command: " + subcommand);
+                break;
+        }
+    }
+
+    public void handleParallelCommand(String[] parts) {
+        String subcommand = parts[1].toLowerCase();
+        switch (subcommand) {
+            case "produce":
+                controller.parallelProduce(Arrays.copyOfRange(parts, 2, parts.length));
+                break;
+            case "consume":
+                controller.parallelConsume(Arrays.copyOfRange(parts, 2, parts.length));
+                break;
+            default:
+                System.out.println("Unknown parallel command: " + subcommand);
                 break;
         }
     }
