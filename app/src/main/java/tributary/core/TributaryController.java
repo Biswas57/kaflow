@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import tributary.api.Consumer;
 import tributary.api.ConsumerGroup;
@@ -11,6 +14,7 @@ import tributary.api.Message;
 import tributary.api.Partition;
 import tributary.api.Topic;
 import tributary.api.TributaryCluster;
+import tributary.api.producers.ManualProducer;
 import tributary.api.producers.Producer;
 import tributary.core.tributaryFactory.IntegerFactory;
 import tributary.core.tributaryFactory.ObjectFactory;
@@ -97,6 +101,15 @@ public class TributaryController {
         return specifiedPartition;
     }
 
+    private boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     public ObjectFactory getFactory() {
         return objectFactory;
     }
@@ -153,7 +166,8 @@ public class TributaryController {
         objectFactory.createProducer(producerId, type, allocation);
     }
 
-    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException {
+    public synchronized void createEvent(String producerId, String topicId, String eventId, String partitionId)
+            throws IOException {
         Producer<?> producer = getProducer(producerId);
         Topic<?> topic = getTopic(topicId);
         if (producer == null || topic == null) {
@@ -164,8 +178,10 @@ public class TributaryController {
             return;
         }
 
-        setObjectFactoryType(topic.getType());
-        objectFactory.createEvent(producerId, topicId, eventId, partitionId);
+        synchronized (topic) {
+            setObjectFactoryType(topic.getType());
+            objectFactory.createEvent(producerId, topicId, eventId, partitionId);
+        }
     }
 
     /*
@@ -207,8 +223,7 @@ public class TributaryController {
     /*
      * Consume events from a partition. The number of events to consume is specified
      * by numberOfEvents.
-     * The consumer must be assigned to the partition.
-     * @precondition: The consumer must be assigned to the partition.
+     * The consumer must be assigned to the partition to consume events.
      */
     public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
         Consumer<?> consumer = findConsumer(consumerId);
@@ -225,21 +240,26 @@ public class TributaryController {
         Topic<?> topic = getTopic(topicId);
 
         if (topic.getType().equals(Integer.class)) {
-            @SuppressWarnings("unchecked")
-            Consumer<Integer> intConsumer = (Consumer<Integer>) consumer;
-            @SuppressWarnings("unchecked")
-            Partition<Integer> intPartition = (Partition<Integer>) partition;
-            consumeHelper(Integer.class, intConsumer, intPartition, numberOfEvents);
+            consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);
         } else if (topic.getType().equals(String.class)) {
-            @SuppressWarnings("unchecked")
-            Consumer<String> strConsumer = (Consumer<String>) consumer;
-            @SuppressWarnings("unchecked")
-            Partition<String> strPartition = (Partition<String>) partition;
-            consumeHelper(String.class, strConsumer, strPartition, numberOfEvents);
+            consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);
+        } else {
+            System.out.println("Unsupported type: " + topic.getType().getSimpleName() + "\n");
         }
     }
 
-    public <T> void consumeHelper(Class<T> type, Consumer<T> consumer, Partition<T> partition, int numberOfEvents) {
+    private <T> void consumeEventsGeneric(Consumer<?> consumer, Partition<?> partition, Class<T> type,
+            int numberOfEvents) {
+        @SuppressWarnings("unchecked")
+        Consumer<T> typedConsumer = (Consumer<T>) consumer;
+        @SuppressWarnings("unchecked")
+        Partition<T> typedPartition = (Partition<T>) partition;
+        synchronized (typedPartition) {
+            consumeHelper(typedConsumer, typedPartition, numberOfEvents);
+        }
+    }
+
+    private <T> void consumeHelper(Consumer<T> consumer, Partition<T> partition, int numberOfEvents) {
         List<Message<T>> messages = partition.listMessages();
         int currentOffset = consumer.getOffset(partition);
         int count = 0;
@@ -257,7 +277,7 @@ public class TributaryController {
 
     /*
      * Update the rebalancing strategy for a consumer group.
-     * Only update method so far
+     * Update the Offset of a consumer to allow for message replay.
      */
     public void updateRebalancing(String groupId, String rebalancing) {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
@@ -265,5 +285,140 @@ public class TributaryController {
         group.rebalance();
         System.out.println("Updated the rebalancing strategy for the "
                 + groupId + " group to " + rebalancing + " rebalancing\n");
+    }
+
+    public void updateConsumerOffset(String consumerId, String partitionId, int offset) {
+        Consumer<?> consumer = findConsumer(consumerId);
+        Partition<?> partition = findPartition(partitionId);
+        Topic<?> topic = getTopic(partition.getAllocatedTopicId());
+
+        if (consumer == null || partition == null || topic == null) {
+            System.out.println("Consumer, partition, or topic not found.\n");
+            return;
+        }
+
+        if (topic.getType().equals(Integer.class)) {
+            updateConsumerOffsetGeneric(consumer, partition, Integer.class, offset);
+        } else if (topic.getType().equals(String.class)) {
+            updateConsumerOffsetGeneric(consumer, partition, String.class, offset);
+        } else {
+            System.out.println("Unsupported type: " + topic.getType().getSimpleName() + "\n");
+        }
+    }
+
+    private <T> void updateConsumerOffsetGeneric(Consumer<?> consumer, Partition<?> partition, Class<T> type,
+            int offset) {
+        @SuppressWarnings("unchecked")
+        Consumer<T> typedConsumer = (Consumer<T>) consumer;
+        @SuppressWarnings("unchecked")
+        Partition<T> typedPartition = (Partition<T>) partition;
+        updateConsumerOffset(typedConsumer, typedPartition, offset);
+    }
+
+    private <T> void updateConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
+        consumer.updateOffset(partition, offset);
+    }
+
+    /*
+     * All parallel operations.
+     * Parallel produce events.
+     * Parallel consume events in a partition.
+     * Parallel operations demonstrate the system's ability to hand multiple
+     * concurrent threads.
+     */
+
+    public void parallelProduce(String[] parts) {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        for (int i = 0; i < parts.length;) {
+            String producerId = parts[i];
+            String topicId = parts[i + 1];
+            String eventFile = parts[i + 2];
+
+            Producer<?> producer = getProducer(producerId);
+            Topic<?> topic = getTopic(topicId);
+            if (producer == null || topic == null) {
+                System.out.println("Producer " + producerId + " or topic " + topicId + " not found.\n");
+                break;
+            } else if (!topic.getType().equals(producer.getType())) {
+                System.out.println("Producer " + producerId + " type does not match Topic " + topicId + " type.\n");
+                break;
+            }
+
+            String partitionId = null;
+            if (producer instanceof ManualProducer) {
+                if (i + 3 < parts.length) {
+                    partitionId = parts[i + 3];
+                    if (findPartition(partitionId) == null) {
+                        System.out.println("Partition " + partitionId + " not found.\n");
+                        break;
+                    }
+                    i += 4;
+                } else {
+                    System.out.println("Insufficient parameters for manual producer " + producerId + "\n");
+                    break;
+                }
+            } else {
+                i += 3;
+            }
+
+            final String finalPartitionId = partitionId;
+            executorService.submit(() -> {
+                try {
+                    createEvent(producerId, topicId, eventFile, finalPartitionId);
+                } catch (IOException e) {
+                    System.out.println("Error producing event: " + e.getMessage());
+                }
+            });
+        }
+
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            System.out.println("Parallel produce interrupted: " + e.getMessage());
+        }
+    }
+
+    public void parallelConsume(String[] parts) {
+        ExecutorService executorService = Executors.newFixedThreadPool(parts.length / 2);
+
+        for (int i = 0; i < parts.length;) {
+            String consumerId = parts[i];
+            String partitionId = parts[i + 1];
+
+            Consumer<?> consumer = findConsumer(consumerId);
+            Partition<?> partition = findPartition(partitionId);
+            Topic<?> topic = getTopic(partition.getAllocatedTopicId());
+            int currentOffset = parallelConsumerOffset(consumer, partition, topic.getType());
+            int partitionSize = partition.listMessages().size();
+
+            int numberOfEvents = partitionSize - currentOffset - 1;
+
+            if (parts.length > i + 2 && isInteger(parts[i + 2])) {
+                numberOfEvents = Integer.parseInt(parts[i + 2]);
+                i += 3;
+            } else {
+                i += 2;
+            }
+
+            final int finalNumberOfEvents = numberOfEvents;
+            executorService.submit(() -> consumeEvents(consumerId, partitionId, finalNumberOfEvents));
+        }
+
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            System.out.println("Parallel consume interrupted: " + e.getMessage());
+        }
+    }
+
+    private <T> int parallelConsumerOffset(Consumer<?> consumer, Partition<?> partition, Class<T> type) {
+        @SuppressWarnings("unchecked")
+        Consumer<T> typedConsumer = (Consumer<T>) consumer;
+        @SuppressWarnings("unchecked")
+        Partition<T> typedPartition = (Partition<T>) partition;
+        return typedConsumer.getOffset(typedPartition);
     }
 }

@@ -208,63 +208,100 @@ public class TributaryController {
      * Consume events from a partition. The number of events to consume is specified
      * by numberOfEvents.
      * The consumer must be assigned to the partition.
+     * 
      * @precondition: The consumer must be assigned to the partition.
      */
     public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
-<span class="fc" id="L214">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
-<span class="fc" id="L215">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
-<span class="pc bpc" id="L216" title="2 of 4 branches missed.">        if (consumer == null || partition == null) {</span>
-<span class="nc" id="L217">            System.out.println(&quot;Consumer &quot; + consumerId + &quot; or partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
-<span class="nc" id="L218">            return;</span>
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        } else if (!consumer.listAssignedPartitions().contains(partition)) {</span>
-<span class="nc" id="L220">            System.out.println(&quot;Consumer is not assigned to the partition.\n&quot;);</span>
-<span class="nc" id="L221">            return;</span>
+<span class="fc" id="L215">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="fc" id="L216">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="pc bpc" id="L217" title="2 of 4 branches missed.">        if (consumer == null || partition == null) {</span>
+<span class="nc" id="L218">            System.out.println(&quot;Consumer &quot; + consumerId + &quot; or partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L219">            return;</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">        } else if (!consumer.listAssignedPartitions().contains(partition)) {</span>
+<span class="nc" id="L221">            System.out.println(&quot;Consumer is not assigned to the partition.\n&quot;);</span>
+<span class="nc" id="L222">            return;</span>
         }
 
-<span class="fc" id="L224">        String topicId = partition.getAllocatedTopicId();</span>
-<span class="fc" id="L225">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="fc" id="L225">        String topicId = partition.getAllocatedTopicId();</span>
+<span class="fc" id="L226">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
 
-<span class="fc bfc" id="L227" title="All 2 branches covered.">        if (topic.getType().equals(Integer.class)) {</span>
-            @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L229">            Consumer&lt;Integer&gt; intConsumer = (Consumer&lt;Integer&gt;) consumer;</span>
-            @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L231">            Partition&lt;Integer&gt; intPartition = (Partition&lt;Integer&gt;) partition;</span>
-<span class="fc" id="L232">            consumeHelper(Integer.class, intConsumer, intPartition, numberOfEvents);</span>
-<span class="pc bpc" id="L233" title="1 of 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
-            @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L235">            Consumer&lt;String&gt; strConsumer = (Consumer&lt;String&gt;) consumer;</span>
-            @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L237">            Partition&lt;String&gt; strPartition = (Partition&lt;String&gt;) partition;</span>
-<span class="fc" id="L238">            consumeHelper(String.class, strConsumer, strPartition, numberOfEvents);</span>
-        }
-<span class="fc" id="L240">    }</span>
-
-    public &lt;T&gt; void consumeHelper(Class&lt;T&gt; type, Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int numberOfEvents) {
-<span class="fc" id="L243">        List&lt;Message&lt;T&gt;&gt; messages = partition.listMessages();</span>
-<span class="fc" id="L244">        int currentOffset = consumer.getOffset(partition);</span>
-<span class="fc" id="L245">        int count = 0;</span>
-
-<span class="fc bfc" id="L247" title="All 4 branches covered.">        for (int i = currentOffset + 1; i &lt; messages.size() &amp;&amp; count &lt; numberOfEvents; i++, count++) {</span>
-<span class="fc" id="L248">            consumer.consume(messages.get(i), partition);</span>
-        }
-
-<span class="fc bfc" id="L251" title="All 2 branches covered.">        if (count &lt; numberOfEvents) {</span>
-<span class="fc" id="L252">            System.out.println(&quot;Not enough messages to consume.\nConsumed &quot; + count + &quot; messages.\n&quot;);</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        if (topic.getType().equals(Integer.class)) {</span>
+<span class="fc" id="L229">            consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);</span>
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
+<span class="fc" id="L231">            consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);</span>
         } else {
-<span class="fc" id="L254">            System.out.println(&quot;Consumed &quot; + count + &quot; messages.\n&quot;);</span>
+<span class="nc" id="L233">            System.out.println(&quot;Unsupported type: &quot; + topic.getType().getSimpleName() + &quot;\n&quot;);</span>
         }
-<span class="fc" id="L256">    }</span>
+<span class="fc" id="L235">    }</span>
+
+    private &lt;T&gt; void consumeEventsGeneric(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type,
+            int numberOfEvents) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L240">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L242">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L243">        consumeHelper(typedConsumer, typedPartition, numberOfEvents);</span>
+<span class="fc" id="L244">    }</span>
+
+    private &lt;T&gt; void consumeHelper(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int numberOfEvents) {
+<span class="fc" id="L247">        List&lt;Message&lt;T&gt;&gt; messages = partition.listMessages();</span>
+<span class="fc" id="L248">        int currentOffset = consumer.getOffset(partition);</span>
+<span class="fc" id="L249">        int count = 0;</span>
+
+<span class="fc bfc" id="L251" title="All 4 branches covered.">        for (int i = currentOffset + 1; i &lt; messages.size() &amp;&amp; count &lt; numberOfEvents; i++, count++) {</span>
+<span class="fc" id="L252">            consumer.consume(messages.get(i), partition);</span>
+        }
+
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        if (count &lt; numberOfEvents) {</span>
+<span class="fc" id="L256">            System.out.println(&quot;Not enough messages to consume.\nConsumed &quot; + count + &quot; messages.\n&quot;);</span>
+        } else {
+<span class="fc" id="L258">            System.out.println(&quot;Consumed &quot; + count + &quot; messages.\n&quot;);</span>
+        }
+<span class="fc" id="L260">    }</span>
 
     /*
      * Update the rebalancing strategy for a consumer group.
-     * Only update method so far
+     * Update the Offset of a consumer to allow for message replay.
      */
     public void updateRebalancing(String groupId, String rebalancing) {
-<span class="fc" id="L263">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
-<span class="fc" id="L264">        group.setRebalancingMethod(rebalancing);</span>
-<span class="fc" id="L265">        group.rebalance();</span>
-<span class="fc" id="L266">        System.out.println(&quot;Updated the rebalancing strategy for the &quot;</span>
+<span class="fc" id="L267">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
+<span class="fc" id="L268">        group.setRebalancingMethod(rebalancing);</span>
+<span class="fc" id="L269">        group.rebalance();</span>
+<span class="fc" id="L270">        System.out.println(&quot;Updated the rebalancing strategy for the &quot;</span>
                 + groupId + &quot; group to &quot; + rebalancing + &quot; rebalancing\n&quot;);
-<span class="fc" id="L268">    }</span>
+<span class="fc" id="L272">    }</span>
+
+    public void updateConsumerOffset(String consumerId, String partitionId, int offset) {
+<span class="fc" id="L275">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="fc" id="L276">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="fc" id="L277">        Topic&lt;?&gt; topic = getTopic(partition.getAllocatedTopicId());</span>
+
+<span class="pc bpc" id="L279" title="3 of 6 branches missed.">        if (consumer == null || partition == null || topic == null) {</span>
+<span class="nc" id="L280">            System.out.println(&quot;Consumer, partition, or topic not found.\n&quot;);</span>
+<span class="nc" id="L281">            return;</span>
+        }
+
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">        if (topic.getType().equals(Integer.class)) {</span>
+<span class="fc" id="L285">            updateConsumerOffsetGeneric(consumer, partition, Integer.class, offset);</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
+<span class="nc" id="L287">            updateConsumerOffsetGeneric(consumer, partition, String.class, offset);</span>
+        } else {
+<span class="nc" id="L289">            System.out.println(&quot;Unsupported type: &quot; + topic.getType().getSimpleName() + &quot;\n&quot;);</span>
+        }
+<span class="fc" id="L291">    }</span>
+
+    private &lt;T&gt; void updateConsumerOffsetGeneric(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type,
+            int offset) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L296">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L298">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L299">        updateConsumerOffset(typedConsumer, typedPartition, offset);</span>
+<span class="fc" id="L300">    }</span>
+
+    private &lt;T&gt; void updateConsumerOffset(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int offset) {
+<span class="fc" id="L303">        consumer.updateOffset(partition, offset);</span>
+<span class="fc" id="L304">    }</span>
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

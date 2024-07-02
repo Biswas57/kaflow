@@ -110,3 +110,24 @@
     - Enhance the CLI interface to provide more appealing output formats and user-friendly commands
     - Adding play from offset method to allow for message replay
     - Adding parallel functionality so more than 1 event can be consumed at a time
+
+
+## Tuesday 02/07/2024
+**Progress**
+- Message Playback with Offset Manipulation: I finally got around to implementing message playback with offset manipulation. This means you can replay events from any point, which makes debugging and testing quite easy.
+- Parallel Produce and Consume: Added the ability to produce and consume events in parallel. This was a big one, involving lots of learning and implementing Java's concurrency tools like ExecutorService and synchronization.
+- Concurrency and Synchronization: Had to learn Java concurrency, making sure everything was thread-safe. This involved adding synchronized blocks in key areas to prevent race conditions which we learns about when doing Singleton pattern in COMP2511.
+- Usability Testing: Ran a bunch of usability tests to make sure everything works smoothly. This included testing for edge cases and making sure the system handles errors gracefully.
+**Challenges**
+- Ensuring that all parameters were correctly validated before processing was tricky. Needed to refine the parsing logic to handle different producer types without errors.
+- Thread Safety: Balancing performance and data integrity required careful synchronization of shared resources like topics and partitions.
+
+## Wednesday 03/07/2024
+**Progress**
+- Updated UML Diagram: Completed the UML diagram to reflect the latest updates in methods and class interactions. This was essential to ensure that all recent changes, including concurrency features and message playback, are accurately documented.
+- JUnit Testing: Wrapped up the last of the JUnit tests for the latest program updates. This involved creating tests for the new parallel produce and consume functionalities, as well as the offset manipulation in message playback.
+- Thorough Testing: Made sure to cover edge cases, both in JUnit testing and usability testing, to ensure that the system handles all scenarios gracefully. This was crucial to confirm that everything works as expected and that no new bugs were introduced with the recent changes.
+
+**Challenges**
+- UML Diagram Updates: Ensuring that the UML diagram accurately reflects the current state of the system required attention to detail and a thorough understanding of all recent changes.
+- Comprehensive Testing: Implementing the final JUnit tests meant covering a lot of ground, including new concurrency features and message playback. Ensuring thorough and effective tests was a significant task.

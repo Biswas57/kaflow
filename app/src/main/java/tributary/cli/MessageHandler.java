@@ -96,7 +96,7 @@ public class MessageHandler {
                     controller.updateRebalancing(parts[4], parts[5].toLowerCase());
                 } else if (parts[2].equals("offset")) {
                     // change later
-                    controller.updateConsumerOffset(parts[3], parts[4], parts[5]);
+                    controller.updateConsumerOffset(parts[3], parts[4], Integer.parseInt(parts[5]));
                 }
                 break;
             default:

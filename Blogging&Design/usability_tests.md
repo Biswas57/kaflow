@@ -34,6 +34,7 @@ show topic banana
 ### Consume a Message in the Banana Topic
 consume event beginnerChef bananaCookingMethods
 
+
 ## Test 2: With Integer Type
 ### Creating a String Topic in Tributary Cluster
 create topic banana integer
@@ -117,7 +118,7 @@ create event bananaCook banana bananaCookForFun bananaCookingMethod1
 consume event beginnerChef1 bananaCookingMethod4
 
 ### Error Consume Event (Partition not allocated to Consumer)
-consume event beginnerChef1 bananaCookingMethod2
+consume event beginnerChef1 bananaCookingMethod1
 
 ### Consume all events in the Banana Topic
 consume events beginnerChef2 bananaCookingMethod2 (whatever number is in it)
@@ -130,3 +131,16 @@ consume event beginnerChef2 bananaCookingMethod2
 
 ### Consume last Message in bananaCookingMethod3
 consume event beginnerChef3 bananaCookingMethod3
+
+### Playback with 2 of the Partitions for Consumer 1
+update consumer offset beginnerChef1 bananaCookingMethod1 1
+update consumer offset beginnerChef1 bananaCookingMethod4 0
+
+### Parrallel Produce 2 new messages for the 2 partitions
+parrallel produce bananaFrier banana bananaFryNums bananaCookingMethod1 bananaFrier banana bananaFryNums bananaCookingMethod4
+
+### Show Topic to check Creation and check new offsets
+show topic banana
+
+### Parallel Consume from the playback to the end of both partitions
+parallel consume beginnerChef1 bananaCookingMethod1 [number of messages left] beginnerChef1 bananaCookingMethod4 [number of messages left]

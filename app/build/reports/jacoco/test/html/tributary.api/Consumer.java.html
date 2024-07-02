@@ -17,7 +17,7 @@ public class Consumer&lt;T&gt; extends TributaryObject {
 <span class="fc" id="L17">        this.partitionOffsets = new HashMap&lt;&gt;();</span>
 <span class="fc" id="L18">    }</span>
 
-    public void consume(Message&lt;T&gt; message, Partition&lt;T&gt; partition) {
+    public synchronized void consume(Message&lt;T&gt; message, Partition&lt;T&gt; partition) {
 <span class="fc" id="L21">        int currentOffset = partitionOffsets.getOrDefault(partition, -1) + 1;</span>
 <span class="fc" id="L22">        partitionOffsets.put(partition, currentOffset);</span>
 <span class="fc" id="L23">        StringBuilder contentBuilder = new StringBuilder();</span>
@@ -55,11 +55,11 @@ public class Consumer&lt;T&gt; extends TributaryObject {
 <span class="fc" id="L55">    }</span>
 
     public void updateOffset(Partition&lt;T&gt; partition, int newOffset) {
-<span class="nc" id="L58">        partitionOffsets.put(partition, newOffset);</span>
-<span class="nc" id="L59">    }</span>
+<span class="fc" id="L58">        partitionOffsets.put(partition, newOffset);</span>
+<span class="fc" id="L59">    }</span>
 
     public int getOffset(Partition&lt;T&gt; partition) {
 <span class="fc" id="L62">        return partitionOffsets.getOrDefault(partition, -1);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
