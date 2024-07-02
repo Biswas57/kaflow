@@ -292,18 +292,20 @@ As an **example** of what commands your CLI may provide, the following table has
   </tr>
   <tr>
     <td><code>show topic &lt;topic&gt;</code></td>
-    <td></td>
     <td>
-      Prints a visual display of the given topic, including all partitions and
-      all of the events currently in each partition.
+      Prints a visual display of the given topic, including all partitions and all of the events currently in each partition.
+    </td>
+    <td>
+      A detailed visual representation of the topic, listing all partitions within the topic and the events currently stored in each partition.
     </td>
   </tr>
   <tr>
     <td><code>show consumer group &lt;group&gt;</code></td>
-    <td></td>
     <td>
-      Shows all consumers in the consumer group, and which partitions each
-      consumer is receiving events from.
+      Shows all consumers in the consumer group, and which partitions each consumer is receiving events from.
+    </td>
+    <td>
+      A detailed list of all consumers in the specified consumer group, including the partitions each consumer is allocated to and is receiving events from.
     </td>
   </tr>
   <tr>
