@@ -160,6 +160,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
     - Abstract Factory Pattern facilitates the creation of different components in the system without specifying the exact class to be created.
     - Simplifies adding new components without modifying existing code.
     - Abstract Factory Pattern for Type Handling, especially when reading from JSON files and creating objects of different types.
+        - Ensure Open Closed principle isn't violated because then we can add different types of Object factories and Type handlers (in addition to String and Integer types) for different types of Event and Message Payload.
 
 **Strategy Pattern for Consumer Group Rebalancing:**
 - **Reason:** Needed a flexible way to switch between different rebalancing algorithms (Range and Round Robin) at runtime.
