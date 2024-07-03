@@ -1,7 +1,9 @@
 package tributary;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,29 +22,27 @@ public class TributaryMockTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        cluster = TributaryCluster.getInstance();
-        controller = mock(TributaryController.class);
+        controller = spy(new TributaryController());
+
+        controller.createTopic("banana", "string");
+        controller.createPartition("banana", "bananaCookingMethods");
+        controller.createProducer("bananaBoiler", "string", "manual");
+        controller.createConsumerGroup("bananaChefs", "banana", "range");
+        controller.createConsumer("bananaChefs", "beginnerChef");
     }
 
     @Test
     public void testCreateAndShowStringTopic() {
-        controller.createTopic("banana", "string");
         verify(controller).createTopic("banana", "string");
     }
 
     @Test
-    public void testCreatePartitionAndShow() {
-        controller.createTopic("banana", "string");
-        controller.createPartition("banana", "bananaCookingMethods");
+    public void testCreatePartition() {
         verify(controller).createPartition("banana", "bananaCookingMethods");
     }
 
     @Test
     public void testDeleteConsumer() {
-        controller.createTopic("banana", "string");
-        controller.createConsumerGroup("bananaChefs", "banana", "range");
-
-        controller.createConsumer("bananaChefs", "beginnerChef");
         verify(controller).createConsumer("bananaChefs", "beginnerChef");
 
         controller.deleteConsumer("beginnerChef");
@@ -51,12 +51,6 @@ public class TributaryMockTest {
 
     @Test
     public void testEventLifeCycle() {
-        controller.createTopic("banana", "string");
-        controller.createPartition("banana", "bananaCookingMethods");
-        controller.createProducer("bananaBoiler", "string", "manual");
-        controller.createConsumerGroup("bananaChefs", "banana", "range");
-        controller.createConsumer("bananaChefs", "bananaBoiler");
-
         assertDoesNotThrow(() -> {
             controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingMethods");
         });
@@ -67,7 +61,6 @@ public class TributaryMockTest {
         });
         controller.consumeEvents("beginnerChef", "bananaCookingMethods", 1);
         verify(controller, times(2)).consumeEvents("beginnerChef", "bananaCookingMethods", 1);
-
     }
 
     @Test
@@ -76,8 +69,11 @@ public class TributaryMockTest {
         verify(controller).createTopic("apple", "integer");
 
         controller.createProducer("bananaBoiler", "integer", "random");
+        // with capital I for Integer
         controller.createProducer("bananaFrier", "integer", "manual");
-        verify(controller, times(2)).createProducer(anyString(), anyString(), anyString());
+
+        // has 3 invocations because of the BeforeEach setup
+        verify(controller, times(3)).createProducer(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -93,5 +89,55 @@ public class TributaryMockTest {
         });
         controller.consumeEvents("beginnerChef1", "bananaCookingMethod1", 1);
         verify(controller, times(1)).consumeEvents("beginnerChef1", "bananaCookingMethod1", 1);
+    }
+
+    @Test
+    public void testUpdateConsumerOffset() {
+        controller.updateConsumerOffset("beginnerChef", "bananaCookingMethods", 5);
+        verify(controller).updateConsumerOffset("beginnerChef", "bananaCookingMethods", 5);
+    }
+
+    @Test
+    public void testParallelProduceTwoMessages() {
+        String[] produceParts = { "bananaBoiler", "banana", "boilBanana", "bananaCookingMethods",
+                "bananaBoiler", "banana", "fryBanana", "bananaCookingMethods" };
+
+        controller.parallelProduce(produceParts);
+        assertDoesNotThrow(() -> {
+            verify(controller, times(2)).createEvent(anyString(), anyString(), anyString(), anyString());
+        });
+    }
+
+    @Test
+    public void testParallelProduceThreeMessages() {
+        String[] produceParts = { "bananaBoiler", "banana", "boilBanana", "bananaCookingMethods",
+                "bananaBoiler", "banana", "fryBanana", "bananaCookingMethods",
+                "bananaBoiler", "banana", "grillBanana", "bananaCookingMethods" };
+
+        controller.parallelProduce(produceParts);
+        assertDoesNotThrow(() -> {
+            verify(controller, times(3)).createEvent(eq("bananaBoiler"), eq("banana"), any(String.class),
+                    eq("bananaCookingMethods"));
+        });
+    }
+
+    @Test
+    public void testParallelConsumeTwoMessages() {
+        String[] consumeParts = { "beginnerChef", "bananaCookingMethods", "2" };
+
+        controller.parallelConsume(consumeParts);
+        assertDoesNotThrow(() -> {
+            verify(controller, times(1)).consumeEvents(eq("beginnerChef"), eq("bananaCookingMethods"), eq(2));
+        });
+    }
+
+    @Test
+    public void testParallelConsumeThreeMessages() {
+        String[] consumeParts = { "beginnerChef", "bananaCookingMethods", "3" };
+
+        controller.parallelConsume(consumeParts);
+        assertDoesNotThrow(() -> {
+            verify(controller, times(1)).consumeEvents(eq("beginnerChef"), eq("bananaCookingMethods"), eq(3));
+        });
     }
 }

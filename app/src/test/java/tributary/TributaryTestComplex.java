@@ -166,10 +166,27 @@ public class TributaryTestComplex {
 		controller.updateConsumerOffset(consumerId, partitionId, 0);
 		offset = consumer.getOffset(partition);
 		assertEquals(offset, 0);
+		int previousSize = partition.listMessages().size();
 
 		// parrallel produce 2 new messages for the partition
+		String[] args = { "bananaFrier", "banana", "bananaFryNums", partitionId, "bananaFrier", "banana",
+				"bananaFryDur", partitionId };
+		controller.parallelProduce(args);
+		assertEquals(partition.listMessages().size(), previousSize + 2);
 
-		// get list size of one of consumers, replay from beginnign
-		// and parallel consume until end of partition both consumers partitions
+		// get list size of one of consumers, replay from beginning. Add another
+		// consumer and parallel consume until end of partition both consumers
+		// partitions
+		String[] consumeArgs = { "beginnerChef1", partitionId, "beginnerChef2", partitionId, "5" };
+		controller.parallelConsume(consumeArgs);
+		assertEquals(consumer.getOffset(partition), partition.listMessages().size() - 1);
+
+		// Checking final state and ensuring everything is consumed correctly
+		final String finalPartition = partition.getId();
+		assertAll(
+				"Checking final state",
+				() -> assertEquals(consumer.getOffset(partition), partition.listMessages().size() - 1),
+				() -> assertDoesNotThrow(() -> controller.consumeEvents("beginnerChef1", finalPartition, 1)),
+				() -> assertEquals(consumer.getOffset(partition), partition.listMessages().size() - 1));
 	}
 }
