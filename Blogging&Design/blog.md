@@ -1,6 +1,6 @@
-# Tributary System Design and Implementation Blog
+# Preliminary Tributary System Design and Implementation Blog
 
-## Preliminary Design - Task 1
+## Design - Task 1
 ### Analysis of Engineering Requirements
 **General Structure**
 Tributary Cluster -> Topics -> Partitions -> Messages
