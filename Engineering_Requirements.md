@@ -114,11 +114,11 @@ Two design considerations you will need to think about in your solution are as f
 - **Generics** - How will you ensure that an object of any type can be used as an event payload in a tributary topic?
 
 One of the key aims of this assignment is to get accustomed with concurrency in Java using the synchronized keyword as shown in lectures. As such
-**we will not be permitting the use of any existing synchronization and concurrency libraries** as you must implement thread-safety yourselves.
+**we encourage the use of any existing synchronization and concurrency libraries**.
 This includes but is not limited to:
 
 - The entire `java.util.concurrent` package
-  - This includes any classes or interfaces that require this import namely thread-safe objects (eg `AtomicInteger`) or concurrency primitives (eg semaphores).
+  - This includes any classes or interfaces that require this import namely thread-safe objects (eg `AtomicInteger` and `ExecutorService`) or concurrency primitives (eg semaphores).
 - Any other thread-safe classes such as `StringBuffer`
 
 # 2. Interface

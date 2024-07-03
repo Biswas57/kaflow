@@ -6,6 +6,9 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
+import tributary.core.typeHandlerFactory.TypeHandler;
+import tributary.core.typeHandlerFactory.TypeHandlerFactory;
+
 public class Message<T> extends TributaryObject {
     private LocalDateTime createdDate;
     private String payloadType;
@@ -26,8 +29,14 @@ public class Message<T> extends TributaryObject {
         JSONObject messageContent = json.getJSONObject("messageContents");
         Map<String, T> content = new HashMap<>();
 
+        TypeHandler<T> handler = TypeHandlerFactory.getHandler(type);
+        if (handler == null) {
+            throw new IllegalArgumentException("Unsupported type: " + type.getSimpleName());
+        }
+
         for (String key : messageContent.keySet()) {
-            content.put(key, type.cast(messageContent.get(key)));
+            Object value = messageContent.get(key);
+            content.put(key, handler.handle(value));
         }
 
         return new Message<>(messageId, createdDate, payloadType, content);

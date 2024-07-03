@@ -16,7 +16,7 @@ public class MessageHandler {
         String subCommand = parts[1].toLowerCase();
         switch (subCommand) {
             case "topic":
-                controller.createTopic(parts[2], parts[3]);
+                controller.createTopic(parts[2], parts[3].toLowerCase());
                 break;
             case "partition":
                 controller.createPartition(parts[2], parts[3]);

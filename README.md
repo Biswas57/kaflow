@@ -158,10 +158,11 @@ Usability Checklist: Using the command line interface, the checklist will be run
     - Implementing the Singleton Pattern ensures data consistency across the system.
 
 **Abstract Factory Pattern for Component Creation:**
-- **Reason:** The TributaryController class had too many responsibilities, violating the Open/Closed Principle.
+- **Reason:** The TributaryController class had too many responsibilities, violating the Open/Closed Principle, and Typesafety constraints mean that it was very easy for us to overuse switch and if-else statements leading to alot of code duplication and poorly designed code.
 - **Details:**
     - Abstract Factory Pattern facilitates the creation of different components in the system without specifying the exact class to be created.
     - Simplifies adding new components without modifying existing code.
+    - Abstract Factory Pattern for Type Handling, especially when reading from JSON files and creating objects of different types.
 
 **Strategy Pattern for Consumer Group Rebalancing:**
 - **Reason:** Needed a flexible way to switch between different rebalancing algorithms (Range and Round Robin) at runtime.
@@ -196,8 +197,11 @@ Usability Checklist: Using the command line interface, the checklist will be run
 **Challenges**
 - Main challenge was the time constraint I had till I had to start studying for my exams and the fact that I was working alone, which made it difficult to get feedback and suggestions on my design.
 - I would have liked to have more time to implement and a bit more guidance because I really felt at times I was just winging it and on my own.
-- I also struggled with the UML diagrams and actually starting this project (felt like jumping off a cliff headfirst)
+- I also struggled with the planning stage and drawing up the initila UML diagrams and actually starting this project (felt like jumping off a cliff headfirst)
+    - Didn't know what to d oor how to start, I was asking around for tutors' help and I was getting a lot of different answers and I was getting confused.
+    - I was also struggling with coming up with the correct design patterns i should use and how to implement them in my system.
+    - I just went with the flow and started coding and then I realised all it took was a bit of planning and a bit of research and I was steadily making progress.
 - Unfortunately 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
     - **Edit:** Have now implemented extensive JUnit and Mockito tests from 28/05/2024
     - **2nd Edit:** Will also be implementing offset replay and parallel event management and running tests for these functions from 02/07/2024 aswell
-- However I am proud of the fact that I got through to the end, with the help of a specific course at UNSW's ed forum, and I will be using this project as a threshold for my ability and motivation in the future.
+- However I am proud of the fact that I got through to the end and I will be using this project as a threshold for my ability and motivation in the future.

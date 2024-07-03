@@ -18,7 +18,7 @@ public class Consumer<T> extends TributaryObject {
     }
 
     public void consume(Message<T> message, Partition<T> partition) {
-        int currentOffset = partitionOffsets.getOrDefault(partition, -1) + 1;
+        int currentOffset = getOffset(partition);
         partitionOffsets.put(partition, currentOffset);
         StringBuilder contentBuilder = new StringBuilder();
 
@@ -55,10 +55,10 @@ public class Consumer<T> extends TributaryObject {
     }
 
     public void updateOffset(Partition<T> partition, int newOffset) {
-        partitionOffsets.put(partition, newOffset);
+        partitionOffsets.put(partition, newOffset - 1);
     }
 
     public int getOffset(Partition<T> partition) {
-        return partitionOffsets.getOrDefault(partition, -1);
+        return partitionOffsets.getOrDefault(partition, -2) + 1;
     }
 }

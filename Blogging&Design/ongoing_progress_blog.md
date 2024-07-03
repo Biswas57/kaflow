@@ -124,10 +124,22 @@
 
 ## Wednesday 03/07/2024
 **Progress**
-- Updated UML Diagram: Completed the UML diagram to reflect the latest updates in methods and class interactions. This was essential to ensure that all recent changes, including concurrency features and message playback, are accurately documented.
 - JUnit Testing: Wrapped up the last of the JUnit tests for the latest program updates. This involved creating tests for the new parallel produce and consume functionalities, as well as the offset manipulation in message playback.
 - Thorough Testing: Made sure to cover edge cases, both in JUnit testing and usability testing, to ensure that the system handles all scenarios gracefully. This was crucial to confirm that everything works as expected and that no new bugs were introduced with the recent changes.
+    - Becuase of correct and through testing, identified numerous issues and implemented correct fixes to these issues, such as Message creation and parallel event production and consumption
+- Type Handler Factory: Added in a TypeHandlerFactory to centralize how type conversions are handled. Each type now has its own handler, like IntegerHandler and StringHandler, taking care of converting JSON values.
+    - This setup cuts down on repetitive type checks, making the code way cleaner and more efficient. It's all about modular, maintainable handling for different types.
+    - Adding new types is super easy now. Just create a new handler for the type and register it in the factory. The system is flexible and ready to scale with minimal changes.
+
+**Challenges**
+- Comprehensive Testing: Implementing the final JUnit tests meant covering a lot of ground, including new concurrency features and message playback. Ensuring thorough and effective tests was a significant task.
+- Fixing the type Handing issue: Had to refactor a lot of code to implement the TypeHandlerFactory. This was a big change, but it made the code much cleaner and more maintainable in the long run.
+
+## Wednesday 03/07/2024
+**Progress**
+- Updated UML Diagram: Completed the UML diagram to reflect the latest updates in methods and class interactions. This was essential to ensure that all recent changes, including concurrency features and message playback, are accurately documented.
 
 **Challenges**
 - UML Diagram Updates: Ensuring that the UML diagram accurately reflects the current state of the system required attention to detail and a thorough understanding of all recent changes.
-- Comprehensive Testing: Implementing the final JUnit tests meant covering a lot of ground, including new concurrency features and message playback. Ensuring thorough and effective tests was a significant task.
+
+

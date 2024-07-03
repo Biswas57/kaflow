@@ -316,7 +316,15 @@ public class TributaryController {
     }
 
     private <T> void updateConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
-        consumer.updateOffset(partition, offset);
+        if (consumer.getOffset(partition) < offset) {
+            System.out.println("Offset cannot be greater than the number of messages in the partition.\n");
+            return;
+            // if number negative return the last nth message
+        } else if (offset < 0) {
+            consumer.updateOffset(partition, partition.listMessages().size() + offset + 1);
+        } else {
+            consumer.updateOffset(partition, offset);
+        }
     }
 
     /*
