@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryMockTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2024-07-03T11:13:26" hostname="bissi-smells.modem" time="0.542">
+<testsuite name="tributary.TributaryMockTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2024-07-03T11:21:34" hostname="bissi-smells.modem" time="0.479">
   <properties/>
-  <testcase name="testEventLifeCycle()" classname="tributary.TributaryMockTest" time="0.498"/>
+  <testcase name="testEventLifeCycle()" classname="tributary.TributaryMockTest" time="0.441"/>
   <testcase name="testCreateIntegerTopicAndProducers()" classname="tributary.TributaryMockTest" time="0.004"/>
-  <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryMockTest" time="0.004"/>
-  <testcase name="testCreateAndShowStringTopic()" classname="tributary.TributaryMockTest" time="0.003"/>
+  <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryMockTest" time="0.005"/>
+  <testcase name="testCreateAndShowStringTopic()" classname="tributary.TributaryMockTest" time="0.002"/>
   <testcase name="testParallelProduceThreeMessages()" classname="tributary.TributaryMockTest" time="0.007"/>
   <testcase name="testUpdateConsumerOffset()" classname="tributary.TributaryMockTest" time="0.002"/>
   <testcase name="testDeleteConsumer()" classname="tributary.TributaryMockTest" time="0.002"/>
-  <testcase name="testParallelConsumeTwoMessages()" classname="tributary.TributaryMockTest" time="0.003"/>
-  <testcase name="testCreatePartition()" classname="tributary.TributaryMockTest" time="0.002"/>
-  <testcase name="testParallelConsumeThreeMessages()" classname="tributary.TributaryMockTest" time="0.002"/>
-  <testcase name="testParallelProduceTwoMessages()" classname="tributary.TributaryMockTest" time="0.008"/>
+  <testcase name="testParallelConsumeTwoMessages()" classname="tributary.TributaryMockTest" time="0.004"/>
+  <testcase name="testCreatePartition()" classname="tributary.TributaryMockTest" time="0.001"/>
+  <testcase name="testParallelConsumeThreeMessages()" classname="tributary.TributaryMockTest" time="0.003"/>
+  <testcase name="testParallelProduceTwoMessages()" classname="tributary.TributaryMockTest" time="0.004"/>
   <system-out><![CDATA[Created String topic with ID: banana
 
 Created partition with ID: bananaCookingMethods for topic: banana
@@ -179,9 +179,9 @@ Consumer group bananaChefs already exists.
 
 Consumer beginnerChefalready exists in the group.
 
-The event: boilBanana has been manually allocated to partition bananaCookingMethods
-
 The event: fryBanana has been manually allocated to partition bananaCookingMethods
+
+The event: boilBanana has been manually allocated to partition bananaCookingMethods
 
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>

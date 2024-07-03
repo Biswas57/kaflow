@@ -52,7 +52,7 @@ public class TributaryTestComplex {
 		controller.createPartition("banana", "bananaCookingMethod2");
 		controller.createPartition("banana", "bananaCookingMethod3");
 		controller.createPartition("banana", "bananaCookingStyle4");
-		assertEquals(cluster.getTopic("banana").listPartitions().size(), 4);
+		assertEquals(4, cluster.getTopic("banana").listPartitions().size());
 
 		controller.createProducer("bananaBoiler", "integer", "random");
 		controller.createProducer("bananaFrier", "integer", "manual");
@@ -177,7 +177,7 @@ public class TributaryTestComplex {
 		// get list size of one of consumers, replay from beginning. Add another
 		// consumer and parallel consume until end of partition both consumers
 		// partitions
-		String[] consumeArgs = { "beginnerChef1", partitionId, "beginnerChef2", partitionId, "5" };
+		String[] consumeArgs = { consumerId, partitionId, "beginnerChef2", partitionId, "5" };
 		controller.parallelConsume(consumeArgs);
 		assertEquals(consumer.getOffset(partition), partition.listMessages().size() - 1);
 
