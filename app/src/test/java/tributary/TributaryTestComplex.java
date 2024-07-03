@@ -84,7 +84,7 @@ public class TributaryTestComplex {
 
 		// string type message should not be able to be added to an integer type topic,
 		// Partition or message
-		assertThrows(ClassCastException.class, () -> {
+		assertThrows(IllegalArgumentException.class, () -> {
 			controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingMethod1");
 		});
 

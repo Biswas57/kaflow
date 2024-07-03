@@ -23,7 +23,7 @@
 <tr>
 <td>
 <div class="infoBox" id="tests">
-<div class="counter">6</div>
+<div class="counter">11</div>
 <p>tests</p>
 </div>
 </td>
@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.789s</div>
+<div class="counter">0.535s</div>
 <p>duration</p>
 </div>
 </td>
@@ -63,6 +63,9 @@
 <li>
 <a href="#tab0">Tests</a>
 </li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
 </ul>
 <div id="tab0" class="tab">
 <h2>Tests</h2>
@@ -76,16 +79,16 @@
 </thead>
 <tr>
 <td class="success">testCreateAndShowStringTopic()</td>
-<td class="success">0.001s</td>
-<td class="success">passed</td>
-</tr>
-<tr>
-<td class="success">testCreateIntegerTopicAndProducers()</td>
 <td class="success">0.003s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
-<td class="success">testCreatePartitionAndShow()</td>
+<td class="success">testCreateIntegerTopicAndProducers()</td>
+<td class="success">0.004s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testCreatePartition()</td>
 <td class="success">0.002s</td>
 <td class="success">passed</td>
 </tr>
@@ -96,15 +99,217 @@
 </tr>
 <tr>
 <td class="success">testEventLifeCycle()</td>
-<td class="success">0.779s</td>
+<td class="success">0.498s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">testMessageCreationAndConsumption()</td>
+<td class="success">0.004s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testParallelConsumeThreeMessages()</td>
+<td class="success">0.002s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testParallelConsumeTwoMessages()</td>
+<td class="success">0.003s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testParallelProduceThreeMessages()</td>
+<td class="success">0.007s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testParallelProduceTwoMessages()</td>
+<td class="success">0.008s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testUpdateConsumerOffset()</td>
 <td class="success">0.002s</td>
 <td class="success">passed</td>
 </tr>
 </table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group with ID bananaChefs does not exist.
+
+Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
+
+Created consumer with ID: beginnerChef for group: bananaChefs
+
+The event: boilBanana has been manually allocated to partition bananaCookingMethods
+
+The event: boilBanana has been consumed by consumer beginnerChef. It contains the contents:
+duration = 5 minutes
+temperature = 100C
+description = Boil bananas at 100 degrees Celsius for 5 minutes to soften.
+Consumed 1 messages.
+
+The event: fryBanana has been manually allocated to partition bananaCookingMethods
+
+The event: fryBanana has been consumed by consumer beginnerChef. It contains the contents:
+duration = 3 minutes
+oilType = Coconut Oil
+temperature = 180C
+description = Fry bananas in coconut oil at 180 degrees Celsius for 3 minutes until golden brown.
+Consumed 1 messages.
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+Created Integer topic with ID: apple
+
+Created producer with ID: bananaBoiler that produces Integer events with random allocation
+
+Created producer with ID: bananaFrier that produces Integer events with manual allocation
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+Created Integer topic with ID: banana
+
+Created partition with ID: bananaCookingMethod1 for topic: banana
+
+Created producer with ID: bananaBoiler that produces Integer events with random allocation
+
+Consumer group bananaChefs already exists.
+
+Created consumer with ID: beginnerChef1 for group: bananaChefs
+
+The event: bananaFryDur has been manually allocated to partition bananaCookingMethods
+
+Not enough messages to consume.
+Consumed 0 messages.
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+The event: boilBanana has been manually allocated to partition bananaCookingMethods
+
+The event: fryBanana has been manually allocated to partition bananaCookingMethods
+
+Error producing event: messageConfigs/grillBanana.json
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+Offset cannot be greater than the number of messages in the partition.
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+Deleted consumer with ID: beginnerChef
+Consumer Group ID: bananaChefs
+Consumer ID: beginnerChef1 - Assigned Partitions: bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, bananaCookingMethod1, bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, 
+
+--------------------------------------------------
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Created consumer with ID: beginnerChef for group: bananaChefs
+
+Consumer is not assigned to the partition.
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+Consumer is not assigned to the partition.
+
+Created String topic with ID: banana
+
+Created partition with ID: bananaCookingMethods for topic: banana
+
+Created producer with ID: bananaBoiler that produces String events with manual allocation
+
+Consumer group bananaChefs already exists.
+
+Consumer beginnerChefalready exists in the group.
+
+The event: boilBanana has been manually allocated to partition bananaCookingMethods
+
+The event: fryBanana has been manually allocated to partition bananaCookingMethods
+
+</pre>
+</span>
 </div>
 </div>
 <div id="footer">
@@ -114,7 +319,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 7.6.4</a> at 2 July 2024, 11:32:48 pm</p>
+<a href="http://www.gradle.org">Gradle 7.6.4</a> at 3 July 2024, 9:13:27 pm</p>
 </div>
 </div>
 </body>
