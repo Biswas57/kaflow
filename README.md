@@ -17,7 +17,7 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 - Designed and documented the entire system structure providing a clear overview and understanding of the system’s architecture and seamlessly integrated all these key features to provide users with efficient and useful pipeline for event processing.
 
 
-## Task 1: Project Overview
+## Project Overview
 **NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [final UML Diagram](Blogging&Design/final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [Engineering Requirements](Engineering_Requirements.md)
 
 **General Structure of System**
@@ -119,10 +119,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 **Adopting a component-driven approach**
 - Basically integrating each components individually and then testing them together to form the final system. Much better to test overall usability and functionality.
 
-## Video Demo - Task 2
-[Youtube Video](https://youtu.be/KzwQWZhSc6M)
-
-## Final Design and Reflection - Task 3
+## Final Design and Reflection
 
 ### Overview of Testing choices
 **Usability Tests**
@@ -187,7 +184,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 [final_design.pdf](Blogging&Design/final_design.pdf)
 
 ### Reflection
-[Ongoing Reflection](Blogging&Design/individual_progress_blog.md)
+[Ongoing Reflection](Blogging&Design/ongoing_progress_blog.md)
 
 **Final Reflection**
 - Overall a very important project that helped me understand the importance of system design as a Backend Software Engineer and the different patterns that can be used to make a system not only more aesthetically pleasing but also more efficient and maintainable.
