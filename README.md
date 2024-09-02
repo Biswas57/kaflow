@@ -1,13 +1,13 @@
 # Tributary Cluster Design and Implementation Blog
 
 ### Overview of Engineering Requirements
-Modern software often relies on many small programs, called microservices, that work together to provide a complete application or service. Event-driven architecture makes up much of the backbone of modern software which microservices rely upon to run smoothly. In essence, event-driven architecture is similar to a signalling system that allows different parts of a software system to work independently but stay connected and responsive, asynchronous, to events at scalable rates. This makes the whole system faster, more flexible, and able to handle more tasks at once without getting stuck waiting for each part to finish its job.
+Modern software often relies on many small programs, called microservices, that work together to provide a complete application or service. Event-driven architecture makes up much of the backbone of modern software which microservices rely upon to run smoothly. In essence, event-driven architecture is similar to a signalling system that allows different parts of a software system to work independently but remain responsive to events at scalable rates. This makes the whole system faster, more flexible, and able to handle more tasks at once without getting stuck waiting for each part to finish its job.
 
 This library is based on a heavily simplified version of the event streaming infrastructure [Apache Kafka](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what they do can be found [here](https://youtu.be/vHbvbwSEYGo).
 
 The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, in other words a Tributary-like platform. However, our library allowed for more complex interactions than simply that of a single channel. Some of my key achievements throughout this project were:
 
-- Constructed a **Tributary Event Processing API**, emulating Apache Kafka's Event Processing Platform in Java, with a function CLI, parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
+- Constructed a **Tributary Event Processing System**, emulating Apache Kafka's Event Processing Platform in Java, with a function CLI, parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
 - Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
 - Ensured thread safety across concurrent producer and consumer threads to protect user data in the event processing pipeline by utilizing Java concurrency tools such as synchronization and ExecutorService.
 - Achieved an 85% test coverage by conducting ∼75 tests in JUnit and Mockito to ensure the system’s reliability.
