@@ -28,7 +28,7 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 4. Producer Structure:
        Tributary Cluster -> Producers.
 
-<img src="images/tributaryClusterExample.png" width="300px" /> <img src="images/topicExample.png" width="600px" />
+<img src="images/tributaryClusterExample.png" width="275px" /> <img src="images/topicExample.png" width="600px" />
 
 - **Tributary Cluster:** The top-level singleton component that covers the entire system.
     - **Topics:** Categories or channels within the Tributary Cluster where messages are allocated based on their content or purpose.
@@ -65,7 +65,7 @@ Other Notes:
 - Load Balancing: The system distributes partitions among consumers in a group to decrease processing time
     - There are 2 distinct distribution methods
  
-<img style="float: center;" src="images/consumerAllocation1.png" width="400px" />
+<img style="float: right;" src="images/consumerAllocation1.png" width="500px" />
 
 Rebalancing (Message Distribution) Strategies:
 - Range Rebalancing: Partitions are evenly divided based on the number of consumers, with adjustments made for odd counts.
