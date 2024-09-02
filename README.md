@@ -65,22 +65,25 @@ Other Notes:
 - Load Balancing: The system distributes partitions among consumers in a group to decrease processing time
     - There are 2 distinct distribution methods
  
-<img src="images/consumerAllocation1.png" width="600px" /> ![](/images/controlledReplay.png)
+<img src="images/consumerAllocation1.png" width="600px" />
 
 Rebalancing (Message Distribution) Strategies:
 - Range Rebalancing: Partitions are evenly divided based on the number of consumers, with adjustments made for odd counts.
 - Round Robin Rebalancing: Partitions are allocated in a rotating manner to ensure even distribution of workload among consumers.
+
+**Synchronous Data Processing**
+- Concurrency: Java synchronization to manage parallel message handling,
+       - ensuring thread-safe operations across producer and consumer threads for real-time data integrity in the event processing pipeline.
 
 **Message Replay**
 Messages from a certain offset onwards are processed, until the most recent message at the latest offset is reached
 - Controlled Replay: Consumers can replay messages from a specific offset to catch errors and failures or for processing historical data.
        - This feature is crucial for when a system feature may not be working as it's supposed to.
 
-**Synchronous Data Processing**
-- Concurrency: Java synchronization to manage parallel message handling,
-       - ensuring thread-safe operations across producer and consumer threads for real-time data integrity in the event processing pipeline.
+![](/images/controlledReplay.png)
 
-**Design Considerations**
+
+### Design Considerations
 
 Concurrency:
 - Thread Safety: To handle concurrent operations without issues, the system will use synchronization via the Singleton Pattern for the Tributary Cluster.
