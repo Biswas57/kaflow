@@ -77,6 +77,7 @@ Messages from a certain offset onwards are processed, until the most recent mess
        - ensuring thread-safe operations across producer and consumer threads for real-time data integrity in the event processing pipeline.
 
 **Design Considerations**
+
 Concurrency:
 - Thread Safety: To handle concurrent operations without issues, the system will use synchronization via the Singleton Pattern for the Tributary Cluster.
 
