@@ -118,6 +118,7 @@
 - Parallel Produce and Consume: Added the ability to produce and consume events in parallel. This was a big one, involving lots of learning and implementing Java's concurrency tools like ExecutorService and synchronization.
 - Concurrency and Synchronization: Had to learn Java concurrency, making sure everything was thread-safe. This involved adding synchronized blocks in key areas to prevent race conditions which we learns about when doing Singleton pattern in COMP2511.
 - Usability Testing: Ran a bunch of usability tests to make sure everything works smoothly. This included testing for edge cases and making sure the system handles errors gracefully.
+
 **Challenges**
 - Ensuring that all parameters were correctly validated before processing was tricky. Needed to refine the parsing logic to handle different producer types without errors.
 - Thread Safety: Balancing performance and data integrity required careful synchronization of shared resources like topics and partitions.
