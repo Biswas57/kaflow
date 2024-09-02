@@ -1,6 +1,6 @@
 # Tributary Cluster Design and Implementation Blog
 
-### Overciew of Engineering Requirements
+### Overview of Engineering Requirements
 Event-Driven Architecture makes up much of the backbone of modern software. With a move towards decentralised microservice systems, there is a need for scalable asynchronous communication between software components.
 
 This library is based on a heavily simplified version of the event streaming infrastructure [Apache Kafka](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what they do can be found [here](https://youtu.be/vHbvbwSEYGo).
