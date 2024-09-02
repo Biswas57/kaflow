@@ -144,3 +144,9 @@
 - UML Diagram Updates: Ensuring that the UML diagram accurately reflects the current state of the system required attention to detail and a thorough understanding of all recent changes.
 
 
+## Monday 02/09/2024
+**Future Goals**
+
+Issues to address:
+- Optimize space and time efficiency in message processing and storage by using HashMaps instead of Lists of Lists
+- Fix the issue with gradle coverage, it says its failing tests but when I run them all of them pass

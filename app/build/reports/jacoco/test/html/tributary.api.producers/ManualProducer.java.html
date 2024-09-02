@@ -12,8 +12,8 @@ public class ManualProducer&lt;T&gt; extends Producer&lt;T&gt; {
 
     @Override
     public void allocateMessage(List&lt;Partition&lt;T&gt;&gt; partitions, String partitionId, Message&lt;T&gt; message) {
-<span class="fc bfc" id="L15" title="All 2 branches covered.">        for (Partition&lt;T&gt; p : partitions) {</span>
-<span class="fc bfc" id="L16" title="All 2 branches covered.">            if (p.getId().equals(partitionId)) {</span>
+<span class="pc bpc" id="L15" title="1 of 2 branches missed.">        for (Partition&lt;T&gt; p : partitions) {</span>
+<span class="pc bpc" id="L16" title="1 of 2 branches missed.">            if (p.getId().equals(partitionId)) {</span>
 <span class="pc bpc" id="L17" title="1 of 2 branches missed.">                if (p.listMessages().contains(message)) {</span>
 <span class="nc" id="L18">                    System.out.println(&quot;Message &quot; + message.getId() + &quot; already exists in &quot;</span>
                             + partitionId + &quot; partition&quot;);
@@ -23,7 +23,7 @@ public class ManualProducer&lt;T&gt; extends Producer&lt;T&gt; {
                         + partitionId + &quot;\n&quot;);
 <span class="fc" id="L24">                return;</span>
             }
-<span class="fc" id="L26">        }</span>
-<span class="fc" id="L27">    }</span>
+<span class="nc" id="L26">        }</span>
+<span class="nc" id="L27">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

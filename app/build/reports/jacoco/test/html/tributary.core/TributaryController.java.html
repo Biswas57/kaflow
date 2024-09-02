@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import tributary.api.Consumer;
 import tributary.api.ConsumerGroup;
@@ -11,6 +14,7 @@ import tributary.api.Message;
 import tributary.api.Partition;
 import tributary.api.Topic;
 import tributary.api.TributaryCluster;
+import tributary.api.producers.ManualProducer;
 import tributary.api.producers.Producer;
 import tributary.core.tributaryFactory.IntegerFactory;
 import tributary.core.tributaryFactory.ObjectFactory;
@@ -21,88 +25,97 @@ public class TributaryController {
     private ObjectFactory objectFactory;
     private Map&lt;String, Class&lt;?&gt;&gt; typeMap;
 
-<span class="fc" id="L24">    public TributaryController() {</span>
-<span class="fc" id="L25">        this.tributaryCluster = TributaryCluster.getInstance();</span>
-<span class="fc" id="L26">        this.objectFactory = new StringFactory();</span>
-<span class="fc" id="L27">        this.typeMap = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L28">        typeMap.put(&quot;integer&quot;, Integer.class);</span>
-<span class="fc" id="L29">        typeMap.put(&quot;string&quot;, String.class);</span>
-<span class="fc" id="L30">    }</span>
+<span class="fc" id="L28">    public TributaryController() {</span>
+<span class="fc" id="L29">        this.tributaryCluster = TributaryCluster.getInstance();</span>
+<span class="fc" id="L30">        this.objectFactory = new StringFactory();</span>
+<span class="fc" id="L31">        this.typeMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L32">        typeMap.put(&quot;integer&quot;, Integer.class);</span>
+<span class="fc" id="L33">        typeMap.put(&quot;string&quot;, String.class);</span>
+<span class="fc" id="L34">    }</span>
 
     /*
      * All Helper methods involved in the the creation, deletion and manipulation of
      * Tributary objects.
      */
     public Topic&lt;?&gt; getTopic(String topicId) {
-<span class="fc" id="L37">        Topic&lt;?&gt; topic = tributaryCluster.getTopic(topicId);</span>
-<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (topic == null) {</span>
-<span class="nc" id="L39">            System.out.println(&quot;Topic with ID &quot; + topicId + &quot; does not exist.\n&quot;);</span>
-<span class="nc" id="L40">            return null;</span>
+<span class="fc" id="L41">        Topic&lt;?&gt; topic = tributaryCluster.getTopic(topicId);</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        if (topic == null) {</span>
+<span class="nc" id="L43">            System.out.println(&quot;Topic with ID &quot; + topicId + &quot; does not exist.\n&quot;);</span>
+<span class="nc" id="L44">            return null;</span>
         }
-<span class="fc" id="L42">        return topic;</span>
+<span class="fc" id="L46">        return topic;</span>
     }
 
     public ConsumerGroup&lt;?&gt; getConsumerGroup(String groupId) {
-<span class="fc" id="L46">        ConsumerGroup&lt;?&gt; group = tributaryCluster.getConsumerGroup(groupId);</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (group == null) {</span>
-<span class="fc" id="L48">            System.out.println(&quot;Consumer group with ID &quot; + groupId + &quot; does not exist.\n&quot;);</span>
-<span class="fc" id="L49">            return null;</span>
+<span class="fc" id="L50">        ConsumerGroup&lt;?&gt; group = tributaryCluster.getConsumerGroup(groupId);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (group == null) {</span>
+<span class="fc" id="L52">            System.out.println(&quot;Consumer group with ID &quot; + groupId + &quot; does not exist.\n&quot;);</span>
+<span class="fc" id="L53">            return null;</span>
         }
-<span class="fc" id="L51">        return group;</span>
+<span class="fc" id="L55">        return group;</span>
     }
 
     public Producer&lt;?&gt; getProducer(String producerId) {
-<span class="fc" id="L55">        Producer&lt;?&gt; producer = tributaryCluster.getProducer(producerId);</span>
-<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (producer == null) {</span>
-<span class="nc" id="L57">            System.out.println(&quot;Producer with ID &quot; + producerId + &quot; does not exist.\n&quot;);</span>
-<span class="nc" id="L58">            return null;</span>
+<span class="fc" id="L59">        Producer&lt;?&gt; producer = tributaryCluster.getProducer(producerId);</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (producer == null) {</span>
+<span class="nc" id="L61">            System.out.println(&quot;Producer with ID &quot; + producerId + &quot; does not exist.\n&quot;);</span>
+<span class="nc" id="L62">            return null;</span>
         }
-<span class="fc" id="L60">        return producer;</span>
+<span class="fc" id="L64">        return producer;</span>
     }
 
     public void setObjectFactoryType(Class&lt;?&gt; type) {
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (type.equals(Integer.class)) {</span>
-<span class="fc" id="L65">            this.objectFactory = new IntegerFactory();</span>
-<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        } else if (type.equals(String.class)) {</span>
-<span class="fc" id="L67">            this.objectFactory = new StringFactory();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (type.equals(Integer.class)) {</span>
+<span class="fc" id="L69">            this.objectFactory = new IntegerFactory();</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        } else if (type.equals(String.class)) {</span>
+<span class="fc" id="L71">            this.objectFactory = new StringFactory();</span>
         } else {
-<span class="nc" id="L69">            System.out.println(&quot;Unsupported type: &quot; + type.getSimpleName() + &quot;\n&quot;);</span>
+<span class="nc" id="L73">            System.out.println(&quot;Unsupported type: &quot; + type.getSimpleName() + &quot;\n&quot;);</span>
         }
-<span class="fc" id="L71">    }</span>
+<span class="fc" id="L75">    }</span>
 
     public Consumer&lt;?&gt; findConsumer(String consumerId) {
-<span class="fc" id="L74">        Consumer&lt;?&gt; specifiedConsumer = null;</span>
-<span class="fc bfc" id="L75" title="All 2 branches covered.">        for (ConsumerGroup&lt;?&gt; group : tributaryCluster.listConsumerGroups()) {</span>
-<span class="fc bfc" id="L76" title="All 2 branches covered.">            for (Consumer&lt;?&gt; consumer : group.listConsumers()) {</span>
-<span class="fc bfc" id="L77" title="All 2 branches covered.">                if (consumer.getId().equals(consumerId)) {</span>
-<span class="fc" id="L78">                    specifiedConsumer = consumer;</span>
+<span class="fc" id="L78">        Consumer&lt;?&gt; specifiedConsumer = null;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (ConsumerGroup&lt;?&gt; group : tributaryCluster.listConsumerGroups()) {</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">            for (Consumer&lt;?&gt; consumer : group.listConsumers()) {</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">                if (consumer.getId().equals(consumerId)) {</span>
+<span class="fc" id="L82">                    specifiedConsumer = consumer;</span>
                 }
-<span class="fc" id="L80">            }</span>
-<span class="fc" id="L81">        }</span>
-<span class="fc" id="L82">        return specifiedConsumer;</span>
+<span class="fc" id="L84">            }</span>
+<span class="fc" id="L85">        }</span>
+<span class="fc" id="L86">        return specifiedConsumer;</span>
     }
 
     public Partition&lt;?&gt; findPartition(String partitionId) {
-<span class="fc" id="L86">        Partition&lt;?&gt; specifiedPartition = null;</span>
-<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        for (Topic&lt;?&gt; topic : tributaryCluster.listTopics()) {</span>
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">            for (Partition&lt;?&gt; partition : topic.listPartitions()) {</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">                if (partition.getId().equals(partitionId)) {</span>
-<span class="fc" id="L90">                    specifiedPartition = partition;</span>
-<span class="fc" id="L91">                    break;</span>
+<span class="fc" id="L90">        Partition&lt;?&gt; specifiedPartition = null;</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        for (Topic&lt;?&gt; topic : tributaryCluster.listTopics()) {</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">            for (Partition&lt;?&gt; partition : topic.listPartitions()) {</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">                if (partition.getId().equals(partitionId)) {</span>
+<span class="fc" id="L94">                    specifiedPartition = partition;</span>
+<span class="fc" id="L95">                    break;</span>
                 }
-<span class="fc" id="L93">            }</span>
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">            if (specifiedPartition != null)</span>
-<span class="fc" id="L95">                break;</span>
-<span class="nc" id="L96">        }</span>
-<span class="fc" id="L97">        return specifiedPartition;</span>
+<span class="fc" id="L97">            }</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">            if (specifiedPartition != null)</span>
+<span class="fc" id="L99">                break;</span>
+<span class="nc" id="L100">        }</span>
+<span class="fc" id="L101">        return specifiedPartition;</span>
+    }
+
+    private boolean isInteger(String str) {
+        try {
+<span class="fc" id="L106">            Integer.parseInt(str);</span>
+<span class="fc" id="L107">            return true;</span>
+<span class="nc" id="L108">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L109">            return false;</span>
+        }
     }
 
     public ObjectFactory getFactory() {
-<span class="nc" id="L101">        return objectFactory;</span>
+<span class="nc" id="L114">        return objectFactory;</span>
     }
 
     public TributaryCluster getCluster() {
-<span class="nc" id="L105">        return tributaryCluster;</span>
+<span class="nc" id="L118">        return tributaryCluster;</span>
     }
 
     /*
@@ -110,63 +123,66 @@ public class TributaryController {
      * These methods are outsourced to the ObjectFactory class.
      */
     public void createTopic(String topicId, String type) {
-<span class="fc" id="L113">        Class&lt;?&gt; typeClass = typeMap.get(type);</span>
-<span class="fc" id="L114">        setObjectFactoryType(typeClass);</span>
-<span class="fc" id="L115">        objectFactory.createTopic(topicId);</span>
-<span class="fc" id="L116">    }</span>
+<span class="fc" id="L126">        Class&lt;?&gt; typeClass = typeMap.get(type);</span>
+<span class="fc" id="L127">        setObjectFactoryType(typeClass);</span>
+<span class="fc" id="L128">        objectFactory.createTopic(topicId);</span>
+<span class="fc" id="L129">    }</span>
 
     public void createPartition(String topicId, String partitionId) {
-<span class="fc" id="L119">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
-<span class="fc" id="L120">        setObjectFactoryType(topic.getType());</span>
-<span class="fc" id="L121">        objectFactory.createPartition(topicId, partitionId);</span>
-<span class="fc" id="L122">    }</span>
+<span class="fc" id="L132">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="fc" id="L133">        setObjectFactoryType(topic.getType());</span>
+<span class="fc" id="L134">        objectFactory.createPartition(topicId, partitionId);</span>
+<span class="fc" id="L135">    }</span>
 
     public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
-<span class="fc" id="L125">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
-<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if (topic == null) {</span>
-<span class="nc" id="L127">            System.out.println(&quot;Topic &quot; + topicId + &quot; does not exist.\n&quot;);</span>
-<span class="nc" id="L128">            return;</span>
+<span class="fc" id="L138">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (topic == null) {</span>
+<span class="nc" id="L140">            System.out.println(&quot;Topic &quot; + topicId + &quot; does not exist.\n&quot;);</span>
+<span class="nc" id="L141">            return;</span>
         }
-<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (getConsumerGroup(groupId) != null) {</span>
-<span class="fc" id="L131">            System.out.println(&quot;Consumer group &quot; + groupId + &quot; already exists.\n&quot;);</span>
-<span class="fc" id="L132">            return;</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (getConsumerGroup(groupId) != null) {</span>
+<span class="fc" id="L144">            System.out.println(&quot;Consumer group &quot; + groupId + &quot; already exists.\n&quot;);</span>
+<span class="fc" id="L145">            return;</span>
         }
-<span class="fc" id="L134">        setObjectFactoryType(topic.getType());</span>
-<span class="fc" id="L135">        objectFactory.createConsumerGroup(groupId, topic, rebalancing);</span>
-<span class="fc" id="L136">    }</span>
+<span class="fc" id="L147">        setObjectFactoryType(topic.getType());</span>
+<span class="fc" id="L148">        objectFactory.createConsumerGroup(groupId, topic, rebalancing);</span>
+<span class="fc" id="L149">    }</span>
 
     public void createConsumer(String groupId, String consumerId) {
-<span class="fc" id="L139">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (group.containsConsumer(consumerId)) {</span>
-<span class="nc" id="L141">            System.out.println(&quot;Consumer &quot; + consumerId + &quot;already exists in the group.\n&quot;);</span>
-<span class="nc" id="L142">            return;</span>
+<span class="fc" id="L152">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (group.containsConsumer(consumerId)) {</span>
+<span class="fc" id="L154">            System.out.println(&quot;Consumer &quot; + consumerId + &quot;already exists in the group.\n&quot;);</span>
+<span class="fc" id="L155">            return;</span>
         }
 
-<span class="fc" id="L145">        Topic&lt;?&gt; topic = group.getAssignedTopic();</span>
-<span class="fc" id="L146">        setObjectFactoryType(topic.getType());</span>
-<span class="fc" id="L147">        objectFactory.createConsumer(groupId, consumerId);</span>
-<span class="fc" id="L148">    }</span>
+<span class="fc" id="L158">        Topic&lt;?&gt; topic = group.getAssignedTopic();</span>
+<span class="fc" id="L159">        setObjectFactoryType(topic.getType());</span>
+<span class="fc" id="L160">        objectFactory.createConsumer(groupId, consumerId);</span>
+<span class="fc" id="L161">    }</span>
 
     public void createProducer(String producerId, String type, String allocation) {
-<span class="fc" id="L151">        Class&lt;?&gt; typeClass = typeMap.get(type);</span>
-<span class="fc" id="L152">        setObjectFactoryType(typeClass);</span>
-<span class="fc" id="L153">        objectFactory.createProducer(producerId, type, allocation);</span>
-<span class="fc" id="L154">    }</span>
+<span class="fc" id="L164">        Class&lt;?&gt; typeClass = typeMap.get(type);</span>
+<span class="fc" id="L165">        setObjectFactoryType(typeClass);</span>
+<span class="fc" id="L166">        objectFactory.createProducer(producerId, type, allocation);</span>
+<span class="fc" id="L167">    }</span>
 
-    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException {
-<span class="fc" id="L157">        Producer&lt;?&gt; producer = getProducer(producerId);</span>
-<span class="fc" id="L158">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
-<span class="pc bpc" id="L159" title="2 of 4 branches missed.">        if (producer == null || topic == null) {</span>
-<span class="nc" id="L160">            System.out.println(&quot;Producer &quot; + producerId + &quot; or topic &quot; + topicId + &quot; not found.\n&quot;);</span>
-<span class="nc" id="L161">            return;</span>
-<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        } else if (!topic.getType().equals(producer.getType())) {</span>
-<span class="nc" id="L163">            System.out.println(&quot;Producer type does not match topic type.\n&quot;);</span>
-<span class="nc" id="L164">            return;</span>
+    public synchronized void createEvent(String producerId, String topicId, String eventId, String partitionId)
+            throws IOException {
+<span class="fc" id="L171">        Producer&lt;?&gt; producer = getProducer(producerId);</span>
+<span class="fc" id="L172">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="pc bpc" id="L173" title="2 of 4 branches missed.">        if (producer == null || topic == null) {</span>
+<span class="nc" id="L174">            System.out.println(&quot;Producer &quot; + producerId + &quot; or topic &quot; + topicId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L175">            return;</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">        } else if (!topic.getType().equals(producer.getType())) {</span>
+<span class="nc" id="L177">            System.out.println(&quot;Producer type does not match topic type.\n&quot;);</span>
+<span class="nc" id="L178">            return;</span>
         }
 
-<span class="fc" id="L167">        setObjectFactoryType(topic.getType());</span>
-<span class="fc" id="L168">        objectFactory.createEvent(producerId, topicId, eventId, partitionId);</span>
-<span class="fc" id="L169">    }</span>
+<span class="fc" id="L181">        synchronized (topic) {</span>
+<span class="fc" id="L182">            setObjectFactoryType(topic.getType());</span>
+<span class="fc" id="L183">            objectFactory.createEvent(producerId, topicId, eventId, partitionId);</span>
+<span class="fc" id="L184">        }</span>
+<span class="fc" id="L185">    }</span>
 
     /*
      * The delete consumer method is the only delete method so far.
@@ -176,8 +192,8 @@ public class TributaryController {
      * Ther is no added functionality when deleting other tributary objects.
      */
     public void deleteConsumer(String consumerId) {
-<span class="fc" id="L179">        tributaryCluster.deleteConsumer(consumerId);</span>
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L195">        tributaryCluster.deleteConsumer(consumerId);</span>
+<span class="fc" id="L196">    }</span>
 
     /*
      * Show the entirety of Topic and ConsumerGroup objects.
@@ -187,121 +203,231 @@ public class TributaryController {
      * of consumption in eahc partition.
      */
     public void showTopic(String topicId) {
-<span class="fc" id="L190">        Topic&lt;?&gt; topic = tributaryCluster.getTopic(topicId);</span>
-<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (topic != null) {</span>
-<span class="fc" id="L192">            topic.showTopic();</span>
+<span class="nc" id="L206">        Topic&lt;?&gt; topic = tributaryCluster.getTopic(topicId);</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">        if (topic != null) {</span>
+<span class="nc" id="L208">            topic.showTopic();</span>
         } else {
-<span class="nc" id="L194">            System.out.println(&quot;Topic not found: &quot; + topicId + &quot;\n&quot;);</span>
+<span class="nc" id="L210">            System.out.println(&quot;Topic not found: &quot; + topicId + &quot;\n&quot;);</span>
         }
-<span class="fc" id="L196">    }</span>
+<span class="nc" id="L212">    }</span>
 
     public void showGroup(String groupId) {
-<span class="nc" id="L199">        ConsumerGroup&lt;?&gt; group = tributaryCluster.getConsumerGroup(groupId);</span>
-<span class="nc bnc" id="L200" title="All 2 branches missed.">        if (group != null) {</span>
-<span class="nc" id="L201">            group.showGroup();</span>
+<span class="nc" id="L215">        ConsumerGroup&lt;?&gt; group = tributaryCluster.getConsumerGroup(groupId);</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">        if (group != null) {</span>
+<span class="nc" id="L217">            group.showGroup();</span>
         } else {
-<span class="nc" id="L203">            System.out.println(&quot;Group not found: &quot; + groupId + &quot;\n&quot;);</span>
+<span class="nc" id="L219">            System.out.println(&quot;Group not found: &quot; + groupId + &quot;\n&quot;);</span>
         }
-<span class="nc" id="L205">    }</span>
+<span class="nc" id="L221">    }</span>
 
     /*
      * Consume events from a partition. The number of events to consume is specified
      * by numberOfEvents.
-     * The consumer must be assigned to the partition.
-     * 
-     * @precondition: The consumer must be assigned to the partition.
+     * The consumer must be assigned to the partition to consume events.
      */
     public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
-<span class="fc" id="L215">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
-<span class="fc" id="L216">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
-<span class="pc bpc" id="L217" title="2 of 4 branches missed.">        if (consumer == null || partition == null) {</span>
-<span class="nc" id="L218">            System.out.println(&quot;Consumer &quot; + consumerId + &quot; or partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
-<span class="nc" id="L219">            return;</span>
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">        } else if (!consumer.listAssignedPartitions().contains(partition)) {</span>
-<span class="nc" id="L221">            System.out.println(&quot;Consumer is not assigned to the partition.\n&quot;);</span>
-<span class="nc" id="L222">            return;</span>
+<span class="fc" id="L229">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="fc" id="L230">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="pc bpc" id="L231" title="2 of 4 branches missed.">        if (consumer == null || partition == null) {</span>
+<span class="nc" id="L232">            System.out.println(&quot;Consumer &quot; + consumerId + &quot; or partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L233">            return;</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        } else if (!consumer.listAssignedPartitions().contains(partition)) {</span>
+<span class="fc" id="L235">            System.out.println(&quot;Consumer is not assigned to the partition.\n&quot;);</span>
+<span class="fc" id="L236">            return;</span>
         }
 
-<span class="fc" id="L225">        String topicId = partition.getAllocatedTopicId();</span>
-<span class="fc" id="L226">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="fc" id="L239">        String topicId = partition.getAllocatedTopicId();</span>
+<span class="fc" id="L240">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
 
-<span class="fc bfc" id="L228" title="All 2 branches covered.">        if (topic.getType().equals(Integer.class)) {</span>
-<span class="fc" id="L229">            consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);</span>
-<span class="pc bpc" id="L230" title="1 of 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
-<span class="fc" id="L231">            consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if (topic.getType().equals(Integer.class)) {</span>
+<span class="nc" id="L243">            consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
+<span class="fc" id="L245">            consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);</span>
         } else {
-<span class="nc" id="L233">            System.out.println(&quot;Unsupported type: &quot; + topic.getType().getSimpleName() + &quot;\n&quot;);</span>
+<span class="nc" id="L247">            System.out.println(&quot;Unsupported type: &quot; + topic.getType().getSimpleName() + &quot;\n&quot;);</span>
         }
-<span class="fc" id="L235">    }</span>
+<span class="fc" id="L249">    }</span>
 
     private &lt;T&gt; void consumeEventsGeneric(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type,
             int numberOfEvents) {
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L240">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
+<span class="fc" id="L254">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L242">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
-<span class="fc" id="L243">        consumeHelper(typedConsumer, typedPartition, numberOfEvents);</span>
-<span class="fc" id="L244">    }</span>
+<span class="fc" id="L256">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L257">        synchronized (typedPartition) {</span>
+<span class="fc" id="L258">            consumeHelper(typedConsumer, typedPartition, numberOfEvents);</span>
+<span class="fc" id="L259">        }</span>
+<span class="fc" id="L260">    }</span>
 
     private &lt;T&gt; void consumeHelper(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int numberOfEvents) {
-<span class="fc" id="L247">        List&lt;Message&lt;T&gt;&gt; messages = partition.listMessages();</span>
-<span class="fc" id="L248">        int currentOffset = consumer.getOffset(partition);</span>
-<span class="fc" id="L249">        int count = 0;</span>
+<span class="fc" id="L263">        List&lt;Message&lt;T&gt;&gt; messages = partition.listMessages();</span>
+<span class="fc" id="L264">        int currentOffset = consumer.getOffset(partition);</span>
+<span class="fc" id="L265">        int count = 0;</span>
 
-<span class="fc bfc" id="L251" title="All 4 branches covered.">        for (int i = currentOffset + 1; i &lt; messages.size() &amp;&amp; count &lt; numberOfEvents; i++, count++) {</span>
-<span class="fc" id="L252">            consumer.consume(messages.get(i), partition);</span>
+<span class="pc bpc" id="L267" title="1 of 4 branches missed.">        for (int i = currentOffset + 1; i &lt; messages.size() &amp;&amp; count &lt; numberOfEvents; i++, count++) {</span>
+<span class="fc" id="L268">            consumer.consume(messages.get(i), partition);</span>
         }
 
-<span class="fc bfc" id="L255" title="All 2 branches covered.">        if (count &lt; numberOfEvents) {</span>
-<span class="fc" id="L256">            System.out.println(&quot;Not enough messages to consume.\nConsumed &quot; + count + &quot; messages.\n&quot;);</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">        if (count &lt; numberOfEvents) {</span>
+<span class="fc" id="L272">            System.out.println(&quot;Not enough messages to consume.\nConsumed &quot; + count + &quot; messages.\n&quot;);</span>
         } else {
-<span class="fc" id="L258">            System.out.println(&quot;Consumed &quot; + count + &quot; messages.\n&quot;);</span>
+<span class="fc" id="L274">            System.out.println(&quot;Consumed &quot; + count + &quot; messages.\n&quot;);</span>
         }
-<span class="fc" id="L260">    }</span>
+<span class="fc" id="L276">    }</span>
 
     /*
      * Update the rebalancing strategy for a consumer group.
      * Update the Offset of a consumer to allow for message replay.
      */
     public void updateRebalancing(String groupId, String rebalancing) {
-<span class="fc" id="L267">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
-<span class="fc" id="L268">        group.setRebalancingMethod(rebalancing);</span>
-<span class="fc" id="L269">        group.rebalance();</span>
-<span class="fc" id="L270">        System.out.println(&quot;Updated the rebalancing strategy for the &quot;</span>
+<span class="nc" id="L283">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
+<span class="nc" id="L284">        group.setRebalancingMethod(rebalancing);</span>
+<span class="nc" id="L285">        group.rebalance();</span>
+<span class="nc" id="L286">        System.out.println(&quot;Updated the rebalancing strategy for the &quot;</span>
                 + groupId + &quot; group to &quot; + rebalancing + &quot; rebalancing\n&quot;);
-<span class="fc" id="L272">    }</span>
+<span class="nc" id="L288">    }</span>
 
     public void updateConsumerOffset(String consumerId, String partitionId, int offset) {
-<span class="fc" id="L275">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
-<span class="fc" id="L276">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
-<span class="fc" id="L277">        Topic&lt;?&gt; topic = getTopic(partition.getAllocatedTopicId());</span>
+<span class="fc" id="L291">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="fc" id="L292">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="fc" id="L293">        Topic&lt;?&gt; topic = getTopic(partition.getAllocatedTopicId());</span>
 
-<span class="pc bpc" id="L279" title="3 of 6 branches missed.">        if (consumer == null || partition == null || topic == null) {</span>
-<span class="nc" id="L280">            System.out.println(&quot;Consumer, partition, or topic not found.\n&quot;);</span>
-<span class="nc" id="L281">            return;</span>
+<span class="pc bpc" id="L295" title="3 of 6 branches missed.">        if (consumer == null || partition == null || topic == null) {</span>
+<span class="nc" id="L296">            System.out.println(&quot;Consumer, partition, or topic not found.\n&quot;);</span>
+<span class="nc" id="L297">            return;</span>
         }
 
-<span class="pc bpc" id="L284" title="1 of 2 branches missed.">        if (topic.getType().equals(Integer.class)) {</span>
-<span class="fc" id="L285">            updateConsumerOffsetGeneric(consumer, partition, Integer.class, offset);</span>
-<span class="nc bnc" id="L286" title="All 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
-<span class="nc" id="L287">            updateConsumerOffsetGeneric(consumer, partition, String.class, offset);</span>
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">        if (topic.getType().equals(Integer.class)) {</span>
+<span class="nc" id="L301">            updateConsumerOffsetGeneric(consumer, partition, Integer.class, offset);</span>
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
+<span class="fc" id="L303">            updateConsumerOffsetGeneric(consumer, partition, String.class, offset);</span>
         } else {
-<span class="nc" id="L289">            System.out.println(&quot;Unsupported type: &quot; + topic.getType().getSimpleName() + &quot;\n&quot;);</span>
+<span class="nc" id="L305">            System.out.println(&quot;Unsupported type: &quot; + topic.getType().getSimpleName() + &quot;\n&quot;);</span>
         }
-<span class="fc" id="L291">    }</span>
+<span class="fc" id="L307">    }</span>
 
     private &lt;T&gt; void updateConsumerOffsetGeneric(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type,
             int offset) {
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L296">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
+<span class="fc" id="L312">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L298">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
-<span class="fc" id="L299">        updateConsumerOffset(typedConsumer, typedPartition, offset);</span>
-<span class="fc" id="L300">    }</span>
+<span class="fc" id="L314">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L315">        updateConsumerOffset(typedConsumer, typedPartition, offset);</span>
+<span class="fc" id="L316">    }</span>
 
     private &lt;T&gt; void updateConsumerOffset(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int offset) {
-<span class="fc" id="L303">        consumer.updateOffset(partition, offset);</span>
-<span class="fc" id="L304">    }</span>
+<span class="pc bpc" id="L319" title="1 of 2 branches missed.">        if (consumer.getOffset(partition) &lt; offset) {</span>
+<span class="fc" id="L320">            System.out.println(&quot;Offset cannot be greater than the number of messages in the partition.\n&quot;);</span>
+<span class="fc" id="L321">            return;</span>
+            // if number negative return the last nth message
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        } else if (offset &lt; 0) {</span>
+<span class="nc" id="L324">            consumer.updateOffset(partition, partition.listMessages().size() + offset + 1);</span>
+        } else {
+<span class="nc" id="L326">            consumer.updateOffset(partition, offset);</span>
+        }
+<span class="nc" id="L328">    }</span>
 
+    /*
+     * All parallel operations.
+     * Parallel produce events.
+     * Parallel consume events in a partition.
+     * Parallel operations demonstrate the system's ability to hand multiple
+     * concurrent threads.
+     */
+
+    public void parallelProduce(String[] parts) {
+<span class="fc" id="L339">        ExecutorService executorService = Executors.newCachedThreadPool();</span>
+
+<span class="fc bfc" id="L341" title="All 2 branches covered.">        for (int i = 0; i &lt; parts.length;) {</span>
+<span class="fc" id="L342">            String producerId = parts[i];</span>
+<span class="fc" id="L343">            String topicId = parts[i + 1];</span>
+<span class="fc" id="L344">            String eventFile = parts[i + 2];</span>
+
+<span class="fc" id="L346">            Producer&lt;?&gt; producer = getProducer(producerId);</span>
+<span class="fc" id="L347">            Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="pc bpc" id="L348" title="2 of 4 branches missed.">            if (producer == null || topic == null) {</span>
+<span class="nc" id="L349">                System.out.println(&quot;Producer &quot; + producerId + &quot; or topic &quot; + topicId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L350">                break;</span>
+<span class="pc bpc" id="L351" title="1 of 2 branches missed.">            } else if (!topic.getType().equals(producer.getType())) {</span>
+<span class="nc" id="L352">                System.out.println(&quot;Producer &quot; + producerId + &quot; type does not match Topic &quot; + topicId + &quot; type.\n&quot;);</span>
+<span class="nc" id="L353">                break;</span>
+            }
+
+<span class="fc" id="L356">            String partitionId = null;</span>
+<span class="pc bpc" id="L357" title="1 of 2 branches missed.">            if (producer instanceof ManualProducer) {</span>
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">                if (i + 3 &lt; parts.length) {</span>
+<span class="fc" id="L359">                    partitionId = parts[i + 3];</span>
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">                    if (findPartition(partitionId) == null) {</span>
+<span class="nc" id="L361">                        System.out.println(&quot;Partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L362">                        break;</span>
+                    }
+<span class="fc" id="L364">                    i += 4;</span>
+                } else {
+<span class="nc" id="L366">                    System.out.println(&quot;Insufficient parameters for manual producer &quot; + producerId + &quot;\n&quot;);</span>
+<span class="nc" id="L367">                    break;</span>
+                }
+            } else {
+<span class="nc" id="L370">                i += 3;</span>
+            }
+
+<span class="fc" id="L373">            final String finalPartitionId = partitionId;</span>
+<span class="fc" id="L374">            executorService.submit(() -&gt; {</span>
+                try {
+<span class="fc" id="L376">                    createEvent(producerId, topicId, eventFile, finalPartitionId);</span>
+<span class="fc" id="L377">                } catch (IOException e) {</span>
+<span class="fc" id="L378">                    System.out.println(&quot;Error producing event: &quot; + e.getMessage());</span>
+<span class="fc" id="L379">                }</span>
+<span class="fc" id="L380">            });</span>
+<span class="fc" id="L381">        }</span>
+
+<span class="fc" id="L383">        executorService.shutdown();</span>
+        try {
+<span class="fc" id="L385">            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
+<span class="nc" id="L386">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L387">            System.out.println(&quot;Parallel produce interrupted: &quot; + e.getMessage());</span>
+<span class="fc" id="L388">        }</span>
+<span class="fc" id="L389">    }</span>
+
+    public void parallelConsume(String[] parts) {
+<span class="fc" id="L392">        ExecutorService executorService = Executors.newFixedThreadPool(parts.length / 2);</span>
+
+<span class="fc bfc" id="L394" title="All 2 branches covered.">        for (int i = 0; i &lt; parts.length;) {</span>
+<span class="fc" id="L395">            String consumerId = parts[i];</span>
+<span class="fc" id="L396">            String partitionId = parts[i + 1];</span>
+
+<span class="fc" id="L398">            Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="fc" id="L399">            Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="fc" id="L400">            Topic&lt;?&gt; topic = getTopic(partition.getAllocatedTopicId());</span>
+<span class="fc" id="L401">            int currentOffset = parallelConsumerOffset(consumer, partition, topic.getType());</span>
+<span class="fc" id="L402">            int partitionSize = partition.listMessages().size();</span>
+
+<span class="fc" id="L404">            int numberOfEvents = partitionSize - currentOffset - 1;</span>
+
+<span class="pc bpc" id="L406" title="2 of 4 branches missed.">            if (parts.length &gt; i + 2 &amp;&amp; isInteger(parts[i + 2])) {</span>
+<span class="fc" id="L407">                numberOfEvents = Integer.parseInt(parts[i + 2]);</span>
+<span class="fc" id="L408">                i += 3;</span>
+            } else {
+<span class="nc" id="L410">                i += 2;</span>
+            }
+
+<span class="fc" id="L413">            final int finalNumberOfEvents = numberOfEvents;</span>
+<span class="fc" id="L414">            executorService.submit(() -&gt; consumeEvents(consumerId, partitionId, finalNumberOfEvents));</span>
+<span class="fc" id="L415">        }</span>
+
+<span class="fc" id="L417">        executorService.shutdown();</span>
+        try {
+<span class="fc" id="L419">            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
+<span class="nc" id="L420">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L421">            System.out.println(&quot;Parallel consume interrupted: &quot; + e.getMessage());</span>
+<span class="fc" id="L422">        }</span>
+<span class="fc" id="L423">    }</span>
+
+    private &lt;T&gt; int parallelConsumerOffset(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L427">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L429">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L430">        return typedConsumer.getOffset(typedPartition);</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

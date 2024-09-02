@@ -20,10 +20,10 @@ public class ConsumerGroup&lt;T&gt; extends TributaryObject {
 <span class="fc" id="L20">    }</span>
 
     public void setRebalancingMethod(String rebalanceMethod) {
-<span class="pc bpc" id="L23" title="1 of 3 branches missed.">        switch (rebalanceMethod) {</span>
+<span class="pc bpc" id="L23" title="2 of 3 branches missed.">        switch (rebalanceMethod) {</span>
             case &quot;roundrobin&quot;:
-<span class="fc" id="L25">                this.rebalanceMethod = new RoundRobinStrategy&lt;&gt;();</span>
-<span class="fc" id="L26">                break;</span>
+<span class="nc" id="L25">                this.rebalanceMethod = new RoundRobinStrategy&lt;&gt;();</span>
+<span class="nc" id="L26">                break;</span>
             case &quot;range&quot;:
 <span class="fc" id="L28">                this.rebalanceMethod = new RangeStrategy&lt;&gt;();</span>
 <span class="fc" id="L29">                break;</span>
@@ -42,7 +42,7 @@ public class ConsumerGroup&lt;T&gt; extends TributaryObject {
     }
 
     public String getRebalanceMethodName() {
-<span class="fc" id="L45">        return rebalanceMethod.getClass().getSimpleName();</span>
+<span class="nc" id="L45">        return rebalanceMethod.getClass().getSimpleName();</span>
     }
 
     public void addConsumer(Consumer&lt;T&gt; consumer) {
@@ -54,7 +54,7 @@ public class ConsumerGroup&lt;T&gt; extends TributaryObject {
 <span class="fc" id="L54">    }</span>
 
     public boolean containsConsumer(String consumerId) {
-<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        return getConsumer(consumerId) != null;</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        return getConsumer(consumerId) != null;</span>
     }
 
     public List&lt;Consumer&lt;T&gt;&gt; listConsumers() {

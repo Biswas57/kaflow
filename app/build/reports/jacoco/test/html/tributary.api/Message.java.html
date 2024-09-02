@@ -6,43 +6,52 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
+import tributary.core.typeHandlerFactory.TypeHandler;
+import tributary.core.typeHandlerFactory.TypeHandlerFactory;
+
 public class Message&lt;T&gt; extends TributaryObject {
     private LocalDateTime createdDate;
     private String payloadType;
     private Map&lt;String, T&gt; content;
 
     public Message(String messageId, LocalDateTime createdDate, String payloadType, Map&lt;String, T&gt; content) {
-<span class="fc" id="L15">        super(messageId);</span>
-<span class="fc" id="L16">        this.createdDate = createdDate;</span>
-<span class="fc" id="L17">        this.payloadType = payloadType;</span>
-<span class="fc" id="L18">        this.content = content;</span>
-<span class="fc" id="L19">    }</span>
+<span class="fc" id="L18">        super(messageId);</span>
+<span class="fc" id="L19">        this.createdDate = createdDate;</span>
+<span class="fc" id="L20">        this.payloadType = payloadType;</span>
+<span class="fc" id="L21">        this.content = content;</span>
+<span class="fc" id="L22">    }</span>
 
     public static &lt;T&gt; Message&lt;T&gt; fromJson(JSONObject json, Class&lt;T&gt; type) {
-<span class="fc" id="L22">        String messageId = json.getString(&quot;eventId&quot;);</span>
-<span class="fc" id="L23">        LocalDateTime createdDate = LocalDateTime.now();</span>
-<span class="fc" id="L24">        String payloadType = json.getString(&quot;PayloadType&quot;);</span>
+<span class="fc" id="L25">        String messageId = json.getString(&quot;eventId&quot;);</span>
+<span class="fc" id="L26">        LocalDateTime createdDate = LocalDateTime.now();</span>
+<span class="fc" id="L27">        String payloadType = json.getString(&quot;PayloadType&quot;);</span>
 
-<span class="fc" id="L26">        JSONObject messageContent = json.getJSONObject(&quot;messageContents&quot;);</span>
-<span class="fc" id="L27">        Map&lt;String, T&gt; content = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L29">        JSONObject messageContent = json.getJSONObject(&quot;messageContents&quot;);</span>
+<span class="fc" id="L30">        Map&lt;String, T&gt; content = new HashMap&lt;&gt;();</span>
 
-<span class="fc bfc" id="L29" title="All 2 branches covered.">        for (String key : messageContent.keySet()) {</span>
-<span class="fc" id="L30">            content.put(key, type.cast(messageContent.get(key)));</span>
-<span class="fc" id="L31">        }</span>
+<span class="fc" id="L32">        TypeHandler&lt;T&gt; handler = TypeHandlerFactory.getHandler(type);</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (handler == null) {</span>
+<span class="nc" id="L34">            throw new IllegalArgumentException(&quot;Unsupported type: &quot; + type.getSimpleName());</span>
+        }
 
-<span class="fc" id="L33">        return new Message&lt;&gt;(messageId, createdDate, payloadType, content);</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        for (String key : messageContent.keySet()) {</span>
+<span class="fc" id="L38">            Object value = messageContent.get(key);</span>
+<span class="fc" id="L39">            content.put(key, handler.handle(value));</span>
+<span class="fc" id="L40">        }</span>
+
+<span class="fc" id="L42">        return new Message&lt;&gt;(messageId, createdDate, payloadType, content);</span>
     }
 
     public LocalDateTime getCreatedDate() {
-<span class="nc" id="L37">        return createdDate;</span>
+<span class="nc" id="L46">        return createdDate;</span>
     }
 
     public String getPayloadType() {
-<span class="nc" id="L41">        return payloadType;</span>
+<span class="nc" id="L50">        return payloadType;</span>
     }
 
     public Map&lt;String, T&gt; getContent() {
-<span class="fc" id="L45">        return content;</span>
+<span class="fc" id="L54">        return content;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
