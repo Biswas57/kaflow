@@ -65,8 +65,9 @@ Other Notes:
 - Load Balancing: The system distributes partitions among consumers in a group to decrease processing time
     - There are 2 distinct distribution methods
  
-![Centered Image](images/consumerAllocation1.png)
-
+<p align="center">
+  <img src="images/consumerAllocation1.png" width="500px" />
+</p>
 Rebalancing (Message Distribution) Strategies:
 - Range Rebalancing: Partitions are evenly divided based on the number of consumers, with adjustments made for odd counts.
 - Round Robin Rebalancing: Partitions are allocated in a rotating manner to ensure even distribution of workload among consumers.
