@@ -203,4 +203,5 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - Unfortunately 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
     - **Edit:** Have now implemented extensive JUnit and Mockito tests from 28/05/2024
     - **2nd Edit:** Have also offset replay and parallel event management and running tests for these functions from 02/07/2024.
+    - **3rd Edit:** Optimised Event storage using HashMaps and fixed gradle coverage issue 02/07/2024
 - However I am proud of the fact that I got through to the end and I will be using this project as a threshold for my ability and motivation in the future.
