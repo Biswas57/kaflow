@@ -66,6 +66,7 @@ Other Notes:
     - There are 2 distinct distribution methods
  
 <img src="images/consumerAllocation1.png" width="400px" />
+![image alt ><](/images/consumerAllocation1.png)
 
 Rebalancing (Message Distribution) Strategies:
 - Range Rebalancing: Partitions are evenly divided based on the number of consumers, with adjustments made for odd counts.
@@ -81,7 +82,9 @@ Messages from a certain offset onwards are processed, until the most recent mess
        - This feature is crucial for when a system feature may not be working as it's supposed to.
 
 ![](/images/controlledReplay.png)
-
+> ℹ  NOTE: The above image demonstrates a consumer starting at offset 6 that performed normal consumption until offset 9. This consumer then triggered a
+> controlled replay from offset 4 that played back all the messages from that offset until the most recently consumed message (i.e messages 6, 7, 8 and 9
+> were consumed again).
 
 ### Design Considerations
 
