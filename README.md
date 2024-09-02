@@ -64,6 +64,8 @@ Other Notes:
 - Message consumption: Consumer groups consist of multiple consumers working together to process messages from all partitions within a topic.
 - Load Balancing: The system distributes partitions among consumers in a group to decrease processing time
     - There are 2 distinct distribution methods
+ 
+<img src="images/consumerAllocation1.png" width="600px" /> ![](/images/controlledReplay.png)
 
 Rebalancing (Message Distribution) Strategies:
 - Range Rebalancing: Partitions are evenly divided based on the number of consumers, with adjustments made for odd counts.
