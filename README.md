@@ -28,7 +28,7 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 4. Producer Structure:
        Tributary Cluster -> Producers.
 
-<img src="images/tributaryClusterExample.png" width="400px" /> <img src="images/topicExample.png" width="600px" />
+<img src="images/tributaryClusterExample.png" width="200px" /> <img src="images/topicExample.png" width="600px" />
 
 - **Tributary Cluster:** The top-level singleton component that covers the entire system.
     - **Topics:** Categories or channels within the Tributary Cluster where messages are allocated based on their content or purpose.
