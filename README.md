@@ -22,11 +22,11 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 
 **General Structure of System**
 1. Content Structure:
-       Tributary Cluster -> Topics -> Partitions -> Messages.
+       Tributary Cluster &rarr; Topics &rarr; Partitions &rarr; Messages.
 2. Consumer Structure:
-       Tributary Cluster -> Consumer Groups -> Consumers.
+       Tributary Cluster &rarr; Consumer Groups &rarr; Consumers.
 4. Producer Structure:
-       Tributary Cluster -> Producers.
+       Tributary Cluster &rarr; Producers.
 
 <img src="images/tributaryClusterExample.png" width="230px" /> <img src="images/topicExample.png" width="550px" />
 
@@ -192,8 +192,8 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - Implementing Generics for Message class types allows for typesafety while allowing the system to handle different types of messages
     - Important system that might evolve to handle more than 2 types of Event data
 
-### Final UML Diagram
-[final_design.pdf](Blogging&Design/final_design.pdf)
+### UML Diagram Progression
+[1st Draft UML (initial design)](Blogging&Design/1st_draft.pdf) &rarr; [2nd Draft UML](Blogging&Design/2nd_draft.pdf) &rarr; [3rd Draft UML](Blogging&Design/3rd_draft.pdf) &rarr; [final_design.pdf](Blogging&Design/final_design.pdf)
 
 ### Reflection
 [Ongoing Reflection](Blogging&Design/ongoing_progress_blog.md)
