@@ -420,14 +420,24 @@ To run usability tests on your solution I needed to develop a way to interact wi
 - I am happy with the final product and the knowledge I have gained from this project.
 
 **Challenges**
-- Main challenge was the time constraint I had till I had to start studying for my exams and the fact that I was working alone, which made it difficult to get feedback and suggestions on my design.
-- I would have liked to have more time to implement and a bit more guidance because I really felt at times I was just winging it and on my own.
-- I also struggled with the planning stage and drawing up the initila UML diagrams and actually starting this project (felt like jumping off a cliff headfirst)
-    - Didn't know what to d oor how to start, I was asking around for tutors' help and I was getting a lot of different answers and I was getting confused.
-    - I was also struggling with coming up with the correct design patterns i should use and how to implement them in my system.
+- The main challenge I had was the time constraint till I had to start studying for my exams and the fact that I was working alone, which made it difficult to get feedback and suggestions on my design.
+- I would have liked to have more time to implement and a bit more guidance because I felt at times I was winging it and on my own.
+- I also struggled with the planning stage and drawing up the initial UML diagrams and starting this project felt like jumping off a cliff headfirst
+    - I didn't know what to do or how to start, I was asking around for tutors' help and I was getting a lot of different answers and *I don't know*'s which wasn't very helpful.
+    - I was also struggling with coming up with the correct design patterns I should use and how to implement them in my system.
     - I just went with the flow and started coding and then I realised all it took was a bit of planning and a bit of research and I was steadily making progress.
-- Unfortunately 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
-    - **Edit:** Have now implemented extensive JUnit and Mockito tests from 28/05/2024
-    - **2nd Edit:** Have also offset replay and parallel event management and running tests for these functions from 02/07/2024.
-    - **3rd Edit:** Optimised Event storage using HashMaps and fixed gradle coverage issue 02/10/2024
-- However I am proud of the fact that I got through to the end and I will be using this project as a threshold for my ability and motivation in the future.
+- Unfortunately, 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
+- However, I am proud of the fact that I got through to the end and I will be using this project as a threshold for my ability and motivation in the future.
+
+## Ongoing Updates and Implementations
+### 28/05/2024
+Implemented extensive JUnit and Mockito testing suites with ~85% branch coverage
+### 02/07/2024
+Implements Kafka offset replay and parallel event creation and consumption functionalities
+- Updated Testing suite for these functionalities as well.
+### 15/11/2024 (Beginning on 20/09/2024)
+Optimized system, Implemented Security features and fixed a bug that caused the testing suites to fail.
+- Optimised Event storage using HashMaps for Cluster, Consumer groups, topics and partitions (Messages already use Hasmaps for info storage
+- Integrated a secure PostgreSQL database instead of storing messages and loading them to the system using JSON files
+- Implemented Message Encryption and Role-Based Access Control (RBAC) for Consumers and Consumer Groups
+- fixed gradle coverage issue where Mockito testing suite was interfering with JUnit testing suite at runtimes.
