@@ -66,7 +66,8 @@ Other Notes:
 <p align="center">
   <img src="images/consumerAllocation1.png" width="500px" />
 </p>
-Rebalancing (Message Distribution) Strategies:
+
+**Rebalancing (Message Distribution) Strategies:**
 - Range Rebalancing: Partitions are evenly divided based on the number of consumers, with adjustments made for odd counts.
 - Round Robin Rebalancing: Partitions are allocated in a rotating manner to ensure even distribution of workload among consumers.
 
