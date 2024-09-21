@@ -160,28 +160,24 @@ Usability Checklist: Using the command line interface, the checklist will be run
 
 ### Overview of Design Patterns Used
 **Singleton Pattern for TributaryCluster:**
-- **Reason:** To ensure a single instance of the cluster and make it accessible throughout the system.
-- **Details:**
+- To ensure a single instance of the cluster and make it accessible throughout the system.
     - The TributaryCluster serves as the central hub for managing the topics, consumer groups, and producers.
     - Implementing the Singleton Pattern ensures data consistency across the system.
 
 **Abstract Factory Pattern for Component Creation:**
-- **Reason:** The TributaryController class had too many responsibilities, violating the Open/Closed Principle, and Typesafety constraints mean that it was very easy for us to overuse switch and if-else statements leading to alot of code duplication and poorly designed code.
-- **Details:**
+- The TributaryController class had too many responsibilities, violating the Open/Closed Principle, and Typesafety constraints mean that it was very easy for us to overuse switch and if-else statements leading to alot of code duplication and poorly designed code.
     - Abstract Factory Pattern facilitates the creation of different components in the system without specifying the exact class to be created.
     - Simplifies adding new components without modifying existing code.
     - Abstract Factory Pattern for Type Handling, especially when reading from JSON files and creating objects of different types.
         - Ensure Open Closed principle isn't violated because then we can add different types of Object factories and Type handlers (in addition to String and Integer types) for different types of Event and Message Payload.
 
 **Strategy Pattern for Consumer Group Rebalancing:**
-- **Reason:** Needed a flexible way to switch between different rebalancing algorithms (Range and Round Robin) at runtime.
-- **Details:**
+- Needed a flexible way to switch between different rebalancing algorithms (Range and Round Robin) at runtime.
     - Implemented the Strategy Pattern to choose the rebalancing algorithm dynamically.
     - Separating rebalancing strategies allows the system to adapt without modifying the core consumer group class.
 
 **Observer Pattern for Event Notification:**
-- **Reason:** Required a mechanism to handle changes in topics and consumer groups dynamically.
-- **Details:**
+- Required a mechanism to handle changes in topics and consumer groups dynamically.
     - Adding Partitions to a Topic: Consumer groups need to be notified to allocate the new partition.
     - Adding or Deleting Consumers: Triggers rebalancing of partitions across the remaining consumers.
     - Implemented Observer Pattern to ensure that consumers or consumer groups are informed of changes efficiently.
