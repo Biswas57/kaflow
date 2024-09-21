@@ -89,7 +89,6 @@ Concurrency:
 
 Generics:
 - Type Flexibility: The system uses Java generics to handle messages of any type, making the system able to adapt to different data types without duplicating code.
-    - This will be implemented using the Factory Pattern to create Objects of differing types.
 
 ### Initial UML Diagram
 
@@ -384,7 +383,7 @@ To run usability tests on your solution I needed to develop a way to interact wi
   </tr>
   <tr>
     <td>
-      <code>set consumer group rebalancing &lt;group&gt; &lt;rebalancing&gt;</code>
+      <code>update rebalancing method &lt;group&gt; &lt;rebalancing&gt;</code>
     </td>
     <td>
       <ul>
@@ -402,7 +401,9 @@ To run usability tests on your solution I needed to develop a way to interact wi
     </td>
     <td>
       <ul>
-        <li>Plays back events for a given consumer from the offset.</li>
+        <li>Plays back events for a given consumer from the offset. 
+               Backtrack Replay: Consumers can replay messages from a specified backtrack in their partition, ie. -2 = 2nd latest message processed
+               Controlled Replay: Consumers can replay messages from a specific offset. ie. 2 = 2nd message in the partition</li>
       </ul>
     </td>
     <td>The id and contents of each event received in order.</td>
