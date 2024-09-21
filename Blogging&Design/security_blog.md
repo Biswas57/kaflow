@@ -75,7 +75,7 @@
 </table>
 
 
-## Implemented Features
+## Features to Implement
 
 ### PostgreSQL database
 
