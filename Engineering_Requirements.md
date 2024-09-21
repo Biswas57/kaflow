@@ -143,7 +143,7 @@ You can think of all of this very similarly to the Java API. It is a library tha
 
 ## 2.3. Command Line Interface
 
-In order to run usability tests on your solution you will need to develop a way to interact with tributaries, producers, and consumers via a command line interface.
+In order to run usability tests on your solution I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface.
 
 To do so, you should write a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system. This class should be in a separate package to the `api/core` packages of your library, as it shouldn't be a part of your library that other engineers developing their own event-driven systems would use.
 
