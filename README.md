@@ -184,9 +184,9 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - Implementing Generics for Message class types allows for typesafety while allowing the system to handle different types of messages
     - Important system that might evolve to handle more than 2 types of Event data
 - Integrated concurrency into the event processing pipeline to handle parallel message production and consumption
-       - Used ExecutorService to manage threads for producing and consuming events simultaneously, ensuring thread-safety and scalability as the system processes multiple events concurrently
-       - Synchronization was applied in key areas to prevent race conditions and ensure data integrity during parallel operations
-
+    - Used ExecutorService to manage threads for producing and consuming events simultaneously, ensuring thread-safety and scalability as the system processes multiple events concurrently
+    - Synchronization was applied in key areas to prevent race conditions and ensure data integrity during parallel operations
+       
 ### UML Diagram Progression
 [1st Draft UML (initial design)](Blogging&Design/1st_draft.pdf) &rarr; [2nd Draft UML](Blogging&Design/2nd_draft.pdf) &rarr; [3rd Draft UML](Blogging&Design/3rd_draft.pdf) &rarr; [final_design.pdf](Blogging&Design/final_design.pdf)
 
