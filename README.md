@@ -187,7 +187,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 [1st Draft UML (initial design)](Blogging&Design/1st_draft.pdf) &rarr; [2nd Draft UML](Blogging&Design/2nd_draft.pdf) &rarr; [3rd Draft UML](Blogging&Design/3rd_draft.pdf) &rarr; [final_design.pdf](Blogging&Design/final_design.pdf)
 
 ### CLI Commands and Usability Testing
-To run usability tests on your solution I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system. 
+To run usability tests on your solution I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system.
 
 <table>
   <tr>
