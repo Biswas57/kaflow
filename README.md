@@ -403,7 +403,7 @@ To run usability tests on your solution I needed to develop a way to interact wi
       <ul>
         <li>Plays back events for a given consumer from the offset.
         <li>Controlled Replay: Consumers can replay messages from a specific offset. ie. 2 = 2nd message in the partition</li></li>
-        <li>Backtrack Replay: Consumers can replay messages from a specified backtrack in their partition, ie. -2 = 2nd latest message processed</li>
+        <li>Backtrack Replay: Consumers can replay messages from a specified backtrack, ie. -2 = 2nd latest message processed</li>
       </ul>
     </td>
     <td>The id and contents of each event received in order.</td>
