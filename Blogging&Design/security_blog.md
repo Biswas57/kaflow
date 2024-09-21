@@ -1,6 +1,6 @@
 # COMP6841 SA Project Blog
 ## Security Implementation Overviews
-<h2>Project Schedule</h2>
+### Project Schedule
 <table>
   <tr>
     <th>Week</th>
@@ -46,7 +46,7 @@
   </tr>
 </table>
 
-<h2>Project Deliverables/Outcomes</h2>
+### Project Deliverables/Outcomes
 <table>
   <tr>
     <th>Deliverable</th>
