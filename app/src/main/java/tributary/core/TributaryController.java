@@ -312,16 +312,22 @@ public class TributaryController {
         Consumer<T> typedConsumer = (Consumer<T>) consumer;
         @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
-        updateConsumerOffset(typedConsumer, typedPartition, offset);
+        updateTypedConsumerOffset(typedConsumer, typedPartition, offset);
     }
 
-    private <T> void updateConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
+    private <T> void updateTypedConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
+        // uses 1 indexing here because zero indexing is used in the consume method
+
         if (consumer.getOffset(partition) < offset) {
             System.out.println("Offset cannot be greater than the number of messages in the partition.\n");
             return;
+            // if number is 0 return the last message in the partition
+        } else if (offset == 0) {
+            consumer.updateOffset(partition, partition.listMessages().size());
             // if number negative return the last nth message
         } else if (offset < 0) {
             consumer.updateOffset(partition, partition.listMessages().size() + offset + 1);
+            // if number positive return the message at nth position in partition
         } else {
             consumer.updateOffset(partition, offset);
         }

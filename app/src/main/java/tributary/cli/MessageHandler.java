@@ -91,14 +91,14 @@ public class MessageHandler {
     public void handleUpdateCommand(String[] parts) {
         String subcommand = parts[1].toLowerCase();
         switch (subcommand) {
-            case "consumer":
-                if (parts[2].equals("group") && parts[3].equals("rebalancing")) {
-                    controller.updateRebalancing(parts[4], parts[5].toLowerCase());
-                } else if (parts[2].equals("offset")) {
-                    // change later
-                    controller.updateConsumerOffset(parts[3], parts[4], Integer.parseInt(parts[5]));
-                }
+            case "rebalancing":
+                controller.updateRebalancing(parts[4], parts[5].toLowerCase());
                 break;
+            case "consumer":
+                if (parts[2].equals("offset")) {
+                    controller.updateConsumerOffset(parts[3], parts[4],
+                            parts.length > 5 ? Integer.parseInt(parts[5]) : -1);
+                }
             default:
                 System.out.println("Unknown update command: " + subcommand);
                 break;

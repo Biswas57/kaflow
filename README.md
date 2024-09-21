@@ -404,6 +404,7 @@ To run usability tests on your solution I needed to develop a way to interact wi
         <li>Plays back events for a given consumer from the offset.
         <li>Controlled Replay: Consumers can replay messages from a specific offset. ie. 2 = 2nd message in the partition</li>
         <li>Backtrack Replay: Consumers can backtrack their processed Messages, ie. -2 = 2nd last message processed</li>
+        <li>If the offset is not inputted then updateConsumerOffset will set the offset as the last processed message. If the offset inputted is 0 then updateConsumerOffset will set the offset to the last message in the Partition</li>
       </ul>
     </td>
     <td>The id and contents of each event received in order.</td>
