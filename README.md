@@ -1,6 +1,5 @@
 # Tributary Cluster Design and Implementation Blog
-
-### Overview of Engineering Requirements
+## Project Overview
 Modern software often relies on many small programs, called microservices, that work together to provide a complete application or service. Event-driven architecture makes up much of the backbone of modern software which microservices rely upon to run smoothly. In essence, event-driven architecture is similar to a signalling system that allows different parts of a software system to work independently but remain responsive to events at scalable rates. This makes the whole system faster, more flexible, and able to handle more tasks at once without getting stuck waiting for each part to finish its job.
 
 This library is based on a heavily simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what they do can be found [**here**](https://youtu.be/vHbvbwSEYGo).
@@ -16,8 +15,7 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 - Conducted extensive usability tests and created a detailed CLI for managing and interacting with the Tributary system, showcasing functionality through a comprehensive set of commands.
 - Designed and documented the entire system structure providing a clear overview and understanding of the system’s architecture and seamlessly integrated all these key features to provide users with efficient and useful pipeline for event processing.
 
-
-## Project Overview
+### Breakdown of Engineering Requirements
 **NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](Engineering_Requirements.md)
 
 **General Structure of System**
@@ -130,8 +128,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 **Adopting a component-driven approach**
 - Basically integrating each components individually and then testing them together to form the final system. Much better to test overall usability and functionality.
 
-## Final Design and Reflection
-
+## Final Design Considerations
 ### Overview of Testing choices
 **Usability Tests**
 [UsabilityTests.md](Blogging&Design/usability_tests.md)
