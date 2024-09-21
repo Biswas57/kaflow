@@ -179,8 +179,6 @@ Usability Checklist: Using the command line interface, the checklist will be run
     - Implemented Observer Pattern to ensure that consumers or consumer groups are informed of changes efficiently.
 
 **Concurrency and Generics**
-- Created an Abstract Producer Class to implement the different types of Producers which have specific produceEvent methods
-    - Each specific producer subclass implements its own allocateMessage method but the super class handle the produceMessage method to reduce code duplication
 - Implementing Generics for Message class types allows for typesafety while allowing the system to handle different types of messages
     - Important system that might evolve to handle more than 2 types of Event data
 - Integrated concurrency into the event processing pipeline to handle parallel message production and consumption
