@@ -71,14 +71,10 @@ Other Notes:
 - Range Rebalancing: Partitions are evenly divided based on the number of consumers, with adjustments made for odd counts.
 - Round Robin Rebalancing: Partitions are allocated in a rotating manner to ensure even distribution of workload among consumers.
 
-**Synchronous Data Processing**
-- Concurrency: Java synchronization to manage parallel message handling,
-       - ensuring thread-safe operations across producer and consumer threads for real-time data integrity in the event processing pipeline.
-
 **Message Replay**
-Messages from a certain offset onwards are processed, until the most recent message at the latest offset is reached
-- Controlled Replay: Consumers can replay messages from a specific offset to catch errors and failures or for processing historical data.
-       - This feature is crucial for when a system feature may not be working as it's supposed to.
+- Messages from a certain offset onwards are processed, until the most recent message at the latest offset is reached to catch errors and failures or for processing historical data. This feature is crucial when a system feature may not be working as it's supposed to.
+- Backtrack Replay: Consumers can replay messages from a specified backtrack in their partition, ie. -2 = 2nd latest message processed
+- Controlled Replay: Consumers can replay messages from a specific offset. ie. 2 = 2nd message in the partition
 
 ![](/images/controlledReplay.png)
 > ℹ  NOTE: The above image demonstrates a consumer starting at offset 6 that performed normal consumption until offset 9. This consumer then triggered a
@@ -89,6 +85,7 @@ Messages from a certain offset onwards are processed, until the most recent mess
 
 Concurrency:
 - Thread Safety: To handle concurrent operations without issues, the system will use synchronization via the Singleton Pattern for the Tributary Cluster.
+- Java synchronization and Executor Service Library to manage parallel message handling ensuring thread-safe operations across producer and consumer threads for real-time data integrity in the event processing pipeline.
 
 Generics:
 - Type Flexibility: The system uses Java generics to handle messages of any type, making the system able to adapt to different data types without duplicating code.
