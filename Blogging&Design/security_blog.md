@@ -3,7 +3,7 @@
 ### Project Schedule
 <table>
   <tr>
-    <th>-  Week  -</th>
+    <th>Term Progression</th>
     <th>Task</th>
   </tr>
   <tr>
