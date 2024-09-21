@@ -125,8 +125,7 @@ Unit Tests: Each component (TributaryCluster, Topic, Partition, Producer(/s and 
 Usability Checklist: Using the command line interface, the checklist will be run through the terminal.
 
 ### Development Approach
-**Adopting a component-driven approach**
-- Basically integrating each components individually and then testing them together to form the final system. Much better to test overall usability and functionality.
+**Adopting a component-driven approach**: Integrating each component and testing that component using Mockito individually and then testing them together in JUnit to build a coherent and well-designed system. Much better to test overall usability and functionality last while ensuring each component works as intended through the development of this Kafka.
 
 ## Final Design Considerations
 ### Overview of Testing choices
