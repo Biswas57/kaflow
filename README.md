@@ -2,7 +2,7 @@
 ## Project Overview
 Modern software often relies on many small programs, called microservices, that work together to provide a complete application or service. Event-driven architecture makes up much of the backbone of modern software which microservices rely upon to run smoothly. In essence, event-driven architecture is similar to a signalling system that allows different parts of a software system to work independently but remain responsive to events at scalable rates. This makes the whole system faster, more flexible, and able to handle more tasks at once without getting stuck waiting for each part to finish its job.
 
-This library is based on a heavily simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what they do can be found [**here**](https://youtu.be/vHbvbwSEYGo).
+This library is based on a heavily simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo).
 
 The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, in other words a Tributary-like platform. However, our library allowed for more complex interactions than simply that of a single channel. Some of my key achievements throughout this project were:
 
