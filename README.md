@@ -16,7 +16,7 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 - Designed and documented the entire system structure providing a clear overview and understanding of the system’s architecture and seamlessly integrated all these key features to provide users with efficient and useful pipeline for event processing.
 
 ### Breakdown of Engineering Requirements
-**NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](Engineering_Requirements.md)
+**NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](Engineering_Requirements.md)
 
 **General Structure of System**
 1. Content Structure:
@@ -183,7 +183,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
     - Synchronization was applied in key areas to prevent race conditions and ensure data integrity during parallel operations
        
 ### UML Diagram Progression
-[1st Draft UML (initial design)](Blogging&Design/1st_draft.pdf) &rarr; [2nd Draft UML](Blogging&Design/2nd_draft.pdf) &rarr; [3rd Draft UML](Blogging&Design/3rd_draft.pdf) &rarr; [final_design.pdf](Blogging&Design/final_design.pdf)
+[1st Draft UML (initial design)](Blogging&Design/UML_1st_draft.pdf) &rarr; [2nd Draft UML](Blogging&Design/UML_2nd_draft.pdf) &rarr; [3rd Draft UML](Blogging&Design/UML_3rd_draft.pdf) &rarr; [final_design.pdf](Blogging&Design/UML_final_design.pdf)
 
 ### CLI Commands and Usability Testing
 To run usability tests on your solution I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system.
@@ -436,7 +436,7 @@ Implemented extensive JUnit and Mockito testing suites with ~85% branch coverage
 Implements Kafka offset replay and parallel event creation and consumption functionalities
 - Updated Testing suite for these functionalities as well.
 ### 15/11/2024 (Beginning on 20/09/2024)
-Optimized system, Implemented Security features and fixed a bug that caused the testing suites to fail.
+Optimized system, Implemented Security features and PostgreSQL database.
 - Optimised Event storage using HashMaps for Cluster, Consumer groups, topics and partitions (Messages already use Hasmaps for info storage
 - Integrated a secure PostgreSQL database instead of storing messages and loading them to the system using JSON files
 - Implemented Message Encryption and Role-Based Access Control (RBAC) for Consumers and Consumer Groups

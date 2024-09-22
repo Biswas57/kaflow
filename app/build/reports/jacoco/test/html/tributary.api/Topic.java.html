@@ -34,7 +34,7 @@ public class Topic&lt;T&gt; extends TributaryObject {
 <span class="nc" id="L34">    }</span>
 
     public Partition&lt;T&gt; getPartition(String partitionId) {
-<span class="nc" id="L37">        return partitions.stream().filter(p -&gt; p.getId().equals(partitionId)).findFirst().orElse(null);</span>
+<span class="fc" id="L37">        return partitions.stream().filter(p -&gt; p.getId().equals(partitionId)).findFirst().orElse(null);</span>
     }
 
     public List&lt;Partition&lt;T&gt;&gt; listPartitions() {
@@ -42,13 +42,13 @@ public class Topic&lt;T&gt; extends TributaryObject {
     }
 
     public void showTopic() {
-<span class="nc" id="L45">        System.out.println(&quot;Topic ID: &quot; + getId());</span>
-<span class="nc bnc" id="L46" title="All 2 branches missed.">        for (Partition&lt;T&gt; partition : partitions) {</span>
-<span class="nc" id="L47">            System.out.print(&quot;Partition ID: &quot; + partition.getId() + &quot; - Messages: &quot;);</span>
-<span class="nc" id="L48">            partition.listMessages().forEach(m -&gt; System.out.print(m.getId() + &quot;, &quot;));</span>
-<span class="nc" id="L49">            System.out.println();</span>
-<span class="nc" id="L50">        }</span>
-<span class="nc" id="L51">        System.out.println(&quot;\n--------------------------------------------------\n&quot;);</span>
-<span class="nc" id="L52">    }</span>
+<span class="fc" id="L45">        System.out.println(&quot;Topic ID: &quot; + getId());</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        for (Partition&lt;T&gt; partition : partitions) {</span>
+<span class="fc" id="L47">            System.out.print(&quot;Partition ID: &quot; + partition.getId() + &quot; - Messages: &quot;);</span>
+<span class="fc" id="L48">            partition.listMessages().forEach(m -&gt; System.out.print(m.getId() + &quot;, &quot;));</span>
+<span class="fc" id="L49">            System.out.println();</span>
+<span class="fc" id="L50">        }</span>
+<span class="fc" id="L51">        System.out.println(&quot;\n--------------------------------------------------\n&quot;);</span>
+<span class="fc" id="L52">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

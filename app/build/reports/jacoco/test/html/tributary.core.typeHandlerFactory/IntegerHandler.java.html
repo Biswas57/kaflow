@@ -3,10 +3,10 @@
 <span class="fc" id="L3">public class IntegerHandler implements TypeHandler&lt;Integer&gt; {</span>
     @Override
     public Integer handle(Object value) {
-<span class="nc bnc" id="L6" title="All 2 branches missed.">        if (value instanceof Number) {</span>
-<span class="nc" id="L7">            return ((Number) value).intValue();</span>
+<span class="fc bfc" id="L6" title="All 2 branches covered.">        if (value instanceof Number) {</span>
+<span class="fc" id="L7">            return ((Number) value).intValue();</span>
         } else {
-<span class="nc" id="L9">            throw new IllegalArgumentException(&quot;Value is not a Number: &quot; + value);</span>
+<span class="fc" id="L9">            throw new IllegalArgumentException(&quot;Value is not a Number: &quot; + value);</span>
         }
     }
 }

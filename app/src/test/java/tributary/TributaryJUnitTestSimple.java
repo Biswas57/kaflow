@@ -16,7 +16,7 @@ import tributary.api.Partition;
 import tributary.api.TributaryCluster;
 import tributary.core.TributaryController;
 
-public class TributaryTestSimple {
+public class TributaryJUnitTestSimple {
     private TributaryController controller;
     private TributaryCluster cluster;
 

@@ -150,3 +150,12 @@
 Issues to address:
 - Optimize space and time efficiency in message processing and storage by using HashMaps instead of Lists of Lists
 - Fix the issue with gradle coverage, it says its failing tests but when I run them all of them pass
+
+## Sunday 22/09/2024
+- Fixed the issue with gradle coverage, it was previously failing because the Mock Instances were not terminated before the JUnit tests were run. This was fixed by adding a @After method to terminate the Mock Instances after each test.
+
+**Future Goals**
+Optimized system, Implemented Security features and PostgreSQL database.
+- Optimised Event storage using HashMaps for Cluster, Consumer groups, topics and partitions (Messages already use Hasmaps for info storage
+- Integrated a secure PostgreSQL database instead of storing messages and loading them to the system using JSON files
+- Implemented Message Encryption and Role-Based Access Control (RBAC) for Consumers and Consumer Groups.

@@ -55,8 +55,8 @@ public class Consumer&lt;T&gt; extends TributaryObject {
 <span class="fc" id="L55">    }</span>
 
     public void updateOffset(Partition&lt;T&gt; partition, int newOffset) {
-<span class="nc" id="L58">        partitionOffsets.put(partition, newOffset - 1);</span>
-<span class="nc" id="L59">    }</span>
+<span class="fc" id="L58">        partitionOffsets.put(partition, newOffset - 1);</span>
+<span class="fc" id="L59">    }</span>
 
     public int getOffset(Partition&lt;T&gt; partition) {
 <span class="fc" id="L62">        return partitionOffsets.getOrDefault(partition, -2) + 1;</span>

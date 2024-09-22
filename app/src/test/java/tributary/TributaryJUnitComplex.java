@@ -17,7 +17,7 @@ import tributary.core.TributaryController;
 import tributary.core.rebalancingStrategy.RangeStrategy;
 import tributary.core.rebalancingStrategy.RoundRobinStrategy;
 
-public class TributaryTestComplex {
+public class TributaryJUnitComplex {
 
 	private TributaryController controller;
 	private TributaryCluster cluster;
@@ -162,10 +162,10 @@ public class TributaryTestComplex {
 		// Playback with 2 of the Partitions for Consumer 1
 		controller.updateConsumerOffset(consumerId, partitionId, 1);
 		int offset = consumer.getOffset(partition);
-		assertEquals(offset, 1);
+		assertEquals(1, offset);
 		controller.updateConsumerOffset(consumerId, partitionId, 0);
 		offset = consumer.getOffset(partition);
-		assertEquals(offset, 0);
+		assertEquals(partition.listMessages().size(), offset);
 		int previousSize = partition.listMessages().size();
 
 		// parrallel produce 2 new messages for the partition

@@ -62,25 +62,25 @@ public class TributaryCluster {
     }
 
     public List&lt;Producer&lt;?&gt;&gt; listProducers() {
-<span class="nc" id="L65">        return new ArrayList&lt;&gt;(producers);</span>
+<span class="fc" id="L65">        return new ArrayList&lt;&gt;(producers);</span>
     }
 
     public void deleteConsumer(String consumerId) {
 <span class="pc bpc" id="L69" title="1 of 2 branches missed.">        for (ConsumerGroup&lt;?&gt; group : listConsumerGroups()) {</span>
 <span class="pc bpc" id="L70" title="1 of 2 branches missed.">            for (Consumer&lt;?&gt; consumer : group.listConsumers()) {</span>
-<span class="pc bpc" id="L71" title="1 of 2 branches missed.">                if (consumer.getId().equals(consumerId)) {</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                if (consumer.getId().equals(consumerId)) {</span>
 <span class="fc" id="L72">                    group.removeConsumer(consumerId);</span>
 <span class="fc" id="L73">                    group.rebalance();</span>
 <span class="fc" id="L74">                    return;</span>
                 }
-<span class="nc" id="L76">            }</span>
+<span class="fc" id="L76">            }</span>
 <span class="nc" id="L77">        }</span>
 <span class="nc" id="L78">        System.out.println(&quot;Consumer not found with ID: &quot; + consumerId);</span>
 <span class="nc" id="L79">    }</span>
 
     // Test-friendly method to set the instance
     public static void setInstance(TributaryCluster mockInstance) {
-<span class="nc" id="L83">        instance = mockInstance;</span>
-<span class="nc" id="L84">    }</span>
+<span class="fc" id="L83">        instance = mockInstance;</span>
+<span class="fc" id="L84">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

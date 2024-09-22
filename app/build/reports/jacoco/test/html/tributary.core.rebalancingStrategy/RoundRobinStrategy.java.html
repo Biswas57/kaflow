@@ -5,17 +5,17 @@ import java.util.List;
 import tributary.api.Consumer;
 import tributary.api.Partition;
 
-<span class="nc" id="L8">public class RoundRobinStrategy&lt;T&gt; implements RebalancingStrategy&lt;T&gt; {</span>
+<span class="fc" id="L8">public class RoundRobinStrategy&lt;T&gt; implements RebalancingStrategy&lt;T&gt; {</span>
     @Override
     public void rebalance(List&lt;Partition&lt;T&gt;&gt; partitions, List&lt;Consumer&lt;T&gt;&gt; consumers) {
-<span class="nc bnc" id="L11" title="All 2 branches missed.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
-<span class="nc" id="L12">            consumer.clearAssignments();</span>
-<span class="nc" id="L13">        }</span>
+<span class="fc bfc" id="L11" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
+<span class="fc" id="L12">            consumer.clearAssignments();</span>
+<span class="fc" id="L13">        }</span>
 
-<span class="nc bnc" id="L15" title="All 2 branches missed.">        for (int i = 0; i &lt; partitions.size(); i++) {</span>
-<span class="nc" id="L16">            Consumer&lt;T&gt; consumer = consumers.get(i % consumers.size());</span>
-<span class="nc" id="L17">            consumer.assignPartition(partitions.get(i));</span>
+<span class="fc bfc" id="L15" title="All 2 branches covered.">        for (int i = 0; i &lt; partitions.size(); i++) {</span>
+<span class="fc" id="L16">            Consumer&lt;T&gt; consumer = consumers.get(i % consumers.size());</span>
+<span class="fc" id="L17">            consumer.assignPartition(partitions.get(i));</span>
         }
-<span class="nc" id="L19">    }</span>
+<span class="fc" id="L19">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

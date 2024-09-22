@@ -105,8 +105,8 @@ public class TributaryController {
         try {
 <span class="fc" id="L106">            Integer.parseInt(str);</span>
 <span class="fc" id="L107">            return true;</span>
-<span class="nc" id="L108">        } catch (NumberFormatException e) {</span>
-<span class="nc" id="L109">            return false;</span>
+<span class="fc" id="L108">        } catch (NumberFormatException e) {</span>
+<span class="fc" id="L109">            return false;</span>
         }
     }
 
@@ -203,13 +203,13 @@ public class TributaryController {
      * of consumption in eahc partition.
      */
     public void showTopic(String topicId) {
-<span class="nc" id="L206">        Topic&lt;?&gt; topic = tributaryCluster.getTopic(topicId);</span>
-<span class="nc bnc" id="L207" title="All 2 branches missed.">        if (topic != null) {</span>
-<span class="nc" id="L208">            topic.showTopic();</span>
+<span class="fc" id="L206">        Topic&lt;?&gt; topic = tributaryCluster.getTopic(topicId);</span>
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">        if (topic != null) {</span>
+<span class="fc" id="L208">            topic.showTopic();</span>
         } else {
 <span class="nc" id="L210">            System.out.println(&quot;Topic not found: &quot; + topicId + &quot;\n&quot;);</span>
         }
-<span class="nc" id="L212">    }</span>
+<span class="fc" id="L212">    }</span>
 
     public void showGroup(String groupId) {
 <span class="nc" id="L215">        ConsumerGroup&lt;?&gt; group = tributaryCluster.getConsumerGroup(groupId);</span>
@@ -239,8 +239,8 @@ public class TributaryController {
 <span class="fc" id="L239">        String topicId = partition.getAllocatedTopicId();</span>
 <span class="fc" id="L240">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
 
-<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if (topic.getType().equals(Integer.class)) {</span>
-<span class="nc" id="L243">            consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (topic.getType().equals(Integer.class)) {</span>
+<span class="fc" id="L243">            consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);</span>
 <span class="pc bpc" id="L244" title="1 of 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
 <span class="fc" id="L245">            consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);</span>
         } else {
@@ -264,7 +264,7 @@ public class TributaryController {
 <span class="fc" id="L264">        int currentOffset = consumer.getOffset(partition);</span>
 <span class="fc" id="L265">        int count = 0;</span>
 
-<span class="pc bpc" id="L267" title="1 of 4 branches missed.">        for (int i = currentOffset + 1; i &lt; messages.size() &amp;&amp; count &lt; numberOfEvents; i++, count++) {</span>
+<span class="fc bfc" id="L267" title="All 4 branches covered.">        for (int i = currentOffset + 1; i &lt; messages.size() &amp;&amp; count &lt; numberOfEvents; i++, count++) {</span>
 <span class="fc" id="L268">            consumer.consume(messages.get(i), partition);</span>
         }
 
@@ -280,12 +280,12 @@ public class TributaryController {
      * Update the Offset of a consumer to allow for message replay.
      */
     public void updateRebalancing(String groupId, String rebalancing) {
-<span class="nc" id="L283">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
-<span class="nc" id="L284">        group.setRebalancingMethod(rebalancing);</span>
-<span class="nc" id="L285">        group.rebalance();</span>
-<span class="nc" id="L286">        System.out.println(&quot;Updated the rebalancing strategy for the &quot;</span>
+<span class="fc" id="L283">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
+<span class="fc" id="L284">        group.setRebalancingMethod(rebalancing);</span>
+<span class="fc" id="L285">        group.rebalance();</span>
+<span class="fc" id="L286">        System.out.println(&quot;Updated the rebalancing strategy for the &quot;</span>
                 + groupId + &quot; group to &quot; + rebalancing + &quot; rebalancing\n&quot;);
-<span class="nc" id="L288">    }</span>
+<span class="fc" id="L288">    }</span>
 
     public void updateConsumerOffset(String consumerId, String partitionId, int offset) {
 <span class="fc" id="L291">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
@@ -297,8 +297,8 @@ public class TributaryController {
 <span class="nc" id="L297">            return;</span>
         }
 
-<span class="pc bpc" id="L300" title="1 of 2 branches missed.">        if (topic.getType().equals(Integer.class)) {</span>
-<span class="nc" id="L301">            updateConsumerOffsetGeneric(consumer, partition, Integer.class, offset);</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">        if (topic.getType().equals(Integer.class)) {</span>
+<span class="fc" id="L301">            updateConsumerOffsetGeneric(consumer, partition, Integer.class, offset);</span>
 <span class="pc bpc" id="L302" title="1 of 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
 <span class="fc" id="L303">            updateConsumerOffsetGeneric(consumer, partition, String.class, offset);</span>
         } else {
@@ -312,20 +312,26 @@ public class TributaryController {
 <span class="fc" id="L312">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
         @SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L314">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
-<span class="fc" id="L315">        updateConsumerOffset(typedConsumer, typedPartition, offset);</span>
+<span class="fc" id="L315">        updateTypedConsumerOffset(typedConsumer, typedPartition, offset);</span>
 <span class="fc" id="L316">    }</span>
 
-    private &lt;T&gt; void updateConsumerOffset(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int offset) {
-<span class="pc bpc" id="L319" title="1 of 2 branches missed.">        if (consumer.getOffset(partition) &lt; offset) {</span>
-<span class="fc" id="L320">            System.out.println(&quot;Offset cannot be greater than the number of messages in the partition.\n&quot;);</span>
-<span class="fc" id="L321">            return;</span>
+    private &lt;T&gt; void updateTypedConsumerOffset(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int offset) {
+        // uses 1 indexing here because zero indexing is used in the consume method
+
+<span class="fc bfc" id="L321" title="All 2 branches covered.">        if (consumer.getOffset(partition) &lt; offset) {</span>
+<span class="fc" id="L322">            System.out.println(&quot;Offset cannot be greater than the number of messages in the partition.\n&quot;);</span>
+<span class="fc" id="L323">            return;</span>
+            // if number is 0 return the last message in the partition
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        } else if (offset == 0) {</span>
+<span class="fc" id="L326">            consumer.updateOffset(partition, partition.listMessages().size());</span>
             // if number negative return the last nth message
-<span class="nc bnc" id="L323" title="All 2 branches missed.">        } else if (offset &lt; 0) {</span>
-<span class="nc" id="L324">            consumer.updateOffset(partition, partition.listMessages().size() + offset + 1);</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">        } else if (offset &lt; 0) {</span>
+<span class="nc" id="L329">            consumer.updateOffset(partition, partition.listMessages().size() + offset + 1);</span>
+            // if number positive return the message at nth position in partition
         } else {
-<span class="nc" id="L326">            consumer.updateOffset(partition, offset);</span>
+<span class="fc" id="L332">            consumer.updateOffset(partition, offset);</span>
         }
-<span class="nc" id="L328">    }</span>
+<span class="fc" id="L334">    }</span>
 
     /*
      * All parallel operations.
@@ -336,98 +342,98 @@ public class TributaryController {
      */
 
     public void parallelProduce(String[] parts) {
-<span class="fc" id="L339">        ExecutorService executorService = Executors.newCachedThreadPool();</span>
+<span class="fc" id="L345">        ExecutorService executorService = Executors.newCachedThreadPool();</span>
 
-<span class="fc bfc" id="L341" title="All 2 branches covered.">        for (int i = 0; i &lt; parts.length;) {</span>
-<span class="fc" id="L342">            String producerId = parts[i];</span>
-<span class="fc" id="L343">            String topicId = parts[i + 1];</span>
-<span class="fc" id="L344">            String eventFile = parts[i + 2];</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">        for (int i = 0; i &lt; parts.length;) {</span>
+<span class="fc" id="L348">            String producerId = parts[i];</span>
+<span class="fc" id="L349">            String topicId = parts[i + 1];</span>
+<span class="fc" id="L350">            String eventFile = parts[i + 2];</span>
 
-<span class="fc" id="L346">            Producer&lt;?&gt; producer = getProducer(producerId);</span>
-<span class="fc" id="L347">            Topic&lt;?&gt; topic = getTopic(topicId);</span>
-<span class="pc bpc" id="L348" title="2 of 4 branches missed.">            if (producer == null || topic == null) {</span>
-<span class="nc" id="L349">                System.out.println(&quot;Producer &quot; + producerId + &quot; or topic &quot; + topicId + &quot; not found.\n&quot;);</span>
-<span class="nc" id="L350">                break;</span>
-<span class="pc bpc" id="L351" title="1 of 2 branches missed.">            } else if (!topic.getType().equals(producer.getType())) {</span>
-<span class="nc" id="L352">                System.out.println(&quot;Producer &quot; + producerId + &quot; type does not match Topic &quot; + topicId + &quot; type.\n&quot;);</span>
-<span class="nc" id="L353">                break;</span>
+<span class="fc" id="L352">            Producer&lt;?&gt; producer = getProducer(producerId);</span>
+<span class="fc" id="L353">            Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="pc bpc" id="L354" title="2 of 4 branches missed.">            if (producer == null || topic == null) {</span>
+<span class="nc" id="L355">                System.out.println(&quot;Producer &quot; + producerId + &quot; or topic &quot; + topicId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L356">                break;</span>
+<span class="pc bpc" id="L357" title="1 of 2 branches missed.">            } else if (!topic.getType().equals(producer.getType())) {</span>
+<span class="nc" id="L358">                System.out.println(&quot;Producer &quot; + producerId + &quot; type does not match Topic &quot; + topicId + &quot; type.\n&quot;);</span>
+<span class="nc" id="L359">                break;</span>
             }
 
-<span class="fc" id="L356">            String partitionId = null;</span>
-<span class="pc bpc" id="L357" title="1 of 2 branches missed.">            if (producer instanceof ManualProducer) {</span>
-<span class="pc bpc" id="L358" title="1 of 2 branches missed.">                if (i + 3 &lt; parts.length) {</span>
-<span class="fc" id="L359">                    partitionId = parts[i + 3];</span>
-<span class="pc bpc" id="L360" title="1 of 2 branches missed.">                    if (findPartition(partitionId) == null) {</span>
-<span class="nc" id="L361">                        System.out.println(&quot;Partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
-<span class="nc" id="L362">                        break;</span>
+<span class="fc" id="L362">            String partitionId = null;</span>
+<span class="pc bpc" id="L363" title="1 of 2 branches missed.">            if (producer instanceof ManualProducer) {</span>
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">                if (i + 3 &lt; parts.length) {</span>
+<span class="fc" id="L365">                    partitionId = parts[i + 3];</span>
+<span class="pc bpc" id="L366" title="1 of 2 branches missed.">                    if (findPartition(partitionId) == null) {</span>
+<span class="nc" id="L367">                        System.out.println(&quot;Partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L368">                        break;</span>
                     }
-<span class="fc" id="L364">                    i += 4;</span>
+<span class="fc" id="L370">                    i += 4;</span>
                 } else {
-<span class="nc" id="L366">                    System.out.println(&quot;Insufficient parameters for manual producer &quot; + producerId + &quot;\n&quot;);</span>
-<span class="nc" id="L367">                    break;</span>
+<span class="nc" id="L372">                    System.out.println(&quot;Insufficient parameters for manual producer &quot; + producerId + &quot;\n&quot;);</span>
+<span class="nc" id="L373">                    break;</span>
                 }
             } else {
-<span class="nc" id="L370">                i += 3;</span>
+<span class="nc" id="L376">                i += 3;</span>
             }
 
-<span class="fc" id="L373">            final String finalPartitionId = partitionId;</span>
-<span class="fc" id="L374">            executorService.submit(() -&gt; {</span>
+<span class="fc" id="L379">            final String finalPartitionId = partitionId;</span>
+<span class="fc" id="L380">            executorService.submit(() -&gt; {</span>
                 try {
-<span class="fc" id="L376">                    createEvent(producerId, topicId, eventFile, finalPartitionId);</span>
-<span class="fc" id="L377">                } catch (IOException e) {</span>
-<span class="fc" id="L378">                    System.out.println(&quot;Error producing event: &quot; + e.getMessage());</span>
-<span class="fc" id="L379">                }</span>
-<span class="fc" id="L380">            });</span>
-<span class="fc" id="L381">        }</span>
+<span class="fc" id="L382">                    createEvent(producerId, topicId, eventFile, finalPartitionId);</span>
+<span class="fc" id="L383">                } catch (IOException e) {</span>
+<span class="fc" id="L384">                    System.out.println(&quot;Error producing event: &quot; + e.getMessage());</span>
+<span class="fc" id="L385">                }</span>
+<span class="fc" id="L386">            });</span>
+<span class="fc" id="L387">        }</span>
 
-<span class="fc" id="L383">        executorService.shutdown();</span>
+<span class="fc" id="L389">        executorService.shutdown();</span>
         try {
-<span class="fc" id="L385">            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
-<span class="nc" id="L386">        } catch (InterruptedException e) {</span>
-<span class="nc" id="L387">            System.out.println(&quot;Parallel produce interrupted: &quot; + e.getMessage());</span>
-<span class="fc" id="L388">        }</span>
-<span class="fc" id="L389">    }</span>
+<span class="fc" id="L391">            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
+<span class="nc" id="L392">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L393">            System.out.println(&quot;Parallel produce interrupted: &quot; + e.getMessage());</span>
+<span class="fc" id="L394">        }</span>
+<span class="fc" id="L395">    }</span>
 
     public void parallelConsume(String[] parts) {
-<span class="fc" id="L392">        ExecutorService executorService = Executors.newFixedThreadPool(parts.length / 2);</span>
+<span class="fc" id="L398">        ExecutorService executorService = Executors.newFixedThreadPool(parts.length / 2);</span>
 
-<span class="fc bfc" id="L394" title="All 2 branches covered.">        for (int i = 0; i &lt; parts.length;) {</span>
-<span class="fc" id="L395">            String consumerId = parts[i];</span>
-<span class="fc" id="L396">            String partitionId = parts[i + 1];</span>
+<span class="fc bfc" id="L400" title="All 2 branches covered.">        for (int i = 0; i &lt; parts.length;) {</span>
+<span class="fc" id="L401">            String consumerId = parts[i];</span>
+<span class="fc" id="L402">            String partitionId = parts[i + 1];</span>
 
-<span class="fc" id="L398">            Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
-<span class="fc" id="L399">            Partition&lt;?&gt; partition = findPartition(partitionId);</span>
-<span class="fc" id="L400">            Topic&lt;?&gt; topic = getTopic(partition.getAllocatedTopicId());</span>
-<span class="fc" id="L401">            int currentOffset = parallelConsumerOffset(consumer, partition, topic.getType());</span>
-<span class="fc" id="L402">            int partitionSize = partition.listMessages().size();</span>
+<span class="fc" id="L404">            Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="fc" id="L405">            Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="fc" id="L406">            Topic&lt;?&gt; topic = getTopic(partition.getAllocatedTopicId());</span>
+<span class="fc" id="L407">            int currentOffset = parallelConsumerOffset(consumer, partition, topic.getType());</span>
+<span class="fc" id="L408">            int partitionSize = partition.listMessages().size();</span>
 
-<span class="fc" id="L404">            int numberOfEvents = partitionSize - currentOffset - 1;</span>
+<span class="fc" id="L410">            int numberOfEvents = partitionSize - currentOffset - 1;</span>
 
-<span class="pc bpc" id="L406" title="2 of 4 branches missed.">            if (parts.length &gt; i + 2 &amp;&amp; isInteger(parts[i + 2])) {</span>
-<span class="fc" id="L407">                numberOfEvents = Integer.parseInt(parts[i + 2]);</span>
-<span class="fc" id="L408">                i += 3;</span>
+<span class="pc bpc" id="L412" title="1 of 4 branches missed.">            if (parts.length &gt; i + 2 &amp;&amp; isInteger(parts[i + 2])) {</span>
+<span class="fc" id="L413">                numberOfEvents = Integer.parseInt(parts[i + 2]);</span>
+<span class="fc" id="L414">                i += 3;</span>
             } else {
-<span class="nc" id="L410">                i += 2;</span>
+<span class="fc" id="L416">                i += 2;</span>
             }
 
-<span class="fc" id="L413">            final int finalNumberOfEvents = numberOfEvents;</span>
-<span class="fc" id="L414">            executorService.submit(() -&gt; consumeEvents(consumerId, partitionId, finalNumberOfEvents));</span>
-<span class="fc" id="L415">        }</span>
+<span class="fc" id="L419">            final int finalNumberOfEvents = numberOfEvents;</span>
+<span class="fc" id="L420">            executorService.submit(() -&gt; consumeEvents(consumerId, partitionId, finalNumberOfEvents));</span>
+<span class="fc" id="L421">        }</span>
 
-<span class="fc" id="L417">        executorService.shutdown();</span>
+<span class="fc" id="L423">        executorService.shutdown();</span>
         try {
-<span class="fc" id="L419">            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
-<span class="nc" id="L420">        } catch (InterruptedException e) {</span>
-<span class="nc" id="L421">            System.out.println(&quot;Parallel consume interrupted: &quot; + e.getMessage());</span>
-<span class="fc" id="L422">        }</span>
-<span class="fc" id="L423">    }</span>
+<span class="fc" id="L425">            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
+<span class="nc" id="L426">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L427">            System.out.println(&quot;Parallel consume interrupted: &quot; + e.getMessage());</span>
+<span class="fc" id="L428">        }</span>
+<span class="fc" id="L429">    }</span>
 
     private &lt;T&gt; int parallelConsumerOffset(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type) {
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L427">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
+<span class="fc" id="L433">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L429">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
-<span class="fc" id="L430">        return typedConsumer.getOffset(typedPartition);</span>
+<span class="fc" id="L435">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L436">        return typedConsumer.getOffset(typedPartition);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
