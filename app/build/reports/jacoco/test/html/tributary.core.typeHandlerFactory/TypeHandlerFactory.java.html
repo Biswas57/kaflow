@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 <span class="nc" id="L6">public class TypeHandlerFactory {</span>
-<span class="fc" id="L7">    private static final Map&lt;Class&lt;?&gt;, TypeHandler&lt;?&gt;&gt; handlers = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L7">    private static Map&lt;Class&lt;?&gt;, TypeHandler&lt;?&gt;&gt; handlers = new HashMap&lt;&gt;();</span>
 
     static {
 <span class="fc" id="L10">        handlers.put(Integer.class, new IntegerHandler());</span>

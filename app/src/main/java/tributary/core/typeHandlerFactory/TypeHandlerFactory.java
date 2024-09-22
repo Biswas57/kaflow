@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TypeHandlerFactory {
-    private static final Map<Class<?>, TypeHandler<?>> handlers = new HashMap<>();
+    private static Map<Class<?>, TypeHandler<?>> handlers = new HashMap<>();
 
     static {
         handlers.put(Integer.class, new IntegerHandler());

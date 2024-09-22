@@ -12,7 +12,7 @@
 
 ZCreated producer with ID: bananaFrier that produces Integer events with manual allocation
 
-3Consumer group with ID bananaChefs does not exist.
++Consumer group bananaChefs does not exist.
 
 _Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
 
@@ -26,11 +26,11 @@
 
 UUpdated the rebalancing strategy for the bananaChefs group to roundrobin rebalancing
 
-\The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod1.
+[The event: bananaBoilingNums has been randomly allocated to partition bananaCookingStyle4.
 
-[The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingStyle4.
+\The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod3.
 
-[The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod2.
+ZThe event: bananaBoilingDur has been randomly allocated to partition bananaCookingStyle4.
 
 WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
 
@@ -41,11 +41,6 @@
 WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 
 VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
-
-dThe event: bananaBoilingNums has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 5
-temperature = 100
-Consumed 1 messages.
 
 `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
 duration = 3
@@ -84,7 +79,7 @@
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
-3Consumer group with ID bananaChefs does not exist.
++Consumer group bananaChefs does not exist.
 
 _Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
 
@@ -126,7 +121,7 @@
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
-3Consumer group with ID bananaChefs does not exist.
++Consumer group bananaChefs does not exist.
 
 _Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
 
@@ -149,9 +144,9 @@
 bdescription = Fry bananas in coconut oil at 180 degrees Celsius for 3 minutes until golden brown.
 Consumed 1 messages.
 
-%Created String topic with ID: banana
+Topic banana already exists.
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -165,9 +160,9 @@
 
 ZCreated producer with ID: bananaFrier that produces Integer events with manual allocation
 
-%Created String topic with ID: banana
+Topic banana already exists.
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -175,7 +170,7 @@
 
 2Consumer beginnerChefalready exists in the group.
 
-&Created Integer topic with ID: banana
+Topic banana already exists.
 
 BCreated partition with ID: bananaCookingMethod1 for topic: banana
 
@@ -190,9 +185,9 @@
  Not enough messages to consume.
 Consumed 0 messages.
 
-	%Created String topic with ID: banana
+	Topic banana already exists.
 	
-	BCreated partition with ID: bananaCookingMethods for topic: banana
+	/Partition bananaCookingMethods already exists.
 	
 	ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 	
@@ -201,11 +196,11 @@
 	2Consumer beginnerChefalready exists in the group.
 	
 
-%Created String topic with ID: banana
+Topic banana already exists.
 
 
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 
 
@@ -230,9 +225,9 @@ SThe event: fryBanana has been manually allocated to partition bananaCookingMeth
 
 
 7Error producing event: messageConfigs/grillBanana.json
-%Created String topic with ID: banana
+Topic banana already exists.
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -242,9 +237,9 @@ SThe event: fryBanana has been manually allocated to partition bananaCookingMeth
 
 GOffset cannot be greater than the number of messages in the partition.
 
-%Created String topic with ID: banana
+Topic banana already exists.
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -254,13 +249,13 @@ SThe event: fryBanana has been manually allocated to partition bananaCookingMeth
 
 'Deleted consumer with ID: beginnerChef
 Consumer Group ID: bananaChefs
-ãConsumer ID: beginnerChef1 - Assigned Partitions: bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, bananaCookingMethod1, bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, 
+_Consumer ID: beginnerChef1 - Assigned Partitions: bananaCookingMethods, bananaCookingMethod1, 
 
 3--------------------------------------------------
 
-%Created String topic with ID: banana
+Topic banana already exists.
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -270,9 +265,9 @@ SThe event: fryBanana has been manually allocated to partition bananaCookingMeth
 
 +Consumer is not assigned to the partition.
 
-%Created String topic with ID: banana
+Topic banana already exists.
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -280,9 +275,9 @@ SThe event: fryBanana has been manually allocated to partition bananaCookingMeth
 
 2Consumer beginnerChefalready exists in the group.
 
-%Created String topic with ID: banana
+Topic banana already exists.
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -292,9 +287,9 @@ SThe event: fryBanana has been manually allocated to partition bananaCookingMeth
 
 +Consumer is not assigned to the partition.
 
-%Created String topic with ID: banana
+Topic banana already exists.
 
-BCreated partition with ID: bananaCookingMethods for topic: banana
+/Partition bananaCookingMethods already exists.
 
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 

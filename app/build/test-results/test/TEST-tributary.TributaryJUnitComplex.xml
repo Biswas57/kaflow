@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryJUnitComplex" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-09-21T23:46:31" hostname="bissi-smells.modem" time="0.055">
+<testsuite name="tributary.TributaryJUnitComplex" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-09-22T06:48:14" hostname="bissi-smells.modem" time="0.051">
   <properties/>
-  <testcase name="mainComplexTest()" classname="tributary.TributaryJUnitComplex" time="0.055"/>
+  <testcase name="mainComplexTest()" classname="tributary.TributaryJUnitComplex" time="0.051"/>
   <system-out><![CDATA[Created Integer topic with ID: banana
 
 Created partition with ID: bananaCookingMethod1 for topic: banana
@@ -16,7 +16,7 @@ Created producer with ID: bananaBoiler that produces Integer events with random 
 
 Created producer with ID: bananaFrier that produces Integer events with manual allocation
 
-Consumer group with ID bananaChefs does not exist.
+Consumer group bananaChefs does not exist.
 
 Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
 
@@ -30,11 +30,11 @@ Created consumer with ID: beginnerChef3 for bananaChefs group
 
 Updated the rebalancing strategy for the bananaChefs group to roundrobin rebalancing
 
-The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod1.
+The event: bananaBoilingNums has been randomly allocated to partition bananaCookingStyle4.
 
-The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingStyle4.
+The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod3.
 
-The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod2.
+The event: bananaBoilingDur has been randomly allocated to partition bananaCookingStyle4.
 
 The event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
 
@@ -45,11 +45,6 @@ The event: bananaFryNums has been manually allocated to partition bananaCookingM
 The event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 
 The event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
-
-The event: bananaBoilingNums has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 5
-temperature = 100
-Consumed 1 messages.
 
 The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
 duration = 3

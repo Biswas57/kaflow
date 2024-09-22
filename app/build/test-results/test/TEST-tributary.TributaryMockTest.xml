@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryMockTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2024-09-21T23:46:31" hostname="bissi-smells.modem" time="0.433">
+<testsuite name="tributary.TributaryMockTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2024-09-22T06:48:14" hostname="bissi-smells.modem" time="0.487">
   <properties/>
-  <testcase name="testEventLifeCycle()" classname="tributary.TributaryMockTest" time="0.404"/>
+  <testcase name="testEventLifeCycle()" classname="tributary.TributaryMockTest" time="0.456"/>
   <testcase name="testCreateIntegerTopicAndProducers()" classname="tributary.TributaryMockTest" time="0.003"/>
-  <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryMockTest" time="0.003"/>
-  <testcase name="testCreateAndShowStringTopic()" classname="tributary.TributaryMockTest" time="0.001"/>
+  <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryMockTest" time="0.004"/>
+  <testcase name="testCreateAndShowStringTopic()" classname="tributary.TributaryMockTest" time="0.002"/>
   <testcase name="testParallelProduceThreeMessages()" classname="tributary.TributaryMockTest" time="0.005"/>
-  <testcase name="testUpdateConsumerOffset()" classname="tributary.TributaryMockTest" time="0.002"/>
-  <testcase name="testDeleteConsumer()" classname="tributary.TributaryMockTest" time="0.002"/>
-  <testcase name="testParallelConsumeTwoMessages()" classname="tributary.TributaryMockTest" time="0.003"/>
+  <testcase name="testUpdateConsumerOffset()" classname="tributary.TributaryMockTest" time="0.001"/>
+  <testcase name="testDeleteConsumer()" classname="tributary.TributaryMockTest" time="0.001"/>
+  <testcase name="testParallelConsumeTwoMessages()" classname="tributary.TributaryMockTest" time="0.002"/>
   <testcase name="testCreatePartition()" classname="tributary.TributaryMockTest" time="0.002"/>
-  <testcase name="testParallelConsumeThreeMessages()" classname="tributary.TributaryMockTest" time="0.003"/>
+  <testcase name="testParallelConsumeThreeMessages()" classname="tributary.TributaryMockTest" time="0.002"/>
   <testcase name="testParallelProduceTwoMessages()" classname="tributary.TributaryMockTest" time="0.003"/>
   <system-out><![CDATA[Created String topic with ID: banana
 
@@ -18,7 +18,7 @@ Created partition with ID: bananaCookingMethods for topic: banana
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
-Consumer group with ID bananaChefs does not exist.
+Consumer group bananaChefs does not exist.
 
 Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
 
@@ -41,9 +41,9 @@ temperature = 180C
 description = Fry bananas in coconut oil at 180 degrees Celsius for 3 minutes until golden brown.
 Consumed 1 messages.
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -57,9 +57,9 @@ Created producer with ID: bananaBoiler that produces Integer events with random 
 
 Created producer with ID: bananaFrier that produces Integer events with manual allocation
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -67,7 +67,7 @@ Consumer group bananaChefs already exists.
 
 Consumer beginnerChefalready exists in the group.
 
-Created Integer topic with ID: banana
+Topic banana already exists.
 
 Created partition with ID: bananaCookingMethod1 for topic: banana
 
@@ -82,9 +82,9 @@ The event: bananaFryDur has been manually allocated to partition bananaCookingMe
 Not enough messages to consume.
 Consumed 0 messages.
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -92,9 +92,9 @@ Consumer group bananaChefs already exists.
 
 Consumer beginnerChefalready exists in the group.
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -107,9 +107,9 @@ The event: boilBanana has been manually allocated to partition bananaCookingMeth
 The event: fryBanana has been manually allocated to partition bananaCookingMethods
 
 Error producing event: messageConfigs/grillBanana.json
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -119,9 +119,9 @@ Consumer beginnerChefalready exists in the group.
 
 Offset cannot be greater than the number of messages in the partition.
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -131,13 +131,13 @@ Consumer beginnerChefalready exists in the group.
 
 Deleted consumer with ID: beginnerChef
 Consumer Group ID: bananaChefs
-Consumer ID: beginnerChef1 - Assigned Partitions: bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, bananaCookingMethod1, bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, bananaCookingMethods, 
+Consumer ID: beginnerChef1 - Assigned Partitions: bananaCookingMethods, bananaCookingMethod1, 
 
 --------------------------------------------------
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -147,9 +147,9 @@ Created consumer with ID: beginnerChef for group: bananaChefs
 
 Consumer is not assigned to the partition.
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -157,9 +157,9 @@ Consumer group bananaChefs already exists.
 
 Consumer beginnerChefalready exists in the group.
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 
@@ -169,9 +169,9 @@ Consumer beginnerChefalready exists in the group.
 
 Consumer is not assigned to the partition.
 
-Created String topic with ID: banana
+Topic banana already exists.
 
-Created partition with ID: bananaCookingMethods for topic: banana
+Partition bananaCookingMethods already exists.
 
 Created producer with ID: bananaBoiler that produces String events with manual allocation
 

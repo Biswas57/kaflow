@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,18 +47,39 @@ public class TributaryJUnitComplex {
 	 */
 	@SuppressWarnings("unchecked")
 	@Test
-	public void mainComplexTest() {
+	public void mainComplexTest() throws Exception {
+		// Topic and Partition creation - successful
 		controller.createTopic("banana", "integer");
 		controller.createPartition("banana", "bananaCookingMethod1");
 		controller.createPartition("banana", "bananaCookingMethod2");
 		controller.createPartition("banana", "bananaCookingMethod3");
 		controller.createPartition("banana", "bananaCookingStyle4");
+		assertEquals(1, cluster.listTopics().size());
 		assertEquals(4, cluster.getTopic("banana").listPartitions().size());
 
+		// Topic creation - errors
+		String text = tapSystemOut(() -> {
+			controller.createTopic("banana", "integer");
+		});
+		assertEquals("Topic banana already exists.", text.strip());
+		assertThrows(IllegalArgumentException.class, () -> controller.createTopic("pingu", "GARBO!"));
+
+		// Partition creation - errors
+		text = tapSystemOut(() -> {
+			controller.createPartition("banana", "bananaCookingMethod1");
+		});
+		assertEquals("Partition bananaCookingMethod1 already exists.", text.strip());
+		text = tapSystemOut(() -> {
+			controller.createPartition("banana1", "bananaCookingMethod5");
+		});
+		assertEquals("Topic banana1 does not exist.", text.strip());
+
+		// Producer creation
 		controller.createProducer("bananaBoiler", "integer", "random");
 		controller.createProducer("bananaFrier", "integer", "manual");
 		assertEquals(cluster.listProducers().size(), 2);
 
+		// Consumer Group creation
 		controller.createConsumerGroup("bananaChefs", "banana", "range");
 		assertEquals(cluster.getConsumerGroup("bananaChefs").listConsumers().size(), 0);
 		assertSame(controller.getConsumerGroup("bananaChefs").getRebalanceMethodName(),
@@ -67,6 +89,7 @@ public class TributaryJUnitComplex {
 		// Consumer Group already exists
 		assertEquals(cluster.listConsumerGroups().size(), 1);
 
+		// Consumer creation
 		controller.createConsumer("bananaChefs", "beginnerChef1");
 		controller.createConsumer("bananaChefs", "beginnerChef2");
 		controller.createConsumer("bananaChefs", "beginnerChef3");
@@ -88,6 +111,7 @@ public class TributaryJUnitComplex {
 			controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingMethod1");
 		});
 
+		// Creating Events of correct type that should not throw an exception
 		assertAll(
 				"Creating Events that should not throw an exception",
 				() -> assertDoesNotThrow(
@@ -109,6 +133,21 @@ public class TributaryJUnitComplex {
 						() -> controller.createEvent("bananaFrier", "banana", "bananaFryDur",
 								"bananaCookingMethod4")));
 
+		// Creating Events of incorrect type (String) with different type Producers
+		// (Integer) should cause code to throw an exception
+		assertAll(
+				"Creating Events that should throw an exception",
+				() -> assertThrows(IllegalArgumentException.class,
+						() -> controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingMethod1")),
+				() -> assertThrows(IllegalArgumentException.class,
+						() -> controller.createEvent("bananaBoiler", "banana", "fryBanana", "bananaCookingMethod2")),
+				() -> assertThrows(IllegalArgumentException.class,
+						() -> controller.createEvent("bananaFrier", "banana", "boilBanana",
+								"bananaCookingMethod1")),
+				() -> assertThrows(IllegalArgumentException.class, () -> controller.createEvent("bananaFrier", "banana",
+						"fryBanana", "bananaCookingMethod3")));
+
+		// Event Consumption - Setting up partition and consumer
 		String partitionId = "bananaCookingMethod1";
 		String consumerId = "beginnerChef1";
 		if (controller.findPartition("bananaCookingMethod1").listMessages().size() >= 3) {

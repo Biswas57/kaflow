@@ -21,7 +21,6 @@
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/main/java/tributary/core/typeHandlerFactory/IntegerHandler.java">
 </file>
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/main/java/tributary/core/typeHandlerFactory/TypeHandlerFactory.java">
-<error line="7" column="56" severity="error" message="Name &apos;handlers&apos; must match pattern &apos;^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$&apos;." source="com.puppycrawl.tools.checkstyle.checks.naming.ConstantNameCheck"/>
 </file>
 <file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/Tributary-Cluster/app/src/main/java/tributary/cli/MessageHandler.java">
 </file>

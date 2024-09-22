@@ -16,6 +16,7 @@ dependencies {
     implementation group: 'org.json', name: 'json', version: '20230618'
 
     // Use JUnit Jupiter & Mockito for testing.
+    testImplementation 'com.github.stefanbirkner:system-lambda:1.0.0'
     testImplementation 'org.mockito:mockito-core:4.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

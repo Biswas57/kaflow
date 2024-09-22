@@ -39,18 +39,13 @@ public class TributaryController {
      */
     public Topic<?> getTopic(String topicId) {
         Topic<?> topic = tributaryCluster.getTopic(topicId);
-        if (topic == null) {
-            System.out.println("Topic with ID " + topicId + " does not exist.\n");
-            return null;
-        }
         return topic;
     }
 
     public ConsumerGroup<?> getConsumerGroup(String groupId) {
         ConsumerGroup<?> group = tributaryCluster.getConsumerGroup(groupId);
         if (group == null) {
-            System.out.println("Consumer group with ID " + groupId + " does not exist.\n");
-            return null;
+            System.out.println("Consumer group " + groupId + " does not exist.\n");
         }
         return group;
     }
@@ -58,20 +53,18 @@ public class TributaryController {
     public Producer<?> getProducer(String producerId) {
         Producer<?> producer = tributaryCluster.getProducer(producerId);
         if (producer == null) {
-            System.out.println("Producer with ID " + producerId + " does not exist.\n");
+            System.out.println("Producer " + producerId + " does not exist.\n");
             return null;
         }
         return producer;
     }
 
-    public void setObjectFactoryType(Class<?> type) {
-        if (type.equals(Integer.class)) {
-            this.objectFactory = new IntegerFactory();
-        } else if (type.equals(String.class)) {
-            this.objectFactory = new StringFactory();
-        } else {
-            System.out.println("Unsupported type: " + type.getSimpleName() + "\n");
+    public void setObjectFactoryType(String type) throws IllegalArgumentException {
+        Class<?> typeClass = typeMap.get(type);
+        if (typeClass == null) {
+            throw new IllegalArgumentException("Unsupported type: " + type + "\n");
         }
+        this.objectFactory = (typeClass.equals(Integer.class)) ? new IntegerFactory() : new StringFactory();
     }
 
     public Consumer<?> findConsumer(String consumerId) {
@@ -122,47 +115,57 @@ public class TributaryController {
      * All creation methods.
      * These methods are outsourced to the ObjectFactory class.
      */
-    public void createTopic(String topicId, String type) {
-        Class<?> typeClass = typeMap.get(type);
-        setObjectFactoryType(typeClass);
+    public void createTopic(String topicId, String type) throws IllegalArgumentException {
+        if (getTopic(topicId) != null) {
+            System.out.println("Topic " + topicId + " already exists.\n");
+            return;
+        }
+        setObjectFactoryType(type);
         objectFactory.createTopic(topicId);
     }
 
-    public void createPartition(String topicId, String partitionId) {
-        Topic<?> topic = getTopic(topicId);
-        setObjectFactoryType(topic.getType());
-        objectFactory.createPartition(topicId, partitionId);
-    }
-
-    public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
+    public void createPartition(String topicId, String partitionId) throws IllegalArgumentException {
         Topic<?> topic = getTopic(topicId);
         if (topic == null) {
             System.out.println("Topic " + topicId + " does not exist.\n");
             return;
+        } else if (findPartition(partitionId) != null) {
+            System.out.println("Partition " + partitionId + " already exists.\n");
+            return;
         }
-        if (getConsumerGroup(groupId) != null) {
+        String topicType = topic.getType().getSimpleName().toLowerCase();
+        setObjectFactoryType(topicType);
+        objectFactory.createPartition(topicId, partitionId);
+    }
+
+    public void createConsumerGroup(String groupId, String topicId, String rebalancing)
+            throws IllegalArgumentException {
+        Topic<?> topic = getTopic(topicId);
+        if (topic == null) {
+            System.out.println("Topic " + topicId + " does not exist.\n");
+            return;
+        } else if (getConsumerGroup(groupId) != null) {
             System.out.println("Consumer group " + groupId + " already exists.\n");
             return;
         }
-        setObjectFactoryType(topic.getType());
+        String type = topic.getType().getSimpleName().toLowerCase();
+        setObjectFactoryType(type);
         objectFactory.createConsumerGroup(groupId, topic, rebalancing);
     }
 
-    public void createConsumer(String groupId, String consumerId) {
+    public void createConsumer(String groupId, String consumerId) throws IllegalArgumentException {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
         if (group.containsConsumer(consumerId)) {
             System.out.println("Consumer " + consumerId + "already exists in the group.\n");
             return;
         }
-
-        Topic<?> topic = group.getAssignedTopic();
-        setObjectFactoryType(topic.getType());
+        String topicType = group.getAssignedTopic().getType().getSimpleName().toLowerCase();
+        setObjectFactoryType(topicType);
         objectFactory.createConsumer(groupId, consumerId);
     }
 
-    public void createProducer(String producerId, String type, String allocation) {
-        Class<?> typeClass = typeMap.get(type);
-        setObjectFactoryType(typeClass);
+    public void createProducer(String producerId, String type, String allocation) throws IllegalArgumentException {
+        setObjectFactoryType(type);
         objectFactory.createProducer(producerId, type, allocation);
     }
 
@@ -179,7 +182,8 @@ public class TributaryController {
         }
 
         synchronized (topic) {
-            setObjectFactoryType(topic.getType());
+            String topicType = topic.getType().getSimpleName().toLowerCase();
+            setObjectFactoryType(topicType);
             objectFactory.createEvent(producerId, topicId, eventId, partitionId);
         }
     }
