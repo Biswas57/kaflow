@@ -419,6 +419,8 @@ To run usability tests on your solution I needed to develop a way to interact wi
 - Went through a lot of struggles and put in a lot of effort to produce a system that I am proud of.
 - I am happy with the final product and the knowledge I have gained from this project.
 
+**COMPLETED ON 16/04/2024** &rarr; transferred from GitLab to GitHub for version control
+
 **Challenges**
 - The main challenge I had was the time constraint till I had to start studying for my exams and the fact that I was working alone, which made it difficult to get feedback and suggestions on my design.
 - I would have liked to have more time to implement and a bit more guidance because I felt at times I was winging it and on my own.
