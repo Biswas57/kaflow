@@ -1,16 +1,6 @@
 # COMP6841 SA Project Blog
-## Part A: Teaching Encryption and TLS/SSL
-- What is Encryption, symmetric and asymmetric
-- What is TLS/SSL Encryption, and importance of it in securing communication
-- TLS/SSL in HTTPS and Apache Kafka
 
-## Part B: Kafdrop Security Breach and RBAC Threat Model
-- Investigate Security breach in Kafka revealing info &rarr; poor encryption and lack of RBAC and encryption
-- Case Study: The Kafka visualisation tool, Kafdrop, allowed unauthorized users to see many users' and organisations' sensitive data. Since Kafdrop interacts directly with Kafka, unauthorized access through this tool can have significant implications for Kafka clusters.
-    - Enforcing TLS/SSL encryption for all connections between Kafka clients, brokers, and management tools like Kafdrop would have ensured that data in transit was encrypted.
-    - Properly implementing RBAC would have ensured that only authorized users could access specific Kafka topics or clusters. RBAC would allow organizations to define roles and permissions for users, specifying who can read, write, or delete data within the Kafka system.
-
-## Part C: Kafka Security Implementation
+## Tributary Security Implementation
 ### Project Schedule and Overview
 <table>
   <tr>
