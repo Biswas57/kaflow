@@ -13,7 +13,7 @@
   </tr>
   <tr>
     <td>Week 2</td>
-    <td>Hone in on my idea and define clear components of the project (secure database, encryption, and RBAC).</td>
+    <td>Hone in on my idea and define clear components of the project (secure database, and RBAC).</td>
   </tr>
   <tr>
     <td>Week 3</td>
