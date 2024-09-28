@@ -1,19 +1,10 @@
 # Tributary Cluster Design and Implementation Blog
 ## Project Overview
-Modern software often relies on many small programs, called microservices, that work together to provide a complete application or service. Event-driven architecture makes up much of the backbone of modern software which microservices rely upon to run smoothly. In essence, event-driven architecture is similar to a signalling system that allows different parts of a software system to work independently but remain responsive to events at scalable rates. This makes the whole system faster, more flexible, and able to handle more tasks at once without getting stuck waiting for each part to finish its job.
+Modern software often relies on many small microservices that work together to provide a complete application. Event-driven architecture makes up much of the backbone of modern software which microservices rely upon to run smoothly. In essence, Event-driven architecture is a system with 2 sets of nodes \rarr; event sources (Producers) and event handlers (Consumers). 
 
 This library is based on a heavily simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo).
 
-The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, in other words a Tributary-like platform. However, our library allowed for more complex interactions than simply that of a single channel. Some of my key achievements throughout this project were:
-
-- Constructed a **Tributary Event Processing System**, emulating Apache Kafka's Event Processing Platform in Java, with a function CLI, parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
-- Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
-- Ensured thread safety across concurrent producer and consumer threads to protect user data in the event processing pipeline by utilizing Java concurrency tools such as synchronization and ExecutorService.
-- Achieved an 85% test coverage by conducting ∼75 tests in JUnit and Mockito to ensure the system’s reliability.
-- Designed a message replay feature that allows Events to be replayed from specific offsets, enabling error checking and correction without compromising the system’s performance.
-- Developed a dynamic event rebalancing mechanism, called Range and Round Robin Strategies within Consumer Groups, which honed my skills in algorithmic design
-- Conducted extensive usability tests and created a detailed CLI for managing and interacting with the Tributary system, showcasing functionality through a comprehensive set of commands.
-- Designed and documented the entire system structure providing a clear overview and understanding of the system’s architecture and seamlessly integrated all these key features to provide users with efficient and useful pipeline for event processing.
+The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, in other words, a Tributary-like platform. Our library builds upon the traditional in-memory EDA, which uses a singular message queue with multiple consumers which can lead to bottlenecks and processing delays. Our log-based approach not only overcomes the limitations of message replay and memory storage with in-memory Message Brokers but also enhances data storage practices \rarr; It improves replayability and adds complexity and additional functionality to message processing, enabling more efficient and flexible handling of events This allows for more efficient data handling, enabling more flexible and effective processing of events beyond a single communication channel.
 
 ### Breakdown of Engineering Requirements
 **NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](Engineering_Requirements.md)
@@ -430,6 +421,16 @@ To run usability tests on your solution I needed to develop a way to interact wi
     - I just went with the flow and started coding and then I realised all it took was a bit of planning and a bit of research and I was steadily making progress.
 - Unfortunately, 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
 - However, I am proud of the fact that I got through to the end and I will be using this project as a threshold for my ability and motivation in the future.
+
+**Acheivements**
+- Constructed a **Tributary Event Processing System**, emulating Apache Kafka's Event Processing Platform in Java, with a function CLI, parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
+- Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
+- Ensured thread safety across concurrent producer and consumer threads to protect user data in the event processing pipeline by utilizing Java concurrency tools such as synchronization and ExecutorService.
+- Achieved an 85% test coverage by conducting ∼75 tests in JUnit and Mockito to ensure the system’s reliability.
+- Designed a message replay feature that allows Events to be replayed from specific offsets, enabling error checking and correction without compromising the system’s performance.
+- Developed a dynamic event rebalancing mechanism, called Range and Round Robin Strategies within Consumer Groups, which honed my skills in algorithmic design
+- Conducted extensive usability tests and created a detailed CLI for managing and interacting with the Tributary system, showcasing functionality through a comprehensive set of commands.
+- Designed and documented the entire system structure providing a clear overview and understanding of the system’s architecture and seamlessly integrated all these key features to provide users with efficient and useful pipeline for event processing.
 
 ## Ongoing Updates and Implementations
 ### 28/05/2024
