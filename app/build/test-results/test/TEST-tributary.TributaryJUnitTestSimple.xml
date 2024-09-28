@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryJUnitTestSimple" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-09-22T06:48:14" hostname="bissi-smells.modem" time="0.003">
+<testsuite name="tributary.TributaryJUnitTestSimple" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-09-22T06:59:44" hostname="bissi-smells.modem" time="0.005">
   <properties/>
-  <testcase name="mainSimpleTest()" classname="tributary.TributaryJUnitTestSimple" time="0.003"/>
+  <testcase name="mainSimpleTest()" classname="tributary.TributaryJUnitTestSimple" time="0.005"/>
   <system-out><![CDATA[Created String topic with ID: banana
 
 Created partition with ID: bananaCookingMethods for topic: banana

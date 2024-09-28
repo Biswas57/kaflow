@@ -394,7 +394,7 @@ public class TributaryController {
         try {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
-            System.out.println("Parallel produce interrupted: " + e.getMessage());
+            System.err.println("Parallel produce interrupted: " + e.getMessage());
         }
     }
 
@@ -428,7 +428,7 @@ public class TributaryController {
         try {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
-            System.out.println("Parallel consume interrupted: " + e.getMessage());
+            System.err.println("Parallel consume interrupted: " + e.getMessage());
         }
     }
 

@@ -26,50 +26,42 @@
 
 UUpdated the rebalancing strategy for the bananaChefs group to roundrobin rebalancing
 
-[The event: bananaBoilingNums has been randomly allocated to partition bananaCookingStyle4.
+\The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod1.
 
 \The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod3.
 
-ZThe event: bananaBoilingDur has been randomly allocated to partition bananaCookingStyle4.
+[The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod3.
 
 WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
 
 WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod3
 
-WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
-
-WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
-
-VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
-
-`The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 3
-temperature = 180
+dThe event: bananaBoilingTemp has been consumed by consumer beginnerChef3. It contains the contents:
+temperature = 100
 Consumed 1 messages.
 
-`The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-temperature = 180
+cThe event: bananaBoilingDur has been consumed by consumer beginnerChef3. It contains the contents:
+duration = 5
 Consumed 1 messages.
 
-_The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 3
+`The event: bananaFryNums has been consumed by consumer beginnerChef3. It contains the contents:
+temperature = 180
 Consumed 1 messages.
 
  Not enough messages to consume.
 Consumed 0 messages.
 
-WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod3
 
-VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
+VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod3
 
-_The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
+_The event: bananaFryDur has been consumed by consumer beginnerChef3. It contains the contents:
 duration = 3
 Consumed 1 messages.
 
 +Consumer is not assigned to the partition.
 
- Not enough messages to consume.
-Consumed 0 messages.
++Consumer is not assigned to the partition.
 
 %Created String topic with ID: banana
 

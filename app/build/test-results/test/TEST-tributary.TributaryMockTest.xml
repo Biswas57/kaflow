@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryMockTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2024-09-22T06:48:14" hostname="bissi-smells.modem" time="0.487">
+<testsuite name="tributary.TributaryMockTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2024-09-22T06:59:44" hostname="bissi-smells.modem" time="0.528">
   <properties/>
-  <testcase name="testEventLifeCycle()" classname="tributary.TributaryMockTest" time="0.456"/>
-  <testcase name="testCreateIntegerTopicAndProducers()" classname="tributary.TributaryMockTest" time="0.003"/>
-  <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryMockTest" time="0.004"/>
+  <testcase name="testEventLifeCycle()" classname="tributary.TributaryMockTest" time="0.492"/>
+  <testcase name="testCreateIntegerTopicAndProducers()" classname="tributary.TributaryMockTest" time="0.006"/>
+  <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryMockTest" time="0.005"/>
   <testcase name="testCreateAndShowStringTopic()" classname="tributary.TributaryMockTest" time="0.002"/>
-  <testcase name="testParallelProduceThreeMessages()" classname="tributary.TributaryMockTest" time="0.005"/>
-  <testcase name="testUpdateConsumerOffset()" classname="tributary.TributaryMockTest" time="0.001"/>
-  <testcase name="testDeleteConsumer()" classname="tributary.TributaryMockTest" time="0.001"/>
-  <testcase name="testParallelConsumeTwoMessages()" classname="tributary.TributaryMockTest" time="0.002"/>
+  <testcase name="testParallelProduceThreeMessages()" classname="tributary.TributaryMockTest" time="0.006"/>
+  <testcase name="testUpdateConsumerOffset()" classname="tributary.TributaryMockTest" time="0.003"/>
+  <testcase name="testDeleteConsumer()" classname="tributary.TributaryMockTest" time="0.002"/>
+  <testcase name="testParallelConsumeTwoMessages()" classname="tributary.TributaryMockTest" time="0.003"/>
   <testcase name="testCreatePartition()" classname="tributary.TributaryMockTest" time="0.002"/>
-  <testcase name="testParallelConsumeThreeMessages()" classname="tributary.TributaryMockTest" time="0.002"/>
+  <testcase name="testParallelConsumeThreeMessages()" classname="tributary.TributaryMockTest" time="0.003"/>
   <testcase name="testParallelProduceTwoMessages()" classname="tributary.TributaryMockTest" time="0.003"/>
   <system-out><![CDATA[Created String topic with ID: banana
 

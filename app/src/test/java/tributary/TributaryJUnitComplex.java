@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.github.stefanbirkner.systemlambda.SystemLambda.assertNothingWrittenToSystemErr;
 import static com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut;
 
 import org.junit.jupiter.api.AfterEach;
@@ -210,14 +211,14 @@ public class TributaryJUnitComplex {
 		// parrallel produce 2 new messages for the partition
 		String[] args = { "bananaFrier", "banana", "bananaFryNums", partitionId, "bananaFrier", "banana",
 				"bananaFryDur", partitionId };
-		controller.parallelProduce(args);
+		assertNothingWrittenToSystemErr(() -> controller.parallelProduce(args));
 		assertEquals(partition.listMessages().size(), previousSize + 2);
 
 		// get list size of one of consumers, replay from beginning. Add another
 		// consumer and parallel consume until end of partition both consumers
 		// partitions
 		String[] consumeArgs = { consumerId, partitionId, "beginnerChef2", partitionId, "5" };
-		controller.parallelConsume(consumeArgs);
+		assertNothingWrittenToSystemErr(() -> controller.parallelConsume(consumeArgs));
 		assertEquals(consumer.getOffset(partition), partition.listMessages().size() - 1);
 
 		// Checking final state and ensuring everything is consumed correctly
