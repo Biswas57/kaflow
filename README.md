@@ -6,7 +6,7 @@ This library is based on a heavily simplified version of the event streaming inf
 
 The fundamental premise of EDA is the asynchronous sharing of data between producers and consumers through a stream-like channel, similar to a Tributary platform. Our library enhances the traditional in-memory EDA, which often relies on a single message queue shared by multiple consumers, potentially causing bottlenecks and delays. By adopting a log-based approach, we overcome the limitations of message replay and memory storage seen in in-memory message brokers. This improvement enhances data storage, replayability, and adds greater functionality to message processing, enabling more efficient and flexible handling of events across multiple channels.
 
-### Breakdown of Engineering Requirements
+## Breakdown of Engineering Requirements
 **NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](Engineering_Requirements.md)
 
 **General Structure of System**
