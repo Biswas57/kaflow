@@ -412,7 +412,7 @@ To run usability tests on your solution I needed to develop a way to interact wi
 
 **COMPLETED ON 16/04/2024** &rarr; transferred from GitLab to GitHub for version control
 
-**Challenges**
+### Challenges
 - The main challenge I had was the time constraint till I had to start studying for my exams and the fact that I was working alone, which made it difficult to get feedback and suggestions on my design.
 - I would have liked to have more time to implement and a bit more guidance because I felt at times I was winging it and on my own.
 - I also struggled with the planning stage and drawing up the initial UML diagrams and starting this project felt like jumping off a cliff headfirst
@@ -422,7 +422,7 @@ To run usability tests on your solution I needed to develop a way to interact wi
 - Unfortunately, 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
 - However, I am proud of the fact that I got through to the end and I will be using this project as a threshold for my ability and motivation in the future.
 
-**Acheivements**
+### Acheivements
 - Constructed a **Tributary Event Processing System**, emulating Apache Kafka's Event Processing Platform in Java, with a function CLI, parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
 - Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
 - Ensured thread safety across concurrent producer and consumer threads to protect user data in the event processing pipeline by utilizing Java concurrency tools such as synchronization and ExecutorService.
