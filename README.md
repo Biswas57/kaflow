@@ -130,7 +130,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - The granularity of these tests helps pinpoint where adjustments are necessary
     - provided clear pathway to refine and enhance the system's stability if there where any errors.
 - Had an advantage over usability tests as it was more detailed and could test the system in a more controlled environment.
-    - Some things that were picked up by the JUnit tests were:
+    - Some complications that usability testing couldn't detect but were picked up by JUnit testing suites:
         - IOExceptions were not caught properly
         - Certain files (the JSON files) were not being created properly because the testing environment couldn't reach them
         - Certain commands were not being processed properly (like the consume event command)
