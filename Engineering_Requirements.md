@@ -23,7 +23,7 @@ A unit of data within a Tributary is a **message**, or record or event. For exam
 
 A topic can be related to “user profiles” and each message relates to requesting an update to a specific profile. However, considering there can be many such requests at a given time, the system divides the incoming requests into multiple partitions. There can be multiple **consumers** consuming messages at the same time (concurrently). However, each partition is handled by only one consumer. Multiple consumers will allow us to effectively utilise the underlying hardware with multiple cores.
 
-In the context of the library you are building, topics are parameterised on a generic type; all event payloads within that topic must be of the specified type.
+In the context of the library that I am building, topics are parameterised on a generic type; all event payloads within that topic must be of the specified type.
 
 ## 1.1. Message Lifecycle: A Simple Example
 
@@ -55,7 +55,7 @@ Producers can indicate whether to send a message to a particular partition by pr
 - **Random Producers** - the producer requests the Tributary system to randomly assign a message to a partition
 - **Manual Producers** - the producer requests the Tributary system to assign a message to a particular partition by providing its corresponding key.
 
-Once a producer has been created with one of the two above message allocation methods, it cannot change its message allocation method. Your implementation should allow for producers to be created with new message allocation methods added in the future.
+Once a producer has been created with one of the two above message allocation methods, it cannot change its message allocation method. My implementation will allow for producers to be created with new message allocation methods added in the future.
 
 ## 1.4. Consumer and Consumer Groups
 
@@ -79,9 +79,9 @@ For example, in the image below Topic D is consumed by Consumer Group A, which h
 
 ### 1.4.3. Consumer Rebalancing
 
-A system should be able to dynamically change the rebalancing strategy between one of two rebalancing strategies - range rebalancing, and round robin rebalancing. These rebalancing strategies are used to reassign partitions to consumers anytime a consumer is added to a consumer group or an existing consumer is removed from a consumer group.
+A system will be able to dynamically change the rebalancing strategy between one of two rebalancing strategies - range rebalancing, and round robin rebalancing. These rebalancing strategies are used to reassign partitions to consumers anytime a consumer is added to a consumer group or an existing consumer is removed from a consumer group.
 
-If a partition is assigned a new consumer after rebalancing, the new consumer should continue consumption from where the previous consumer left off.
+If a partition is assigned a new consumer after rebalancing, the new consumer will continue consumption from where the previous consumer left off.
 
 #### 1.4.3.1. Range Rebalancing
 
@@ -111,26 +111,18 @@ One of the most powerful aspects of event streaming is the ability to **replay**
 
 ## 1.6. Design Considerations
 
-Two design considerations you will need to think about in your solution are as follows:
+Two design considerations I needed to think about were:
 
-- **Concurrency** - since Producers and Consumers are all running in parallel, operating on a shared resource, how will you ensure correctness?
-- **Generics** - How will you ensure that an object of any type can be used as an event payload in a tributary topic?
-
-One of the key aims of this assignment is to get accustomed with concurrency in Java using the synchronized keyword as shown in lectures. As such
-**we encourage the use of any existing synchronization and concurrency libraries**.
-This includes but is not limited to:
-
-- The entire `java.util.concurrent` package
-  - This includes any classes or interfaces that require this import namely thread-safe objects (eg `AtomicInteger` and `ExecutorService`) or concurrency primitives (eg semaphores).
-- Any other thread-safe classes such as `StringBuffer`
+- **Concurrency** - since Producers and Consumers are all running in parallel, operating on a shared resource, how will I ensure correctness?
+- **Generics** - How will I ensure that an object of any type can be used as an event payload in a tributary topic?
 
 # 2. Interface
 
 ## 2.1. Java API
 
-Since you are building a library on which other engineers can develop event-driven systems, you will need to have some classes which are available for others to use in their implementations - just as you do when you import any Java library.
+Since I am building a library on which other engineers can develop event-driven systems, I will need to have some classes which are available for others to use in their implementations - just as one does when they import any Java library.
 
-You will need to determine which classes are part of the interface (API which other developers can use), and these classes will need to be documented with JavaDoc and go inside a folder called `api`. All other classes are considered part of the internal workings of the system (black box) and do not need JavaDoc. These classes should go inside a folder called `core`.
+I will need to determine which classes are part of the interface (API which other developers can use), and these classes will need to be documented with JavaDoc and go inside a folder called `api`. All other classes are considered part of the internal workings of the system (black box) and do not need JavaDoc. These classes should go inside a folder called `core`.
 
 ## 2.2. Philosophy and Usage
 
