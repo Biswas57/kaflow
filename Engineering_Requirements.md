@@ -1,4 +1,4 @@
-# 1. Engineering Requirements
+# Engineering Requirements
 
 ## About Stream Processing
 
