@@ -152,6 +152,7 @@ To do so, you should write a wrapper class called `TributaryCLI` that allows the
 
 As an **example** of what commands your CLI may provide, the following table has CRUD operations that you can implement - you can add/modify/remove CRUD operations as you see fit. If you choose to implement the table as is, note that you are free to modify the naming/syntax/output of commands. **The only requirement for the CLI is that you can use it to showcase an implementation of the [Engineering Requirements](#1-engineering-requirements) discussed in Section 1**.
 
+
 <table>
   <tr>
     <th><b>Command</b></th>
@@ -347,7 +348,7 @@ As an **example** of what commands your CLI may provide, the following table has
   </tr>
   <tr>
     <td>
-      <code>set consumer group rebalancing &lt;group&gt; &lt;rebalancing&gt;</code>
+      <code>update rebalancing method &lt;group&gt; &lt;rebalancing&gt;</code>
     </td>
     <td>
       <ul>
@@ -365,7 +366,10 @@ As an **example** of what commands your CLI may provide, the following table has
     </td>
     <td>
       <ul>
-        <li>Plays back events for a given consumer from the offset.</li>
+        <li>Plays back events for a given consumer from the offset.
+        <li>Controlled Replay: Consumers can replay messages from a specific offset. ie. 2 = 2nd message in the partition</li>
+        <li>Backtrack Replay: Consumers can backtrack their processed Messages, ie. -2 = 2nd last message processed</li>
+        <li>If the offset is not inputted then updateConsumerOffset will set the offset as the last processed message. If the offset inputted is 0 then updateConsumerOffset will set the offset to the last message in the Partition</li>
       </ul>
     </td>
     <td>The id and contents of each event received in order.</td>
