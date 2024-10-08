@@ -1,4 +1,12 @@
 # COMP6841 SA Project Blog
+[How this Event Stream-Processing System was designed.](../Engineering_Requirements.md)
+## Background
+
+There are a few major security aspects to take into consideration when analyzing the soundness and reliability of a stream processing application.
+
+**Access Control:** While it’s easy to see why access control is important in any system, it’s particularly important when being granted access means gaining a level of control over critical data. This is a scenario not uncommon when dealing with big data processors such as that involved in stream processing applications. Let’s consider an organization working with Apache Kafka. Such an organization will have developed producers and consumers that communicate with a Kafka cluster on a continuous basis.Without access controls in place, any client could be configured to read from or write to any particular topic within the Kafka system. As your organization matures and begins to utilize the Kafka cluster on a larger scale and for various types of data (some more important than others), it’s likely that a fly-by-night approach to securing the implementation of the platform will not suffice. In this instance, it’s critical that all clients attempting to read or write to the cluster be properly authenticated and authorized for the topics with which they are attempting to interact, to ensure that improper access to potentially sensitive data is prevented. The focus is to utilise access control lists (ACLs) to authorize particular applications to read from or write to particular topics – thus providing secure access on a more granular level.
+
+**Data Security:** Just as authentication and authorization are critical security aspects to consider when dealing in stream processing, ensuring the security of the data as it is being transmitted over the network by such applications is also of the utmost importance. Continuing to use Kafka as our example platform, data-in-transit via write operations from producers to Kafka brokers and via read operations executed by consumers against these Kafka brokers, should be protected from undue access by unauthorized systems. In an effort to provide a more thorough security policy for such a stream processing implementation, this data should be encrypted when it is communicated between client applications and Kafka.
 
 ## Tributary Security Implementation
 ### Project Schedule and Overview
