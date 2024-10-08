@@ -321,9 +321,9 @@ public class TributaryController {
 
     private <T> void updateTypedConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
         // uses 1 indexing here because zero indexing is used in the consume method
-
-        if (consumer.getOffset(partition) < offset) {
-            System.out.println("Offset cannot be greater than the number of messages in the partition.\n");
+        if (Math.abs(offset) > consumer.getOffset(partition)) {
+            System.out.println(
+                    "Playback or Backtrack Offset cannot be greater than the number of messages in the partition.\n");
             return;
             // if number is 0 return the last message in the partition
         } else if (offset == 0) {
