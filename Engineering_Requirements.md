@@ -1,9 +1,12 @@
 # 1. Engineering Requirements
 
-## Overview
-Event-Driven Architecture makes up much of the backbone of modern software. With a move towards decentralised microservice systems, there is a need for scalable asynchronous communication between software components.
+## About Stream Processing
 
-This library is based on a heavily simplified version of the event streaming infrastructure [Apache Kafka](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what they do can be found [here](https://youtu.be/vHbvbwSEYGo).
+Stream processing refers to the execution of a process on data from an event stream, oftentimes shortly after the event is created. In other words, as data is received a stream processing application acts upon this data in near real-time. Stream processing, therefore, allows for data to move through a data pipeline in a manner that enables the analysis or utilization of this data in the most efficient manner possible. This is in opposition to batch processing where data is collected and stored to be operated upon at a later time.
+
+A stream processor can have many jobs. For instance, such an application may simply be responsible for creating more specific events which are then detected by another stream processing application further down the data pipeline. In other cases, a stream processor could be tasked with performing real-time operations on event data to provide an alert to a particular condition represented by the data point (i.e. alerting a stockbroker that a particular stock has hit an all-time high, possibly indicating a time to sell) or to provide context to data that has been processed over time (i.e. the real-time percentage change in a stock’s price over the past year).
+
+Today, several stream-processing platforms exist to support the building of stream-processing applications. One such platform (of great popularity) is Apache Kafka. It’s hard to discuss stream processing platforms without discussing Kafka, just as it is hard to discuss data-based applications without recognizing the importance of properly securing them. This library is based on a heavily simplified version of the event streaming infrastructure [Apache Kafka](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what they do can be found [here](https://youtu.be/vHbvbwSEYGo).
 
 The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, in other words a Tributary-like platform. However, our library allowed for more complex interactions than simply that of a single channel. 
 
