@@ -159,7 +159,7 @@ Issues to address:
 - Fixed the issue with gradle coverage, it was previously failing because the Mock Instances were not terminated before the JUnit tests were run. This was fixed by adding a @After method to terminate the Mock Instances after each test.
 
 **Future Goals**
-Optimized system, Implemented Security features and PostgreSQL database.
+
+Optimized system and implemented Security features.
 - Optimised Event storage using HashMaps for Cluster, Consumer groups, topics and partitions (Messages already use Hasmaps for info storage
-- Integrated a secure PostgreSQL database instead of storing messages and loading them to the system using JSON files
-- Implemented Message Encryption and Role-Based Access Control (RBAC) for Consumers and Consumer Groups.
+- Implemented Message Encryption and Role-Based Access Control (RBAC) for Producers, Consumers and Consumer Groups.
