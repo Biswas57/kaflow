@@ -101,3 +101,18 @@ Tributary Cluster manages access to topics, partitions, and message consumption 
 - Some partitions may store high-priority or sensitive data, requiring specific authorization.
 
 Implementing RBAC allows us to extend the system's flexibility by adding fine-grained controls over who can produce, consume, or replay messages, aligning with the structure of your Consumer Groups and Rebalancing Strategies. This would also prevent unauthorized message consumption or accidental data access, especially during message replay or rebalancing operations.
+
+## Progress Blog
+
+Things to implement:
+**RBAC**
+- Change Producers and Consumer Groups to be outside of Cluster
+- Change Cluster from Singleton pattern so multiple can exist
+- Make offset property of the partition and not the consumer because partitions assigned to certain consumers can change
+- Implement admin Producer and Admin Consumer Group, which allows us to bypass authorisation
+- RBAC through error messages.
+- Make usability test SETUP for multiple topics, partitions, producers and consumer groups, so I don't waste time in the demonstration
+
+**Encryption**
+- Encryption for Message Production and Decryption for message consumption
+- **Optional:** Create Keys for each consumer group and producer, can work well for RBAC
