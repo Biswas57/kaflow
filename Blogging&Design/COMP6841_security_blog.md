@@ -103,8 +103,8 @@ Tributary Cluster manages access to topics, partitions, and message consumption 
 Implementing RBAC allows us to extend the system's flexibility by adding fine-grained controls over who can produce, consume, or replay messages, aligning with the structure of your Consumer Groups and Rebalancing Strategies. This would also prevent unauthorized message consumption or accidental data access, especially during message replay or rebalancing operations.
 
 ## Progress Blog
-
 Things to implement:
+
 **RBAC**
 - Change Producers and Consumer Groups to be outside of Cluster
 - Change Cluster from Singleton pattern so multiple can exist
