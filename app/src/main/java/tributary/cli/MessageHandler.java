@@ -94,9 +94,9 @@ public class MessageHandler {
             case "rebalancing":
                 controller.updateRebalancing(parts[4], parts[5].toLowerCase());
                 break;
-            case "consumer":
+            case "playback":
                 if (parts[2].equals("offset")) {
-                    controller.updateConsumerOffset(parts[3], parts[4],
+                    controller.updatePartitionOffset(parts[3], parts[4],
                             parts.length > 5 ? Integer.parseInt(parts[5]) : -1);
                 }
             default:

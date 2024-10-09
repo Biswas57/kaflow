@@ -10,6 +10,8 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 **NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](Engineering_Requirements.md)
 
 **General Structure of System**
+
+This structure might change because in the real Kafka Producer and Consumers exist outside the one cluster and there are additional components called brokers that allow me to add more low-level features to the system. However, for the purposes of this project, I will keep the system simple and easy to understand.
 1. Content Structure:
        Tributary Cluster &rarr; Topics &rarr; Partitions &rarr; Messages.
 2. Consumer Structure:
@@ -100,17 +102,15 @@ Generics:
 - ObjectFactory: Creates objects like topics, consumer and groups, producers, events and partitions.
 - Other Important Patterns and Abstraction
 
-### Usability Test Checklist
+### Testing Plan
+Unit Tests: Each component (TributaryCluster, Topic, Partition, Producer(/s and subclasses), ConsumerGroup, and Consumer) will have its own suite of unit tests to verify individual functionality and edge cases.
+
+Usability Checklist: Using the command line interface, the checklist will be run through the terminal. The list must test the following functionalities:
 - Create Topic: Check can create a new topic and show it in the topic list.
 - Creat Message: Test if producers can send messages and if random producers correctly distribute messages across partitions.
 - Consume Message: Ensure consumers can retrieve and process messages from their assigned partitions.
 - Rebalance Consumer Group: Check the system correctly reallocates partitions among consumers in a group when a new consumer joins or leaves.
 - Replay Messages: Test the controlled message replay functionality for a given consumer from a specific offset.
-
-### Testing Plan
-Unit Tests: Each component (TributaryCluster, Topic, Partition, Producer(/s and subclasses), ConsumerGroup, and Consumer) will have its own suite of unit tests to verify individual functionality and edge cases.
-
-Usability Checklist: Using the command line interface, the checklist will be run through the terminal.
 
 ### Development Approach
 **Adopting a component-driven approach**: Integrating each component and testing that component using Mockito individually and then testing them together in JUnit to build a coherent and well-designed system. Much better to test overall usability and functionality last while ensuring each component works as intended through the development of this Kafka.

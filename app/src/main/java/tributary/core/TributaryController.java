@@ -265,7 +265,7 @@ public class TributaryController {
 
     private <T> void consumeHelper(Consumer<T> consumer, Partition<T> partition, int numberOfEvents) {
         List<Message<T>> messages = partition.listMessages();
-        int currentOffset = consumer.getOffset(partition);
+        int currentOffset = partition.getOffset();
         int count = 0;
 
         for (int i = currentOffset + 1; i < messages.size() && count < numberOfEvents; i++, count++) {
@@ -291,7 +291,7 @@ public class TributaryController {
                 + groupId + " group to " + rebalancing + " rebalancing\n");
     }
 
-    public void updateConsumerOffset(String consumerId, String partitionId, int offset) {
+    public void updatePartitionOffset(String consumerId, String partitionId, int offset) {
         Consumer<?> consumer = findConsumer(consumerId);
         Partition<?> partition = findPartition(partitionId);
         Topic<?> topic = getTopic(partition.getAllocatedTopicId());
@@ -302,38 +302,36 @@ public class TributaryController {
         }
 
         if (topic.getType().equals(Integer.class)) {
-            updateConsumerOffsetGeneric(consumer, partition, Integer.class, offset);
+            updatePartitionOffsetGeneric(partition, Integer.class, offset);
         } else if (topic.getType().equals(String.class)) {
-            updateConsumerOffsetGeneric(consumer, partition, String.class, offset);
+            updatePartitionOffsetGeneric(partition, String.class, offset);
         } else {
             System.out.println("Unsupported type: " + topic.getType().getSimpleName() + "\n");
         }
     }
 
-    private <T> void updateConsumerOffsetGeneric(Consumer<?> consumer, Partition<?> partition, Class<T> type,
+    private <T> void updatePartitionOffsetGeneric(Partition<?> partition, Class<T> type,
             int offset) {
         @SuppressWarnings("unchecked")
-        Consumer<T> typedConsumer = (Consumer<T>) consumer;
-        @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
-        updateTypedConsumerOffset(typedConsumer, typedPartition, offset);
+        updateTypedConsumerOffset(typedPartition, offset);
     }
 
-    private <T> void updateTypedConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
+    private <T> void updateTypedConsumerOffset(Partition<T> partition, int offset) {
         // uses 1 indexing here because zero indexing is used in the consume method
-        if (Math.abs(offset) > consumer.getOffset(partition)) {
+        if (Math.abs(offset) > partition.getOffset()) {
             System.out.println(
                     "Playback or Backtrack Offset cannot be greater than the number of messages in the partition.\n");
             return;
             // if number is 0 return the last message in the partition
         } else if (offset == 0) {
-            consumer.updateOffset(partition, partition.listMessages().size());
+            partition.setOffset(partition.listMessages().size());
             // if number negative return the last nth message
         } else if (offset < 0) {
-            consumer.updateOffset(partition, partition.listMessages().size() + offset + 1);
+            partition.setOffset(partition.listMessages().size() + offset + 1);
             // if number positive return the message at nth position in partition
         } else {
-            consumer.updateOffset(partition, offset);
+            partition.setOffset(offset);
         }
     }
 
@@ -405,10 +403,9 @@ public class TributaryController {
             String consumerId = parts[i];
             String partitionId = parts[i + 1];
 
-            Consumer<?> consumer = findConsumer(consumerId);
             Partition<?> partition = findPartition(partitionId);
             Topic<?> topic = getTopic(partition.getAllocatedTopicId());
-            int currentOffset = parallelConsumerOffset(consumer, partition, topic.getType());
+            int currentOffset = parallelConsumerOffset(partition, topic.getType());
             int partitionSize = partition.listMessages().size();
 
             int numberOfEvents = partitionSize - currentOffset - 1;
@@ -432,11 +429,9 @@ public class TributaryController {
         }
     }
 
-    private <T> int parallelConsumerOffset(Consumer<?> consumer, Partition<?> partition, Class<T> type) {
-        @SuppressWarnings("unchecked")
-        Consumer<T> typedConsumer = (Consumer<T>) consumer;
+    private <T> int parallelConsumerOffset(Partition<?> partition, Class<T> type) {
         @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
-        return typedConsumer.getOffset(typedPartition);
+        return typedPartition.getOffset();
     }
 }

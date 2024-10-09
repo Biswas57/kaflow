@@ -117,4 +117,4 @@ Things to implement:
 - Encryption for Message Production and Decryption for message consumption
 - Decide what encryption algorithm to use
 - Implement Encryption algorithm
-- **Optional:** Create Keys for each consumer group and producer, can work well for RBAC
+- **Optional:** Create Keys for each message to consumer group or producer, can work well for RBAC

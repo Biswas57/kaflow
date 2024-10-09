@@ -11,7 +11,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import tributary.api.Consumer;
 import tributary.api.Partition;
 import tributary.api.TributaryCluster;
 import tributary.core.TributaryController;
@@ -86,17 +85,16 @@ public class TributaryJUnitTestSimple {
 
         controller.showTopic("banana");
         Partition<String> partition = (Partition<String>) controller.findPartition("bananaCookingMethods");
-        Consumer<String> consumer = (Consumer<String>) controller.findConsumer("beginnerChef");
 
         // Partition offset starts at -1 because list of Messages in Partition are 0
         // indexed
-        assertEquals(consumer.getOffset(partition), -1);
+        assertEquals(0, partition.getOffset());
 
         controller.consumeEvents("beginnerChef", "bananaCookingMethods", 1);
-        assertEquals(consumer.getOffset(partition), 0);
+        assertEquals(partition.getOffset(), 0);
 
         // offset stays at 0 because there is only 1 message in the partition
         controller.consumeEvents("beginnerChef", "bananaCookingMethods", 1);
-        assertEquals(consumer.getOffset(partition), 0);
+        assertEquals(partition.getOffset(), 0);
     }
 }

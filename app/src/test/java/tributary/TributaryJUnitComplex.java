@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import tributary.api.Consumer;
 import tributary.api.Partition;
 import tributary.api.TributaryCluster;
 import tributary.core.TributaryController;
@@ -179,32 +178,30 @@ public class TributaryJUnitComplex {
 		}
 
 		Partition<Integer> partition = (Partition<Integer>) controller.findPartition(partitionId);
-		Consumer<Integer> consumer = (Consumer<Integer>) controller.findConsumer(consumerId);
-
 		// consume Events in partition bananaCookingMethod1 until there are is 1 message
 		// left
-		while (partition.listMessages().size() - consumer.getOffset(partition) > 2) {
+		while (partition.listMessages().size() - partition.getOffset() > 2) {
 			controller.consumeEvents(consumerId, partitionId, 1);
 		}
 
 		// right before consuming the last message in the partition
 		// offset is +1 because the offset starts at -1
-		assertEquals(partition.listMessages().size() - 1, consumer.getOffset(partition) + 1);
+		assertEquals(partition.listMessages().size() - 1, partition.getOffset() + 1);
 
 		// consume the last message in the partition
 		controller.consumeEvents(consumerId, partitionId, 1);
-		assertEquals(partition.listMessages().size(), consumer.getOffset(partition) + 1);
+		assertEquals(partition.listMessages().size(), partition.getOffset() + 1);
 
 		// consume 1 more message in the partition (should not be able to)
 		controller.consumeEvents(consumerId, partitionId, 1);
-		assertEquals(partition.listMessages().size(), consumer.getOffset(partition) + 1);
+		assertEquals(partition.listMessages().size(), partition.getOffset() + 1);
 
 		// Playback with 2 of the Partitions for Consumer 1
-		controller.updateConsumerOffset(consumerId, partitionId, 1);
-		int offset = consumer.getOffset(partition);
+		controller.updatePartitionOffset(consumerId, partitionId, 1);
+		int offset = partition.getOffset();
 		assertEquals(1, offset);
-		controller.updateConsumerOffset(consumerId, partitionId, 0);
-		offset = consumer.getOffset(partition);
+		controller.updatePartitionOffset(consumerId, partitionId, 0);
+		offset = partition.getOffset();
 		assertEquals(partition.listMessages().size(), offset);
 		int previousSize = partition.listMessages().size();
 
@@ -219,14 +216,14 @@ public class TributaryJUnitComplex {
 		// partitions
 		String[] consumeArgs = { consumerId, partitionId, "beginnerChef2", partitionId, "5" };
 		assertNothingWrittenToSystemErr(() -> controller.parallelConsume(consumeArgs));
-		assertEquals(consumer.getOffset(partition), partition.listMessages().size() - 1);
+		assertEquals(partition.getOffset(), partition.listMessages().size() - 1);
 
 		// Checking final state and ensuring everything is consumed correctly
 		final String finalPartition = partition.getId();
 		assertAll(
 				"Checking final state",
-				() -> assertEquals(consumer.getOffset(partition), partition.listMessages().size() - 1),
+				() -> assertEquals(partition.getOffset(), partition.listMessages().size() - 1),
 				() -> assertDoesNotThrow(() -> controller.consumeEvents("beginnerChef1", finalPartition, 1)),
-				() -> assertEquals(consumer.getOffset(partition), partition.listMessages().size() - 1));
+				() -> assertEquals(partition.getOffset(), partition.listMessages().size() - 1));
 	}
 }

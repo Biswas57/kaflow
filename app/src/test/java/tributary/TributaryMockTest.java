@@ -105,8 +105,8 @@ public class TributaryMockTest {
 
     @Test
     public void testUpdateConsumerOffset() {
-        controller.updateConsumerOffset("beginnerChef", "bananaCookingMethods", 5);
-        verify(controller).updateConsumerOffset("beginnerChef",
+        controller.updatePartitionOffset("beginnerChef", "bananaCookingMethods", 5);
+        verify(controller).updatePartitionOffset("beginnerChef",
                 "bananaCookingMethods", 5);
     }
 

@@ -6,6 +6,7 @@ import java.util.List;
 public class Partition<T> extends TributaryObject {
     private List<Message<T>> messages;
     private String allocatedTopic;
+    private int offset;
 
     public Partition(String topicId, String partitionId) {
         super(partitionId);
@@ -27,5 +28,13 @@ public class Partition<T> extends TributaryObject {
 
     public Message<T> getMessage(String messageId) {
         return messages.stream().filter(m -> m.getId().equals(messageId)).findFirst().orElse(null);
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getOffset() {
+        return offset;
     }
 }
