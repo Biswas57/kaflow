@@ -21,16 +21,17 @@ import tributary.core.tributaryFactory.ObjectFactory;
 import tributary.core.tributaryFactory.StringFactory;
 
 public class TributaryController {
-    private TributaryCluster tributaryCluster;
+    private TributaryCluster cluster;
     private ObjectFactory objectFactory;
     private Map<String, Class<?>> typeMap;
 
     public TributaryController() {
-        this.tributaryCluster = TributaryCluster.getInstance();
+        this.cluster = TributaryCluster.getInstance();
         this.objectFactory = new StringFactory();
         this.typeMap = new HashMap<>();
         typeMap.put("integer", Integer.class);
         typeMap.put("string", String.class);
+        typeMap.put("bytes", Byte.class);
     }
 
     /*
@@ -38,12 +39,12 @@ public class TributaryController {
      * Tributary objects.
      */
     public Topic<?> getTopic(String topicId) {
-        Topic<?> topic = tributaryCluster.getTopic(topicId);
+        Topic<?> topic = cluster.getTopic(topicId);
         return topic;
     }
 
     public ConsumerGroup<?> getConsumerGroup(String groupId) {
-        ConsumerGroup<?> group = tributaryCluster.getConsumerGroup(groupId);
+        ConsumerGroup<?> group = cluster.getConsumerGroup(groupId);
         if (group == null) {
             System.out.println("Consumer group " + groupId + " does not exist.\n");
         }
@@ -51,7 +52,7 @@ public class TributaryController {
     }
 
     public Producer<?> getProducer(String producerId) {
-        Producer<?> producer = tributaryCluster.getProducer(producerId);
+        Producer<?> producer = cluster.getProducer(producerId);
         if (producer == null) {
             System.out.println("Producer " + producerId + " does not exist.\n");
             return null;
@@ -69,7 +70,7 @@ public class TributaryController {
 
     public Consumer<?> findConsumer(String consumerId) {
         Consumer<?> specifiedConsumer = null;
-        for (ConsumerGroup<?> group : tributaryCluster.listConsumerGroups()) {
+        for (ConsumerGroup<?> group : cluster.listConsumerGroups()) {
             for (Consumer<?> consumer : group.listConsumers()) {
                 if (consumer.getId().equals(consumerId)) {
                     specifiedConsumer = consumer;
@@ -81,7 +82,7 @@ public class TributaryController {
 
     public Partition<?> findPartition(String partitionId) {
         Partition<?> specifiedPartition = null;
-        for (Topic<?> topic : tributaryCluster.listTopics()) {
+        for (Topic<?> topic : cluster.listTopics()) {
             for (Partition<?> partition : topic.listPartitions()) {
                 if (partition.getId().equals(partitionId)) {
                     specifiedPartition = partition;
@@ -108,7 +109,7 @@ public class TributaryController {
     }
 
     public TributaryCluster getCluster() {
-        return tributaryCluster;
+        return cluster;
     }
 
     /*
@@ -140,17 +141,14 @@ public class TributaryController {
 
     public void createConsumerGroup(String groupId, String topicId, String rebalancing)
             throws IllegalArgumentException {
-        Topic<?> topic = getTopic(topicId);
-        if (topic == null) {
-            System.out.println("Topic " + topicId + " does not exist.\n");
-            return;
-        } else if (getConsumerGroup(groupId) != null) {
+        if (getConsumerGroup(groupId) != null) {
             System.out.println("Consumer group " + groupId + " already exists.\n");
             return;
         }
-        String type = topic.getType().getSimpleName().toLowerCase();
+
+        String type = getTopic(topicId).getType().getSimpleName().toLowerCase();
         setObjectFactoryType(type);
-        objectFactory.createConsumerGroup(groupId, topic, rebalancing);
+        objectFactory.createConsumerGroup(groupId, topicId, rebalancing);
     }
 
     public void createConsumer(String groupId, String consumerId) throws IllegalArgumentException {
@@ -159,14 +157,15 @@ public class TributaryController {
             System.out.println("Consumer " + consumerId + "already exists in the group.\n");
             return;
         }
-        String topicType = group.getAssignedTopic().getType().getSimpleName().toLowerCase();
+        String topicType = group.getAssignedTopics().get(0).getType().getSimpleName().toLowerCase();
         setObjectFactoryType(topicType);
         objectFactory.createConsumer(groupId, consumerId);
     }
 
-    public void createProducer(String producerId, String type, String allocation) throws IllegalArgumentException {
-        setObjectFactoryType(type);
-        objectFactory.createProducer(producerId, type, allocation);
+    public void createProducer(String producerId, String topicId, String allocation) throws IllegalArgumentException {
+        Topic<?> topic = getTopic(topicId);
+        setObjectFactoryType(topic.getType().getSimpleName().toLowerCase());
+        objectFactory.createProducer(producerId, topicId, allocation);
     }
 
     public synchronized void createEvent(String producerId, String topicId, String eventId, String partitionId)
@@ -193,10 +192,10 @@ public class TributaryController {
      * This was to demonstrate the ability for consumer groups to automatially
      * rebalance once a consumer is deleted.
      * Simple demonstration of the Observer Pattern implemented
-     * Ther is no added functionality when deleting other tributary objects.
+     * There is no added functionality when deleting other tributary objects.
      */
     public void deleteConsumer(String consumerId) {
-        tributaryCluster.deleteConsumer(consumerId);
+        cluster.deleteConsumer(consumerId);
     }
 
     /*
@@ -207,7 +206,7 @@ public class TributaryController {
      * of consumption in eahc partition.
      */
     public void showTopic(String topicId) {
-        Topic<?> topic = tributaryCluster.getTopic(topicId);
+        Topic<?> topic = cluster.getTopic(topicId);
         if (topic != null) {
             topic.showTopic();
         } else {
@@ -216,7 +215,7 @@ public class TributaryController {
     }
 
     public void showGroup(String groupId) {
-        ConsumerGroup<?> group = tributaryCluster.getConsumerGroup(groupId);
+        ConsumerGroup<?> group = cluster.getConsumerGroup(groupId);
         if (group != null) {
             group.showGroup();
         } else {
@@ -282,6 +281,7 @@ public class TributaryController {
     /*
      * Update the rebalancing strategy for a consumer group.
      * Update the Offset of a consumer to allow for message replay.
+     * Update the admin token for a consumer group or producer.
      */
     public void updateRebalancing(String groupId, String rebalancing) {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
@@ -300,17 +300,10 @@ public class TributaryController {
             System.out.println("Consumer, partition, or topic not found.\n");
             return;
         }
-
-        if (topic.getType().equals(Integer.class)) {
-            updatePartitionOffsetGeneric(partition, Integer.class, offset);
-        } else if (topic.getType().equals(String.class)) {
-            updatePartitionOffsetGeneric(partition, String.class, offset);
-        } else {
-            System.out.println("Unsupported type: " + topic.getType().getSimpleName() + "\n");
-        }
+        updatePartitionOffsetGeneric(partition, offset);
     }
 
-    private <T> void updatePartitionOffsetGeneric(Partition<?> partition, Class<T> type,
+    private <T> void updatePartitionOffsetGeneric(Partition<?> partition,
             int offset) {
         @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
@@ -332,6 +325,89 @@ public class TributaryController {
             // if number positive return the message at nth position in partition
         } else {
             partition.setOffset(offset);
+        }
+    }
+
+    public void updateConsumerGroupAdmin(String newGroupId, String oldGroupId) {
+        if (oldGroupId == null && cluster.getAdminConsToken() != null) {
+            System.out.println("Admin token exists but old Admin could not be identified.\n");
+            return;
+        } else if (oldGroupId != null && cluster.getAdminConsToken() == null) {
+            System.out.println("Old admin token not found.\n");
+            return;
+        } else if (oldGroupId != null && cluster.getAdminConsToken() != null) {
+            // removes admin permissions from oldgroup by stripping all assigned topics and
+            // rebalancing partitions
+            ConsumerGroup<?> oldGroup = getConsumerGroup(oldGroupId);
+            oldGroup.clearAssignments();
+            oldGroup.rebalance();
+
+            // password/token authentication here.
+            String token = cluster.getAdminConsToken();
+            if (!TokenManager.validateToken(token, oldGroup.getId(), oldGroup.getCreatedTime())) {
+                System.out.println("Invalid token for old Consumer Group Admin.\n");
+                return;
+            }
+        }
+
+        ConsumerGroup<?> newGroup = getConsumerGroup(newGroupId);
+        if (newGroup == null) {
+            System.out.println("New Consumer Group Admin " + newGroupId + " not found.\n");
+            return;
+        }
+
+        String token = TokenManager.generateToken(newGroup.getId(), newGroup.getCreatedTime());
+        cluster.setAdminConsToken(token);
+        assignTopicGeneric(newGroup);
+
+        // reassign all partitions across consumers in the new admin group
+        newGroup.rebalance();
+
+        // show assigned topics to show admin perms of new group Admin
+        newGroup.showTopics();
+    }
+
+    public void updateProducerAdmin(String newProdId, String oldProdId) {
+        if (oldProdId == null && cluster.getAdminProdToken() != null) {
+            System.out.println("Admin token exists but old Admin could not be identified.\n");
+            return;
+        } else if (oldProdId != null && cluster.getAdminProdToken() == null) {
+            System.out.println("Old admin token not found.\n");
+            return;
+        } else if (oldProdId != null && cluster.getAdminProdToken() != null) {
+            // removes admin permissions from old prod by stripping all assigned topics
+            ConsumerGroup<?> oldProd = getConsumerGroup(oldProdId);
+            oldProd.clearAssignments();
+
+            // password/token authentication here.
+            String token = cluster.getAdminProdToken();
+            if (!TokenManager.validateToken(token, oldProd.getId(), oldProd.getCreatedTime())) {
+                System.out.println("Invalid token for old Producer Admin.\n");
+                return;
+            }
+        }
+
+        Producer<?> newProd = getProducer(newProdId);
+        if (newProd == null) {
+            System.out.println("New Consumer Group Admin " + newProdId + " not found.\n");
+            return;
+        }
+
+        String token = TokenManager.generateToken(newProd.getId(), newProd.getCreatedTime());
+        cluster.setAdminConsToken(token);
+        assignTopicGeneric(newProd);
+
+        // show assigned topics to show admin perms of new Prod Admin
+        newProd.showTopics();
+    }
+
+    public <T> void assignTopicGeneric(AdminObject<T> admin) {
+        for (Topic<?> topic : cluster.listTopics()) {
+            if (topic.getType() == admin.getType() && !admin.getAssignedTopics().contains(topic)) {
+                @SuppressWarnings("unchecked")
+                Topic<T> typedTopic = (Topic<T>) topic;
+                admin.assignTopic(typedTopic);
+            }
         }
     }
 

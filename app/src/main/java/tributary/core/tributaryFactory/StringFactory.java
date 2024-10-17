@@ -45,15 +45,31 @@ public class StringFactory extends ObjectFactory {
         System.out.println("Created consumer with ID: " + consumerId + " for group: " + groupId + "\n");
     }
 
+    public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
+        @SuppressWarnings("unchecked")
+        Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+        if (topic == null) {
+            System.out.println("Topic " + topicId + " does not exist.\n");
+            return;
+        }
+        ConsumerGroup<String> group = new ConsumerGroup<>(groupId, topic, rebalancing);
+        getCluster().addGroup(group);
+
+        System.out.println("Created consumer group with ID: " + groupId + " for topic: " + topic.getId()
+                + " with " + rebalancing + " rebalancing strategy.\n");
+    }
+
     @Override
-    public void createProducer(String producerId, String type, String allocation) {
+    public void createProducer(String producerId, String topicId, String allocation) {
+        @SuppressWarnings("unchecked")
+        Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
         Producer<String> producer;
         switch (allocation) {
             case "manual":
-                producer = new ManualProducer<>(producerId, String.class);
+                producer = new ManualProducer<>(producerId, String.class, topic);
                 break;
             case "random":
-                producer = new RandomProducer<>(producerId, String.class);
+                producer = new RandomProducer<>(producerId, String.class, topic);
                 break;
             default:
                 System.out.println("Unsupported allocation type: " + allocation + "\n");

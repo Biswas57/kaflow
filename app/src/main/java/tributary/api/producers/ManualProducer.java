@@ -4,10 +4,11 @@ import java.util.List;
 
 import tributary.api.Message;
 import tributary.api.Partition;
+import tributary.api.Topic;
 
 public class ManualProducer<T> extends Producer<T> {
-    public ManualProducer(String producerId, Class<T> type) {
-        super(producerId, type);
+    public ManualProducer(String producerId, Class<T> type, Topic<T> topic) {
+        super(producerId, type, topic);
     }
 
     @Override

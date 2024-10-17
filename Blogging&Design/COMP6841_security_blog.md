@@ -106,15 +106,18 @@ Implementing RBAC allows us to extend the system's flexibility by adding fine-gr
 Things to implement:
 
 **RBAC**
-- Change Producers and Consumer Groups to be outside of Cluster
-- Change Cluster from Singleton pattern so multiple can exist
-- Make offset property of the partition and not the consumer because partitions assigned to certain consumers can change
-- Implement admin Producer and Admin Consumer Group, which allows us to bypass authorisation
-- RBAC through error messages.
+- Change Producers and Consumer Groups to be outside of Cluster (later)
+- Change Cluster from Singleton pattern so multiple can exist (later)
+- Make offset property of the partition and not the consumer because partitions assigned to certain consumers can change ✅
+- Implement admin Producer and Admin Consumer Group, which allows us to bypass authorisation ✅
+  - Tokenization for Admin Producer and Admin Consumer Group ✅
+  - Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
+- RBAC through error messages. ✅
 - Make usability test SETUP for multiple topics, partitions, producers and consumer groups, so I don't waste time in the demonstration
 
 **Encryption**
 - Encryption for Message Production and Decryption for message consumption
+- Add bytes as a form of payload for messages -> can simulate breaking the encryption using buffer overflow or any other attack
 - Decide what encryption algorithm to use
 - Implement Encryption algorithm
 - **Optional:** Create Keys for each message to consumer group or producer, can work well for RBAC

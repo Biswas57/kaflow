@@ -3,19 +3,19 @@ package tributary.api;
 import java.util.ArrayList;
 import java.util.List;
 
+import tributary.core.AdminObject;
 import tributary.core.rebalancingStrategy.RangeStrategy;
 import tributary.core.rebalancingStrategy.RebalancingStrategy;
 import tributary.core.rebalancingStrategy.RoundRobinStrategy;
 
-public class ConsumerGroup<T> extends TributaryObject {
+public class ConsumerGroup<T> extends AdminObject<T> {
     private List<Consumer<T>> consumers;
-    private Topic<T> assignedTopic;
     private RebalancingStrategy<T> rebalanceMethod;
 
-    public ConsumerGroup(String consumerGroupId, Topic<T> assignedTopic, String rebalanceMethod) {
-        super(consumerGroupId);
+    public ConsumerGroup(String groupId, Topic<T> assignedTopic, String rebalanceMethod) {
+        super(groupId, assignedTopic.getType());
         this.consumers = new ArrayList<>();
-        this.assignedTopic = assignedTopic;
+        assignTopic(assignedTopic);
         setRebalancingMethod(rebalanceMethod);
     }
 
@@ -31,10 +31,6 @@ public class ConsumerGroup<T> extends TributaryObject {
                 System.out.println("Unknown rebalancing strategy: " + rebalanceMethod);
                 break;
         }
-    }
-
-    public Topic<T> getAssignedTopic() {
-        return assignedTopic;
     }
 
     public RebalancingStrategy<T> getRebalanceMethod() {
@@ -74,8 +70,7 @@ public class ConsumerGroup<T> extends TributaryObject {
 
     public void showGroup() {
         System.out.println("Consumer Group ID: " + getId());
-        List<Consumer<T>> consumers = listConsumers();
-        for (Consumer<T> consumer : consumers) {
+        for (Consumer<T> consumer : listConsumers()) {
             System.out.print("Consumer ID: " + consumer.getId() + " - Assigned Partitions: ");
             consumer.listAssignedPartitions().forEach(p -> System.out.print(p.getId() + ", "));
             System.out.println();
@@ -84,6 +79,6 @@ public class ConsumerGroup<T> extends TributaryObject {
     }
 
     public void rebalance() {
-        rebalanceMethod.rebalance(getAssignedTopic().listPartitions(), listConsumers());
+        rebalanceMethod.rebalance(getAssignedTopics(), listConsumers());
     }
 }

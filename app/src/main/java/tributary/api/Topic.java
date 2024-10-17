@@ -17,14 +17,6 @@ public class Topic<T> extends TributaryObject {
         return type;
     }
 
-    public boolean isIntegerTopic() {
-        return Integer.class.equals(type);
-    }
-
-    public boolean isStringTopic() {
-        return String.class.equals(type);
-    }
-
     public void addPartition(Partition<T> partition) {
         partitions.add(partition);
     }

@@ -10,6 +10,8 @@ public class TributaryCluster {
     private List<Topic<?>> topics;
     private List<ConsumerGroup<?>> consumerGroups;
     private List<Producer<?>> producers;
+    private String adminProdToken;
+    private String adminConsToken;
 
     private TributaryCluster() {
         this.topics = new ArrayList<>();
@@ -81,5 +83,21 @@ public class TributaryCluster {
     // Test-friendly method to set the instance
     public static void setInstance(TributaryCluster mockInstance) {
         instance = mockInstance;
+    }
+
+    public void setAdminProdToken(String token) {
+        this.adminProdToken = token;
+    }
+
+    public void setAdminConsToken(String token) {
+        this.adminConsToken = token;
+    }
+
+    public String getAdminProdToken() {
+        return adminProdToken;
+    }
+
+    public String getAdminConsToken() {
+        return adminConsToken;
     }
 }

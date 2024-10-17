@@ -99,6 +99,14 @@ public class MessageHandler {
                     controller.updatePartitionOffset(parts[3], parts[4],
                             parts.length > 5 ? Integer.parseInt(parts[5]) : -1);
                 }
+                break;
+            case "admin":
+                if (parts[2].equals("producer")) {
+                    controller.updateProducerAdmin(parts[3], parts[4]);
+                } else if (parts[2].equals("consumer")) {
+                    controller.updateConsumerGroupAdmin(parts[3], parts[4]);
+                }
+                break;
             default:
                 System.out.println("Unknown update command: " + subcommand);
                 break;

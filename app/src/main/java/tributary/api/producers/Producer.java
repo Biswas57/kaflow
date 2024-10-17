@@ -6,18 +6,14 @@ import org.json.JSONObject;
 
 import tributary.api.Message;
 import tributary.api.Partition;
-import tributary.api.TributaryObject;
+import tributary.api.Topic;
+import tributary.core.AdminObject;
 
-public abstract class Producer<T> extends TributaryObject {
-    private Class<T> type;
+public abstract class Producer<T> extends AdminObject<T> {
 
-    public Producer(String producerId, Class<T> type) {
-        super(producerId);
-        this.type = type;
-    }
-
-    public Class<T> getType() {
-        return type;
+    public Producer(String producerId, Class<T> type, Topic<T> topic) {
+        super(producerId, type);
+        assignTopic(topic);
     }
 
     public abstract void allocateMessage(List<Partition<T>> partitions, String partitionId, Message<T> message);
