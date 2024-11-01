@@ -10,6 +10,7 @@ public class AdminObject<T> extends TributaryObject {
     private long createdTime;
     private List<Topic<T>> assignedTopics;
     private Class<T> type;
+    private String token;
 
     public AdminObject(String id, Class<T> type) {
         super(id);
@@ -48,8 +49,16 @@ public class AdminObject<T> extends TributaryObject {
         return this.type;
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public void showTopics() {
-        System.out.println("Producer ID: " + getId() + " - Type: " + getType().getSimpleName());
+        System.out.println("Consumer Group ID: " + getId() + " - Type: " + getType().getSimpleName());
         for (Topic<T> topic : assignedTopics) {
             System.out.println("Topic ID: " + topic.getId() + " - Partitions: ");
             topic.listPartitions().forEach(p -> System.out.print(p.getId() + ", "));

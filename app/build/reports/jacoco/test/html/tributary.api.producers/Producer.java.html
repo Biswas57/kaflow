@@ -6,25 +6,21 @@ import org.json.JSONObject;
 
 import tributary.api.Message;
 import tributary.api.Partition;
-import tributary.api.TributaryObject;
+import tributary.api.Topic;
+import tributary.core.AdminObject;
 
-public abstract class Producer&lt;T&gt; extends TributaryObject {
-    private Class&lt;T&gt; type;
+public abstract class Producer&lt;T&gt; extends AdminObject&lt;T&gt; {
 
-    public Producer(String producerId, Class&lt;T&gt; type) {
-<span class="fc" id="L15">        super(producerId);</span>
-<span class="fc" id="L16">        this.type = type;</span>
+    public Producer(String producerId, Class&lt;T&gt; type, Topic&lt;T&gt; topic) {
+<span class="fc" id="L15">        super(producerId, type);</span>
+<span class="fc" id="L16">        assignTopic(topic);</span>
 <span class="fc" id="L17">    }</span>
-
-    public Class&lt;T&gt; getType() {
-<span class="fc" id="L20">        return type;</span>
-    }
 
     public abstract void allocateMessage(List&lt;Partition&lt;T&gt;&gt; partitions, String partitionId, Message&lt;T&gt; message);
 
     public void produceMessage(List&lt;Partition&lt;T&gt;&gt; partitions, String partitionId, JSONObject message) {
-<span class="fc" id="L26">        Message&lt;T&gt; msg = Message.fromJson(message, getType());</span>
-<span class="fc" id="L27">        allocateMessage(partitions, partitionId, msg);</span>
-<span class="fc" id="L28">    }</span>
+<span class="fc" id="L22">        Message&lt;T&gt; msg = Message.fromJson(message, getType());</span>
+<span class="fc" id="L23">        allocateMessage(partitions, partitionId, msg);</span>
+<span class="fc" id="L24">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

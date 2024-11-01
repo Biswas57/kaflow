@@ -33,6 +33,10 @@ public class Topic<T> extends TributaryObject {
         return partitions;
     }
 
+    public boolean containsPartition(String partitionId) {
+        return partitions.stream().anyMatch(p -> p.getId().equals(partitionId));
+    }
+
     public void showTopic() {
         System.out.println("Topic ID: " + getId());
         for (Partition<T> partition : partitions) {

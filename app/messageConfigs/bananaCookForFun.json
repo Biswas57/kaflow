@@ -1,6 +1,6 @@
 {
     "eventId": "bananaCookForFun",
-    "PayloadType": "IntegerTesting for singular event",
+    "PayloadType": "Integer",
     "messageContents": {
         "number1": 1,
         "number2": 2,

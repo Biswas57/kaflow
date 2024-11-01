@@ -92,7 +92,7 @@ public class MessageHandler {
         String subcommand = parts[1].toLowerCase();
         switch (subcommand) {
             case "rebalancing":
-                controller.updateRebalancing(parts[4], parts[5].toLowerCase());
+                controller.updateRebalancing(parts[2], parts[3].toLowerCase());
                 break;
             case "playback":
                 if (parts[2].equals("offset")) {
@@ -102,9 +102,11 @@ public class MessageHandler {
                 break;
             case "admin":
                 if (parts[2].equals("producer")) {
-                    controller.updateProducerAdmin(parts[3], parts[4]);
+                    controller.updateProducerAdmin(parts[3], parts.length > 4 ? parts[4] : null,
+                            parts.length > 4 ? parts[5] : null);
                 } else if (parts[2].equals("consumer")) {
-                    controller.updateConsumerGroupAdmin(parts[3], parts[4]);
+                    controller.updateConsumerGroupAdmin(parts[3], parts.length > 4 ? parts[4] : null,
+                            parts.length > 4 ? parts[5] : null);
                 }
                 break;
             default:

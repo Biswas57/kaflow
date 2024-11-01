@@ -109,15 +109,16 @@ Things to implement:
 - Change Producers and Consumer Groups to be outside of Cluster (later)
 - Change Cluster from Singleton pattern so multiple can exist (later)
 - Make offset property of the partition and not the consumer because partitions assigned to certain consumers can change ✅
-- Implement admin Producer and Admin Consumer Group, which allows us to bypass authorisation ✅
+- Implement admin Producer and Admin Consumer Group, which allows us to access any partition / topic ✅
   - Tokenization for Admin Producer and Admin Consumer Group ✅
+  - Implement verify produce and consume functions ✅
   - Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
+  - Implement a mechanism that locks an account or restricts access after a certain number of failed login attempts to prevent brute force attacks.
 - RBAC through error messages. ✅
 - Make usability test SETUP for multiple topics, partitions, producers and consumer groups, so I don't waste time in the demonstration
 
 **Encryption**
 - Encryption for Message Production and Decryption for message consumption
 - Add bytes as a form of payload for messages -> can simulate breaking the encryption using buffer overflow or any other attack
-- Decide what encryption algorithm to use
-- Implement Encryption algorithm
+- Use RSA for encryption and decryption
 - **Optional:** Create Keys for each message to consumer group or producer, can work well for RBAC

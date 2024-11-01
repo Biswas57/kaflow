@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminObject.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">tributary.core</a> &gt; <span class="el_source">AdminObject.java</span></div><h1>AdminObject.java</h1><pre class="source lang-java linenums">package tributary.core;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import tributary.api.Topic;
+import tributary.api.TributaryObject;
+
+public class AdminObject&lt;T&gt; extends TributaryObject {
+    private long createdTime;
+    private List&lt;Topic&lt;T&gt;&gt; assignedTopics;
+    private Class&lt;T&gt; type;
+    private String token;
+
+    public AdminObject(String id, Class&lt;T&gt; type) {
+<span class="fc" id="L16">        super(id);</span>
+<span class="fc" id="L17">        this.createdTime = System.currentTimeMillis();</span>
+<span class="fc" id="L18">        this.assignedTopics = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L19">        this.type = type;</span>
+<span class="fc" id="L20">    }</span>
+
+    public long getCreatedTime() {
+<span class="fc" id="L23">        return createdTime;</span>
+    }
+
+    public void clearAssignments() {
+<span class="fc" id="L27">        Topic&lt;T&gt; topic = assignedTopics.get(0);</span>
+<span class="fc" id="L28">        assignedTopics.clear();</span>
+<span class="fc" id="L29">        assignTopic(topic);</span>
+<span class="fc" id="L30">    }</span>
+
+    public List&lt;Topic&lt;T&gt;&gt; getAssignedTopics() {
+<span class="fc" id="L33">        return assignedTopics;</span>
+    }
+
+    public void assignTopic(Topic&lt;T&gt; topic) {
+<span class="fc" id="L37">        assignedTopics.add(topic);</span>
+<span class="fc" id="L38">    }</span>
+
+    public void unassignTopic(String topicId) {
+<span class="nc" id="L41">        assignedTopics.removeIf(t -&gt; t.getId().equals(topicId));</span>
+<span class="nc" id="L42">    }</span>
+
+    public List&lt;Topic&lt;T&gt;&gt; listAssignedTopics() {
+<span class="fc" id="L45">        return assignedTopics;</span>
+    }
+
+    public Class&lt;T&gt; getType() {
+<span class="fc" id="L49">        return this.type;</span>
+    }
+
+    public String getToken() {
+<span class="fc" id="L53">        return token;</span>
+    }
+
+    public void setToken(String token) {
+<span class="fc" id="L57">        this.token = token;</span>
+<span class="fc" id="L58">    }</span>
+
+    public void showTopics() {
+<span class="fc" id="L61">        System.out.println(&quot;Consumer Group ID: &quot; + getId() + &quot; - Type: &quot; + getType().getSimpleName());</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        for (Topic&lt;T&gt; topic : assignedTopics) {</span>
+<span class="fc" id="L63">            System.out.println(&quot;Topic ID: &quot; + topic.getId() + &quot; - Partitions: &quot;);</span>
+<span class="fc" id="L64">            topic.listPartitions().forEach(p -&gt; System.out.print(p.getId() + &quot;, &quot;));</span>
+<span class="fc" id="L65">            System.out.println();</span>
+<span class="fc" id="L66">        }</span>
+<span class="fc" id="L67">        System.out.println(&quot;\n--------------------------------------------------\n&quot;);</span>
+<span class="fc" id="L68">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

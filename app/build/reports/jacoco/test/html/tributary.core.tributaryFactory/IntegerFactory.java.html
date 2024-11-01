@@ -35,44 +35,60 @@ public class IntegerFactory extends ObjectFactory {
 <span class="fc" id="L35">        System.out.println(&quot;Created partition with ID: &quot; + partitionId + &quot; for topic: &quot; + topicId + &quot;\n&quot;);</span>
 <span class="fc" id="L36">    }</span>
 
+    public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L40">        Topic&lt;Integer&gt; topic = (Topic&lt;Integer&gt;) getCluster().getTopic(topicId);</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (topic == null) {</span>
+<span class="nc" id="L42">            System.out.println(&quot;Topic &quot; + topicId + &quot; does not exist.\n&quot;);</span>
+<span class="nc" id="L43">            return;</span>
+        }
+<span class="fc" id="L45">        ConsumerGroup&lt;Integer&gt; group = new ConsumerGroup&lt;&gt;(groupId, topic, rebalancing);</span>
+<span class="fc" id="L46">        getCluster().addGroup(group);</span>
+
+<span class="fc" id="L48">        System.out.println(&quot;Created consumer group with ID: &quot; + groupId + &quot; for topic: &quot; + topic.getId()</span>
+                + &quot; with &quot; + rebalancing + &quot; rebalancing strategy.\n&quot;);
+<span class="fc" id="L50">    }</span>
+
     @Override
     public void createConsumer(String groupId, String consumerId) {
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L41">        ConsumerGroup&lt;Integer&gt; group = (ConsumerGroup&lt;Integer&gt;) getCluster().getConsumerGroup(groupId);</span>
-<span class="fc" id="L42">        Consumer&lt;Integer&gt; consumer = new Consumer&lt;&gt;(groupId, consumerId);</span>
-<span class="fc" id="L43">        group.addConsumer(consumer);</span>
-<span class="fc" id="L44">        group.rebalance();</span>
-<span class="fc" id="L45">        System.out.println(&quot;Created consumer with ID: &quot; + consumerId + &quot; for &quot; + groupId + &quot; group\n&quot;);</span>
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L55">        ConsumerGroup&lt;Integer&gt; group = (ConsumerGroup&lt;Integer&gt;) getCluster().getConsumerGroup(groupId);</span>
+<span class="fc" id="L56">        Consumer&lt;Integer&gt; consumer = new Consumer&lt;&gt;(groupId, consumerId);</span>
+<span class="fc" id="L57">        group.addConsumer(consumer);</span>
+<span class="fc" id="L58">        group.rebalance();</span>
+<span class="fc" id="L59">        System.out.println(&quot;Created consumer with ID: &quot; + consumerId + &quot; for group: &quot; + groupId + &quot; group\n&quot;);</span>
+<span class="fc" id="L60">    }</span>
 
     @Override
-    public void createProducer(String producerId, String type, String allocation) {
+    public void createProducer(String producerId, String topicId, String allocation) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L65">        Topic&lt;Integer&gt; topic = (Topic&lt;Integer&gt;) getCluster().getTopic(topicId);</span>
         Producer&lt;Integer&gt; producer;
-<span class="pc bpc" id="L51" title="1 of 3 branches missed.">        switch (allocation) {</span>
+<span class="pc bpc" id="L67" title="1 of 3 branches missed.">        switch (allocation) {</span>
             case &quot;manual&quot;:
-<span class="fc" id="L53">                producer = new ManualProducer&lt;&gt;(producerId, Integer.class);</span>
-<span class="fc" id="L54">                break;</span>
+<span class="fc" id="L69">                producer = new ManualProducer&lt;&gt;(producerId, Integer.class, topic);</span>
+<span class="fc" id="L70">                break;</span>
             case &quot;random&quot;:
-<span class="fc" id="L56">                producer = new RandomProducer&lt;&gt;(producerId, Integer.class);</span>
-<span class="fc" id="L57">                break;</span>
+<span class="fc" id="L72">                producer = new RandomProducer&lt;&gt;(producerId, Integer.class, topic);</span>
+<span class="fc" id="L73">                break;</span>
             default:
-<span class="nc" id="L59">                System.out.println(&quot;Unsupported allocation type: &quot; + allocation);</span>
-<span class="nc" id="L60">                return;</span>
+<span class="nc" id="L75">                System.out.println(&quot;Unsupported allocation type: &quot; + allocation);</span>
+<span class="nc" id="L76">                return;</span>
         }
-<span class="fc" id="L62">        getCluster().addProducer(producer);</span>
-<span class="fc" id="L63">        System.out.println(&quot;Created producer with ID: &quot; + producerId</span>
+<span class="fc" id="L78">        getCluster().addProducer(producer);</span>
+<span class="fc" id="L79">        System.out.println(&quot;Created producer with ID: &quot; + producerId</span>
                 + &quot; that produces Integer events with &quot; + allocation + &quot; allocation\n&quot;);
-<span class="fc" id="L65">    }</span>
+<span class="fc" id="L81">    }</span>
 
     @Override
     public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException {
-<span class="fc" id="L69">        JSONObject messageJsonObject = new JSONObject(</span>
-<span class="fc" id="L70">                Files.readString(Paths.get(&quot;messageConfigs/&quot; + eventId + &quot;.json&quot;)));</span>
+<span class="fc" id="L85">        JSONObject messageJsonObject = new JSONObject(</span>
+<span class="fc" id="L86">                Files.readString(Paths.get(&quot;messageConfigs/&quot; + eventId + &quot;.json&quot;)));</span>
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L72">        Producer&lt;Integer&gt; producer = (Producer&lt;Integer&gt;) getCluster().getProducer(producerId);</span>
+<span class="fc" id="L88">        Producer&lt;Integer&gt; producer = (Producer&lt;Integer&gt;) getCluster().getProducer(producerId);</span>
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L74">        Topic&lt;Integer&gt; topic = (Topic&lt;Integer&gt;) getCluster().getTopic(topicId);</span>
-<span class="fc" id="L75">        producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);</span>
-<span class="fc" id="L76">    }</span>
+<span class="fc" id="L90">        Topic&lt;Integer&gt; topic = (Topic&lt;Integer&gt;) getCluster().getTopic(topicId);</span>
+<span class="fc" id="L91">        producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);</span>
+<span class="fc" id="L92">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

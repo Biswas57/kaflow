@@ -9,11 +9,12 @@ import java.util.Map;
     static {
 <span class="fc" id="L10">        handlers.put(Integer.class, new IntegerHandler());</span>
 <span class="fc" id="L11">        handlers.put(String.class, new StringHandler());</span>
-<span class="fc" id="L12">    }</span>
+<span class="fc" id="L12">        handlers.put(byte[].class, new ByteHandler());</span>
+<span class="fc" id="L13">    }</span>
 
     @SuppressWarnings(&quot;unchecked&quot;)
     public static &lt;T&gt; TypeHandler&lt;T&gt; getHandler(Class&lt;T&gt; type) {
-<span class="fc" id="L16">        return (TypeHandler&lt;T&gt;) handlers.get(type);</span>
+<span class="fc" id="L17">        return (TypeHandler&lt;T&gt;) handlers.get(type);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

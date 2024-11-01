@@ -1,0 +1,9 @@
+{
+    "eventId": "freezeBanana",
+    "PayloadType": "String",
+    "messageContents": {
+        "temperature": "-18C",
+        "duration": "4 hours",
+        "description": "Freeze the banana at -18C for at least 4 hours to make a frozen dessert."
+    }
+}

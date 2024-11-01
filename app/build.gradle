@@ -20,6 +20,9 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:4.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // To access .env file variables
+    implementation 'io.github.cdimascio:dotenv-java:2.2.0'
 }
 
 sourceSets {

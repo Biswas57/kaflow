@@ -9,6 +9,7 @@ public class TypeHandlerFactory {
     static {
         handlers.put(Integer.class, new IntegerHandler());
         handlers.put(String.class, new StringHandler());
+        handlers.put(byte[].class, new ByteHandler());
     }
 
     @SuppressWarnings("unchecked")

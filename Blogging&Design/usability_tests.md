@@ -8,7 +8,7 @@ create topic banana string
 create partition banana bananaCookingMethods
 
 ### Creating a Producer with Random Allocation
-create producer bananaBoiler string random
+create producer bananaBoiler banana random
 
 ### Creating a Consumer Group with Range Rebalancing
 create consumer group bananaChefs banana range
@@ -56,10 +56,10 @@ show topic banana
 
 ## With Manual and Random Allocation
 ### Creating a Producer with Random Allocation
-create producer bananaBoiler integer random
+create producer bananaBoiler banana random
 
 ### Creating a Producer with Manual Allocation (Integer has been set with capital ‘i’)
-create producer bananaFrier Integer manual
+create producer bananaFrier banana manual
 
 ## With Range and Round Robin Rebalancing
 ### Creating a Consumer Group with Range Rebalancing
@@ -108,7 +108,7 @@ show consumer group bananaChefs
 //
 **If none of the Partitions have only have one message then do the next 2 commands**
 ### Creating a Producer with Manual Allocation (Just to test singular consume event)
-create producer bananaCook integer manual
+create producer bananaCook banana manual
 
 ### Creating a message in the Banana Topic
 create event bananaCook banana bananaCookForFun bananaCookingMethod1

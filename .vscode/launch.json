@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "TokenManager",
+            "request": "launch",
+            "mainClass": "tributary.core.tokenManager.TokenManager",
+            "projectName": "app"
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "TributaryCLI",
+            "request": "launch",
+            "mainClass": "tributary.cli.TributaryCLI",
+            "projectName": "app"
+        },
+        {
+            "type": "java",
+            "name": "EncryptionManager",
+            "request": "launch",
+            "mainClass": "tributary.core.encryptionManager.EncryptionManager",
+            "projectName": "app"
+        }
+    ]
+}

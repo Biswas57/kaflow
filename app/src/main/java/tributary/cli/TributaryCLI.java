@@ -17,7 +17,7 @@ public class TributaryCLI {
         while (true) {
             System.out.println("Enter command:");
             input = scanner.nextLine();
-            if (input.equals("exit")) {
+            if (input.equals("exit") || input.equals("quit")) {
                 System.out.println("Exiting Tributary CLI.\n");
                 break;
             }

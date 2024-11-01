@@ -16,6 +16,8 @@ import tributary.api.Topic;
 import tributary.api.TributaryCluster;
 import tributary.api.producers.ManualProducer;
 import tributary.api.producers.Producer;
+import tributary.core.rebalancingStrategy.RebalancingStrategy;
+import tributary.core.tokenManager.TokenManager;
 import tributary.core.tributaryFactory.IntegerFactory;
 import tributary.core.tributaryFactory.ObjectFactory;
 import tributary.core.tributaryFactory.StringFactory;
@@ -31,7 +33,7 @@ public class TributaryController {
         this.typeMap = new HashMap<>();
         typeMap.put("integer", Integer.class);
         typeMap.put("string", String.class);
-        typeMap.put("bytes", Byte.class);
+        typeMap.put("bytes", byte[].class);
     }
 
     /*
@@ -45,9 +47,6 @@ public class TributaryController {
 
     public ConsumerGroup<?> getConsumerGroup(String groupId) {
         ConsumerGroup<?> group = cluster.getConsumerGroup(groupId);
-        if (group == null) {
-            System.out.println("Consumer group " + groupId + " does not exist.\n");
-        }
         return group;
     }
 
@@ -95,15 +94,6 @@ public class TributaryController {
         return specifiedPartition;
     }
 
-    private boolean isInteger(String str) {
-        try {
-            Integer.parseInt(str);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
     public ObjectFactory getFactory() {
         return objectFactory;
     }
@@ -128,10 +118,10 @@ public class TributaryController {
     public void createPartition(String topicId, String partitionId) throws IllegalArgumentException {
         Topic<?> topic = getTopic(topicId);
         if (topic == null) {
-            System.out.println("Topic " + topicId + " does not exist.\n");
+            System.out.println("Topic " + topicId + " does not exist.");
             return;
-        } else if (findPartition(partitionId) != null) {
-            System.out.println("Partition " + partitionId + " already exists.\n");
+        } else if (topic.containsPartition(partitionId)) {
+            System.out.println("Partition " + partitionId + " already exists in topic.\n");
             return;
         }
         String topicType = topic.getType().getSimpleName().toLowerCase();
@@ -175,6 +165,9 @@ public class TributaryController {
         if (producer == null || topic == null) {
             System.out.println("Producer " + producerId + " or topic " + topicId + " not found.\n");
             return;
+        } else if (!verifyProducer(producer, topic)) {
+            System.out.println("Producer does not have permission to produce to this topic.\n");
+            return;
         } else if (!topic.getType().equals(producer.getType())) {
             System.out.println("Producer type does not match topic type.\n");
             return;
@@ -185,6 +178,18 @@ public class TributaryController {
             setObjectFactoryType(topicType);
             objectFactory.createEvent(producerId, topicId, eventId, partitionId);
         }
+    }
+
+    public boolean verifyProducer(Producer<?> prod, Topic<?> topic) {
+        String adminToken = cluster.getAdminProdToken();
+        if (prod.listAssignedTopics().contains(topic)) {
+            return true;
+        } else if (adminToken != null && prod.getToken() != null) {
+            if (adminToken.equals(prod.getToken()))
+                return true;
+        }
+
+        return false;
     }
 
     /*
@@ -231,16 +236,19 @@ public class TributaryController {
     public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
         Consumer<?> consumer = findConsumer(consumerId);
         Partition<?> partition = findPartition(partitionId);
+        String topicId = partition.getAllocatedTopicId();
+        Topic<?> topic = getTopic(topicId);
+
         if (consumer == null || partition == null) {
             System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.\n");
+            return;
+        } else if (!verifyConsumer(consumer, topic)) {
+            System.out.println("Consumer Group of Consumer does not have permission to consume from the topic.\n");
             return;
         } else if (!consumer.listAssignedPartitions().contains(partition)) {
             System.out.println("Consumer is not assigned to the partition.\n");
             return;
         }
-
-        String topicId = partition.getAllocatedTopicId();
-        Topic<?> topic = getTopic(topicId);
 
         if (topic.getType().equals(Integer.class)) {
             consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);
@@ -264,10 +272,10 @@ public class TributaryController {
 
     private <T> void consumeHelper(Consumer<T> consumer, Partition<T> partition, int numberOfEvents) {
         List<Message<T>> messages = partition.listMessages();
-        int currentOffset = partition.getOffset();
+        int currentOffset = partition.getOffset(consumer);
         int count = 0;
 
-        for (int i = currentOffset + 1; i < messages.size() && count < numberOfEvents; i++, count++) {
+        for (int i = currentOffset; i < messages.size() && count < numberOfEvents; i++, count++) {
             consumer.consume(messages.get(i), partition);
         }
 
@@ -278,6 +286,18 @@ public class TributaryController {
         }
     }
 
+    public boolean verifyConsumer(Consumer<?> consumer, Topic<?> topic) {
+        ConsumerGroup<?> group = getConsumerGroup(consumer.getGroup());
+        String adminToken = cluster.getAdminConsToken();
+        if (group.listAssignedTopics().contains(topic)) {
+            return true;
+        } else if (adminToken != null && group.getToken() != null) {
+            if (adminToken.equals(group.getToken()))
+                return true;
+        }
+        return false;
+    }
+
     /*
      * Update the rebalancing strategy for a consumer group.
      * Update the Offset of a consumer to allow for message replay.
@@ -285,10 +305,15 @@ public class TributaryController {
      */
     public void updateRebalancing(String groupId, String rebalancing) {
         ConsumerGroup<?> group = getConsumerGroup(groupId);
+        RebalancingStrategy<?> prevMethod = group.getRebalanceMethod();
         group.setRebalancingMethod(rebalancing);
         group.rebalance();
-        System.out.println("Updated the rebalancing strategy for the "
-                + groupId + " group to " + rebalancing + " rebalancing\n");
+
+        RebalancingStrategy<?> currMethod = group.getRebalanceMethod();
+        if (prevMethod.equals(currMethod)) {
+            System.out.println("Updated the rebalancing strategy for the "
+                    + groupId + " group to " + currMethod.toString() + " rebalancing\n");
+        }
     }
 
     public void updatePartitionOffset(String consumerId, String partitionId, int offset) {
@@ -300,52 +325,55 @@ public class TributaryController {
             System.out.println("Consumer, partition, or topic not found.\n");
             return;
         }
-        updatePartitionOffsetGeneric(partition, offset);
+        updatePartitionOffsetGeneric(consumer, partition, offset);
     }
 
-    private <T> void updatePartitionOffsetGeneric(Partition<?> partition,
+    private <T> void updatePartitionOffsetGeneric(Consumer<?> consumer, Partition<?> partition,
             int offset) {
         @SuppressWarnings("unchecked")
+        Consumer<T> typedconsumer = (Consumer<T>) consumer;
+        @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
-        updateTypedConsumerOffset(typedPartition, offset);
+        updateTypedConsumerOffset(typedconsumer, typedPartition, offset);
     }
 
-    private <T> void updateTypedConsumerOffset(Partition<T> partition, int offset) {
+    private <T> void updateTypedConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
         // uses 1 indexing here because zero indexing is used in the consume method
-        if (Math.abs(offset) > partition.getOffset()) {
+        if (Math.abs(offset) > partition.getOffset(consumer)) {
             System.out.println(
                     "Playback or Backtrack Offset cannot be greater than the number of messages in the partition.\n");
             return;
             // if number is 0 return the last message in the partition
         } else if (offset == 0) {
-            partition.setOffset(partition.listMessages().size());
+            partition.setOffset(consumer, partition.listMessages().size());
             // if number negative return the last nth message
         } else if (offset < 0) {
-            partition.setOffset(partition.listMessages().size() + offset + 1);
+            partition.setOffset(consumer, partition.listMessages().size() + offset + 1);
             // if number positive return the message at nth position in partition
         } else {
-            partition.setOffset(offset);
+            partition.setOffset(consumer, offset);
         }
     }
 
-    public void updateConsumerGroupAdmin(String newGroupId, String oldGroupId) {
-        if (oldGroupId == null && cluster.getAdminConsToken() != null) {
+    public void updateConsumerGroupAdmin(String newGroupId, String oldGroupId, String password) {
+        ConsumerGroup<?> oldGroup = getConsumerGroup(oldGroupId);
+        if (oldGroup == null && cluster.getAdminConsToken() != null) {
             System.out.println("Admin token exists but old Admin could not be identified.\n");
             return;
-        } else if (oldGroupId != null && cluster.getAdminConsToken() == null) {
+        } else if (oldGroup != null && cluster.getAdminConsToken() == null) {
             System.out.println("Old admin token not found.\n");
             return;
-        } else if (oldGroupId != null && cluster.getAdminConsToken() != null) {
+        } else if (oldGroup != null && cluster.getAdminConsToken() != null) {
             // removes admin permissions from oldgroup by stripping all assigned topics and
             // rebalancing partitions
-            ConsumerGroup<?> oldGroup = getConsumerGroup(oldGroupId);
             oldGroup.clearAssignments();
+            oldGroup.setToken(null);
             oldGroup.rebalance();
 
             // password/token authentication here.
             String token = cluster.getAdminConsToken();
-            if (!TokenManager.validateToken(token, oldGroup.getId(), oldGroup.getCreatedTime())) {
-                System.out.println("Invalid token for old Consumer Group Admin.\n");
+            if (!TokenManager.validateToken(token, oldGroup.getId(), oldGroup.getCreatedTime(), password)) {
+                System.out.println("Incorrect token for old Consumer Group Admin.\n");
                 return;
             }
         }
@@ -358,6 +386,7 @@ public class TributaryController {
 
         String token = TokenManager.generateToken(newGroup.getId(), newGroup.getCreatedTime());
         cluster.setAdminConsToken(token);
+        newGroup.setToken(token);
         assignTopicGeneric(newGroup);
 
         // reassign all partitions across consumers in the new admin group
@@ -365,23 +394,25 @@ public class TributaryController {
 
         // show assigned topics to show admin perms of new group Admin
         newGroup.showTopics();
+        newGroup.showGroup();
     }
 
-    public void updateProducerAdmin(String newProdId, String oldProdId) {
-        if (oldProdId == null && cluster.getAdminProdToken() != null) {
+    public void updateProducerAdmin(String newProdId, String oldProdId, String password) {
+        Producer<?> oldProd = getProducer(oldProdId);
+        if (oldProd == null && cluster.getAdminProdToken() != null) {
             System.out.println("Admin token exists but old Admin could not be identified.\n");
             return;
-        } else if (oldProdId != null && cluster.getAdminProdToken() == null) {
+        } else if (oldProd != null && cluster.getAdminProdToken() == null) {
             System.out.println("Old admin token not found.\n");
             return;
-        } else if (oldProdId != null && cluster.getAdminProdToken() != null) {
+        } else if (oldProd != null && cluster.getAdminProdToken() != null) {
             // removes admin permissions from old prod by stripping all assigned topics
-            ConsumerGroup<?> oldProd = getConsumerGroup(oldProdId);
             oldProd.clearAssignments();
+            oldProd.setToken(null);
 
             // password/token authentication here.
             String token = cluster.getAdminProdToken();
-            if (!TokenManager.validateToken(token, oldProd.getId(), oldProd.getCreatedTime())) {
+            if (!TokenManager.validateToken(token, oldProd.getId(), oldProd.getCreatedTime(), password)) {
                 System.out.println("Invalid token for old Producer Admin.\n");
                 return;
             }
@@ -394,7 +425,8 @@ public class TributaryController {
         }
 
         String token = TokenManager.generateToken(newProd.getId(), newProd.getCreatedTime());
-        cluster.setAdminConsToken(token);
+        cluster.setAdminProdToken(token);
+        newProd.setToken(token);
         assignTopicGeneric(newProd);
 
         // show assigned topics to show admin perms of new Prod Admin
@@ -480,8 +512,14 @@ public class TributaryController {
             String partitionId = parts[i + 1];
 
             Partition<?> partition = findPartition(partitionId);
+            Consumer<?> consumer = findConsumer(consumerId);
+            if (consumer == null || partition == null) {
+                System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.\n");
+                return;
+            }
+
             Topic<?> topic = getTopic(partition.getAllocatedTopicId());
-            int currentOffset = parallelConsumerOffset(partition, topic.getType());
+            int currentOffset = parallelConsumerOffset(consumer, partition, topic.getType());
             int partitionSize = partition.listMessages().size();
 
             int numberOfEvents = partitionSize - currentOffset - 1;
@@ -505,9 +543,26 @@ public class TributaryController {
         }
     }
 
-    private <T> int parallelConsumerOffset(Partition<?> partition, Class<T> type) {
+    private <T> int parallelConsumerOffset(Consumer<?> consumer, Partition<?> partition, Class<T> type) {
+        @SuppressWarnings("unchecked")
+        Consumer<T> typedconsumer = (Consumer<T>) consumer;
         @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
-        return typedPartition.getOffset();
+
+        try {
+            return typedPartition.getOffset(typedconsumer);
+        } catch (NullPointerException e) {
+            typedPartition.setOffset(typedconsumer, 0);
+            return 0;
+        }
+    }
+
+    private boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }

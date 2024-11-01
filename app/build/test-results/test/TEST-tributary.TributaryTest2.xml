@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="tributary.TributaryTest2" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-11-01T12:02:12" hostname="bissi-smells.modem" time="0.013">
+  <properties/>
+  <testcase name="mainComplexTest()" classname="tributary.TributaryTest2" time="0.013"/>
+  <system-out><![CDATA[Created Integer topic with ID: banana
+
+Created partition with ID: bananaCookingMethod1 for topic: banana
+
+Created partition with ID: bananaCookingMethod2 for topic: banana
+
+Created partition with ID: bananaCookingMethod3 for topic: banana
+
+Created partition with ID: bananaCookingStyle4 for topic: banana
+
+Created producer with ID: bananaBoiler that produces Integer events with random allocation
+
+Created producer with ID: bananaFrier that produces Integer events with manual allocation
+
+Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
+
+Consumer group bananaChefs already exists.
+
+Created consumer with ID: beginnerChef1 for group: bananaChefs group
+
+Created consumer with ID: beginnerChef2 for group: bananaChefs group
+
+Created consumer with ID: beginnerChef3 for group: bananaChefs group
+
+The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod1.
+
+The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod2.
+
+The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod1.
+
+The event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
+
+The event: bananaFryNums has been manually allocated to partition bananaCookingMethod3
+
+The event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+
+The event: bananaBoilingNums has been consumed by consumer beginnerChef1. It contains the contents:
+duration = 5
+temperature = 100
+Consumed 1 messages.
+
+The event: bananaBoilingDur has been consumed by consumer beginnerChef1. It contains the contents:
+duration = 5
+Consumed 1 messages.
+
+The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
+duration = 3
+temperature = 180
+Consumed 1 messages.
+
+Not enough messages to consume.
+Consumed 0 messages.
+
+The event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+
+The event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
+
+The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
+duration = 3
+temperature = 180
+Consumed 1 messages.
+
+Consumer is not assigned to the partition.
+
+The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
+duration = 3
+Consumed 1 messages.
+
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

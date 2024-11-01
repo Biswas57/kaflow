@@ -2,36 +2,28 @@
 
 import java.io.IOException;
 
-import tributary.api.ConsumerGroup;
-import tributary.api.Topic;
 import tributary.api.TributaryCluster;
 
-<span class="fc" id="L9">public abstract class ObjectFactory {</span>
-<span class="fc" id="L10">    private TributaryCluster cluster = TributaryCluster.getInstance();</span>
+<span class="fc" id="L7">public abstract class ObjectFactory {</span>
+<span class="fc" id="L8">    private TributaryCluster cluster = TributaryCluster.getInstance();</span>
 
     public TributaryCluster getCluster() {
-<span class="fc" id="L13">        return cluster;</span>
+<span class="fc" id="L11">        return cluster;</span>
     }
 
     public void setCluster(TributaryCluster cluster) {
-<span class="fc" id="L17">        this.cluster = cluster;</span>
-<span class="fc" id="L18">    }</span>
+<span class="fc" id="L15">        this.cluster = cluster;</span>
+<span class="fc" id="L16">    }</span>
 
     public abstract void createTopic(String topicId);
 
     public abstract void createPartition(String topicId, String partitionId);
 
-    public void createConsumerGroup(String groupId, Topic&lt;?&gt; topic, String rebalancing) {
-<span class="fc" id="L25">        ConsumerGroup&lt;?&gt; group = new ConsumerGroup&lt;&gt;(groupId, topic, rebalancing);</span>
-<span class="fc" id="L26">        cluster.addGroup(group);</span>
-
-<span class="fc" id="L28">        System.out.println(&quot;Created consumer group with ID: &quot; + groupId + &quot; for topic: &quot; + topic.getId()</span>
-                + &quot; with &quot; + rebalancing + &quot; rebalancing strategy.\n&quot;);
-<span class="fc" id="L30">    }</span>
+    public abstract void createConsumerGroup(String groupId, String topicId, String rebalancing);
 
     public abstract void createConsumer(String groupId, String consumerId);
 
-    public abstract void createProducer(String producerId, String type, String allocation);
+    public abstract void createProducer(String producerId, String topicId, String allocation);
 
     public abstract void createEvent(String producerId, String topicId,
             String eventId, String partitionId) throws IOException;

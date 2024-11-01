@@ -1,6 +1,6 @@
 {
     "eventId": "bananaBoilingNums",
-    "PayloadType": "Temperature and Duration",
+    "PayloadType": "Integer",
     "messageContents": {
         "temperature": 100,
         "duration": 5

@@ -1,33 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RangeStrategy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">tributary.core.rebalancingStrategy</a> &gt; <span class="el_source">RangeStrategy.java</span></div><h1>RangeStrategy.java</h1><pre class="source lang-java linenums">package tributary.core.rebalancingStrategy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import tributary.api.Consumer;
 import tributary.api.Partition;
+import tributary.api.Topic;
 
-<span class="fc" id="L8">public class RangeStrategy&lt;T&gt; implements RebalancingStrategy&lt;T&gt; {</span>
+<span class="fc" id="L10">public class RangeStrategy&lt;T&gt; implements RebalancingStrategy&lt;T&gt; {</span>
     @Override
-    public void rebalance(List&lt;Partition&lt;T&gt;&gt; partitions, List&lt;Consumer&lt;T&gt;&gt; consumers) {
-<span class="pc bpc" id="L11" title="2 of 4 branches missed.">        if (partitions.isEmpty() || consumers.isEmpty()) {</span>
-<span class="nc" id="L12">            return;</span>
+    public void rebalance(List&lt;Topic&lt;T&gt;&gt; topics, List&lt;Consumer&lt;T&gt;&gt; consumers) {
+<span class="pc bpc" id="L13" title="2 of 4 branches missed.">        if (topics.isEmpty() || consumers.isEmpty()) {</span>
+<span class="nc" id="L14">            return;</span>
         }
-<span class="fc bfc" id="L14" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
-<span class="fc" id="L15">            consumer.clearAssignments();</span>
-<span class="fc" id="L16">        }</span>
+<span class="fc bfc" id="L16" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
+<span class="fc" id="L17">            consumer.clearAssignments();</span>
+<span class="fc" id="L18">        }</span>
 
-<span class="fc" id="L18">        int minPartitionsPerConsumer = partitions.size() / consumers.size();</span>
-<span class="fc" id="L19">        int extraPartitions = partitions.size() % consumers.size();</span>
+<span class="fc" id="L20">        List&lt;Partition&lt;T&gt;&gt; partitions = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L21" title="All 2 branches covered.">        for (Topic&lt;T&gt; topic : topics) {</span>
+<span class="fc" id="L22">            partitions.addAll(topic.listPartitions());</span>
+<span class="fc" id="L23">        }</span>
+<span class="fc" id="L24">        int minPartitionsPerConsumer = partitions.size() / consumers.size();</span>
+<span class="fc" id="L25">        int extraPartitions = partitions.size() % consumers.size();</span>
 
-<span class="fc" id="L21">        int partitionIndex = 0;</span>
-<span class="fc bfc" id="L22" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
-<span class="fc bfc" id="L23" title="All 2 branches covered.">            for (int j = 0; j &lt; minPartitionsPerConsumer; j++, partitionIndex++) {</span>
-<span class="fc" id="L24">                consumer.assignPartition(partitions.get(partitionIndex));</span>
+<span class="fc" id="L27">        int partitionIndex = 0;</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : consumers) {</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">            for (int j = 0; j &lt; minPartitionsPerConsumer; j++, partitionIndex++) {</span>
+<span class="fc" id="L30">                consumer.assignPartition(partitions.get(partitionIndex));</span>
             }
-<span class="fc bfc" id="L26" title="All 2 branches covered.">            if (extraPartitions &gt; 0) {</span>
-<span class="fc" id="L27">                consumer.assignPartition(partitions.get(partitionIndex++));</span>
-<span class="fc" id="L28">                extraPartitions--;</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">            if (extraPartitions &gt; 0) {</span>
+<span class="fc" id="L33">                consumer.assignPartition(partitions.get(partitionIndex++));</span>
+<span class="fc" id="L34">                extraPartitions--;</span>
             }
-<span class="fc" id="L30">        }</span>
-<span class="fc" id="L31">    }</span>
+<span class="fc" id="L36">        }</span>
+<span class="fc" id="L37">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

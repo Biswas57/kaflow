@@ -9,4 +9,14 @@ public class IntegerHandler implements TypeHandler<Integer> {
             throw new IllegalArgumentException("Value is not a Number: " + value);
         }
     }
+
+    @Override
+    public String valueToString(Object value) {
+        return Integer.toString(handle(value));
+    }
+
+    @Override
+    public Integer stringToValue(String value) {
+        return Integer.parseInt(value);
+    }
 }
