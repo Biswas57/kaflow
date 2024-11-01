@@ -194,12 +194,13 @@ Usability Checklist: Using the command line interface, the checklist will be run
 - However, I am proud of the fact that I got through to the end and I will be using this project as a threshold for my ability and motivation in the future.
 
 ### Acheivements
-- Constructed a **Tributary Event Processing System**, emulating Apache Kafka's Event Processing Platform in Java, with a function CLI, parallel data processing and assured type-safety by implementing Concurrency and Generics alongside important OOP Design principles.
-- Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
-- Ensured thread safety across concurrent producer and consumer threads to protect user data in the event processing pipeline by utilizing Java concurrency tools such as synchronization and ExecutorService.
-- Achieved an 85% test coverage by conducting ∼75 tests in JUnit and Mockito to ensure the system’s reliability.
+- Developed an Event-Driven Processing System, emulating Apache Kafka's event streaming capabilities in Java, with parallel data processing and message playback.
+- Ensured thread safety and type safety across user threads by utilising Java Generics and Concurrency techniques such as Covariance and Synchronization to safeguard user data during event processing.
+- Implemented an RBAC system with token-based authentication, SHA-256 hashing and RSA message encryption to ensure secure role management and confidentiality of data transmitted for producers and consumers.
+- Achieved an ~85% test coverage by conducting 75+ JUnit and Mockito test to ensure system reliability.
 - Designed a message replay feature that allows Events to be replayed from specific offsets, enabling error checking and correction without compromising the system’s performance.
 - Developed a dynamic event rebalancing mechanism, called Range and Round Robin Strategies within Consumer Groups, which honed my skills in algorithmic design
+- Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
 - Conducted extensive usability tests and created a detailed CLI for managing and interacting with the Tributary system, showcasing functionality through a comprehensive set of commands.
 - Designed and documented the entire system structure providing a clear overview and understanding of the system’s architecture and seamlessly integrated all these key features to provide users with efficient and useful pipeline for event processing.
 
