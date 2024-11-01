@@ -71,8 +71,9 @@ Other Notes:
 - Messages from a certain offset onwards are processed, until the most recent message at the latest offset is reached to catch errors and failures or for processing historical data. This feature is crucial when a system feature may not be working as it's supposed to.
 - Backtrack Replay: Consumers can replay messages from a specified backtrack in their partition, ie. -2 = 2nd latest message processed
 - Controlled Replay: Consumers can replay messages from a specific offset. ie. 2 = 2nd message in the partition
-
-![](/images/controlledReplay.png)
+<p align="center">
+  <img src="images/controlledReplay.png" width="500px" />
+</p>
 > ℹ  NOTE: The above image demonstrates a consumer starting at offset 6 that performed normal consumption until offset 9. This consumer then triggered a
 > controlled replay from offset 4 that played back all the messages from that offset until the most recently consumed message (i.e messages 6, 7, 8 and 9
 > were consumed again).
