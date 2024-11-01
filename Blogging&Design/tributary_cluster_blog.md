@@ -184,6 +184,34 @@ There are a few major security aspects to take into consideration when analyzing
 
 **Data Security:** Just as authentication and authorization are critical security aspects to consider when dealing in stream processing, ensuring the security of the data as it is being transmitted over the network by such applications is also of the utmost importance. Continuing to use Kafka as our example platform, data-in-transit via write operations from producers to Kafka brokers and via read operations executed by consumers against these Kafka brokers, should be protected from undue access by unauthorized systems. In an effort to provide a more thorough security policy for such a stream processing implementation, this data should be encrypted when it is communicated between client applications and Kafka.
 
+### Project Deliverables/Outcomes
+<table>
+  <tr>
+    <th>Deliverable</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>PostgreSQL Backend</td>
+    <td>A fully functional PostgreSQL backend replacing JSON files for message (logs and records of processes) storage.</td>
+  </tr>
+  <tr>
+    <td>TLS/SSL Encryption</td>
+    <td>Implement TLS/SSL encryption for transmitting messages between producers, consumers, and the Tributary Cluster.</td>
+  </tr>
+  <tr>
+    <td>RBAC System</td>
+    <td>An access control system for regulating who can produce, consume, or replay messages based on roles and permissions.</td>
+  </tr>
+  <tr>
+    <td>Documentation & Final Report</td>
+    <td>
+      Detailed documentation covering system design and security implementations for interacting with the Tributary Cluster. 
+      The final report will summarize the project’s objectives, achievements, challenges, and how the security features relate to industry use, 
+      emphasizing the importance of security.
+    </td>
+  </tr>
+</table>
+
 ## Features Implemented
 ### Encryption for Data in Transit (TLS/SSL)
 Since the Kafka system relies heavily on message transmission between producers, consumers, and partitions within the Tributary Cluster, ensuring that data in transit is protected is critical. This is particularly relevant because the system operates in environments that handle large volumes of potentially sensitive data. So Adding TLS/SSL encryption ensures that messages between components (producers, consumers, topics) cannot be intercepted or tampered with while they are in transit. Given that the system supports multiple producers and consumers working concurrently, securing these communication channels protects the integrity and confidentiality of your data, preventing man-in-the-middle attacks.
