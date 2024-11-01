@@ -228,11 +228,10 @@ Implementing RBAC allows us to extend the system's flexibility by adding fine-gr
 
 
 # Reflection
+**BELOW REFLECTION COMPLETED ON 16/04/2024** &rarr; completed immediately after transferred from GitLab to GitHub for version control
 - Overall a very important project that helped me understand the importance of system design as a Backend Software Engineer and the different patterns that can be used to make a system not only more aesthetically pleasing but also more efficient and maintainable.
 - Went through a lot of struggles and put in a lot of effort to produce a system that I am proud of.
 - I am happy with the final product and the knowledge I have gained from this project.
-
-**COMPLETED ON 16/04/2024** &rarr; transferred from GitLab to GitHub for version control
 
 ### Challenges
 - The main challenge I had was the time constraint till I had to start studying for my exams and the fact that I was working alone, which made it difficult to get feedback and suggestions on my design.
