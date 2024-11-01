@@ -82,11 +82,9 @@ Generics:
 - Type Flexibility: The system uses Java generics to handle messages of any type, making the system able to adapt to different data types without duplicating code.
 
 ### Initial UML Diagram
-
-[initial_design.pdf](initial_design.pdf)
+My [initial UML design](UML_1st_draft.pdf) was extremeley simple and had very little thought as to how the system would operate. Chose this approach because I would be overwhelmed if I had done otherwise
 
 ### Java API Design
-
 **api:** This is the outward known side of our system, where the interfaces and classes essential for users to interact with the Tributary system are located.
 - TributaryCluster: Manages the collection of topics.
 - Topic: Handles operations on a specific topic.
