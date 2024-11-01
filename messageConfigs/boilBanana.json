@@ -1,9 +1,0 @@
-{
-    "eventId": "boilBanana",
-    "PayloadType": "String",
-    "messageContents": {
-        "temperature": "100C",
-        "duration": "5 mins",
-        "description": "Boil the banana in water for 5 mins at 100C to make a banana tea."
-    }
-}
