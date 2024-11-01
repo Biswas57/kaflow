@@ -1,6 +1,6 @@
 # Index
 1. [Design Focused Implementation](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog)
-2. [Security Feature Implementation]([https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-security-implementation-blog))
+2. [Security Feature Implementation](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-security-implementation-blog)
 3. [Reflection](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
 
 # Tributary Cluster Design-Focused Blog
