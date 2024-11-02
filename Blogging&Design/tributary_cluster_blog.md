@@ -439,6 +439,23 @@ Optimized system and implemented Security features.
 - Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
 - Implement a mechanism that locks an account or restricts access after a certain number of failed login attempts to prevent brute force attacks.
 
+### 01/11/2024
+**Progress**
+- Make my system a proper java library. Still Yet to publish
+- Completed Blog Restructering
+- Started Security Report
+
+**Future Goals**
+- Finish Readme Deployment Instructions
+- Finish Final UML
+- Finish Security Report and add it to the GitHub Security Blog
+- Figure out how to make Tributary Cluster a proper Java Library
+- Make first producer and Consumer Group created the admins
+- Implement Byte type handling
+- Implement return Strings instead of stdout (maybe)
+- Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
+- Implement a mechanism that locks an account or restricts access after a certain number of failed login attempts to prevent brute force attacks.
+
 ### 15/11/2024 (Goal Planned on 11/09/2024)
 Optimized system, Implemented Security features.
 - Implemented Message Encryption and Role-Based Access Control (RBAC) for Consumers and Consumer Groups
