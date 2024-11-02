@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryTestMockito" tests="11" skipped="0" failures="0" errors="0" timestamp="2024-11-01T12:02:12" hostname="bissi-smells.modem" time="0.582">
+<testsuite name="tributary.TributaryTestMockito" tests="11" skipped="0" failures="0" errors="0" timestamp="2024-11-02T01:40:50" hostname="bissi-smells.modem" time="0.589">
   <properties/>
-  <testcase name="testEventLifeCycle()" classname="tributary.TributaryTestMockito" time="0.53"/>
-  <testcase name="testCreateIntegerTopicAndProducers()" classname="tributary.TributaryTestMockito" time="0.011"/>
-  <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryTestMockito" time="0.009"/>
-  <testcase name="testCreateAndShowStringTopic()" classname="tributary.TributaryTestMockito" time="0.003"/>
-  <testcase name="testParallelProduceThreeMessages()" classname="tributary.TributaryTestMockito" time="0.006"/>
-  <testcase name="testUpdateConsumerOffset()" classname="tributary.TributaryTestMockito" time="0.004"/>
+  <testcase name="testEventLifeCycle()" classname="tributary.TributaryTestMockito" time="0.558"/>
+  <testcase name="testCreateIntegerTopicAndProducers()" classname="tributary.TributaryTestMockito" time="0.003"/>
+  <testcase name="testMessageCreationAndConsumption()" classname="tributary.TributaryTestMockito" time="0.003"/>
+  <testcase name="testCreateAndShowStringTopic()" classname="tributary.TributaryTestMockito" time="0.002"/>
+  <testcase name="testParallelProduceThreeMessages()" classname="tributary.TributaryTestMockito" time="0.005"/>
+  <testcase name="testUpdateConsumerOffset()" classname="tributary.TributaryTestMockito" time="0.002"/>
   <testcase name="testDeleteConsumer()" classname="tributary.TributaryTestMockito" time="0.002"/>
-  <testcase name="testParallelConsumeTwoMessages()" classname="tributary.TributaryTestMockito" time="0.006"/>
+  <testcase name="testParallelConsumeTwoMessages()" classname="tributary.TributaryTestMockito" time="0.004"/>
   <testcase name="testCreatePartition()" classname="tributary.TributaryTestMockito" time="0.001"/>
-  <testcase name="testParallelConsumeThreeMessages()" classname="tributary.TributaryTestMockito" time="0.004"/>
+  <testcase name="testParallelConsumeThreeMessages()" classname="tributary.TributaryTestMockito" time="0.003"/>
   <testcase name="testParallelProduceTwoMessages()" classname="tributary.TributaryTestMockito" time="0.002"/>
   <system-out><![CDATA[Created String topic with ID: banana
 
@@ -146,9 +146,9 @@ Created consumer with ID: beginnerChef for group: bananaChefs
 
 The event: boilBanana has been manually allocated to partition bananaCookingMethods
 
-The event: fryBanana has been manually allocated to partition bananaCookingMethods
-
 The event: grillBanana has been manually allocated to partition bananaCookingMethods
+
+The event: fryBanana has been manually allocated to partition bananaCookingMethods
 
 Consumer is not assigned to the partition.
 

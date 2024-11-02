@@ -13,12 +13,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import tributary.api.ConsumerGroup;
-import tributary.api.Topic;
-import tributary.api.TributaryCluster;
-import tributary.api.producers.Producer;
-import tributary.core.TributaryController;
+import tributary.core.tributaryObject.producers.Producer;
+import tributary.api.TributaryController;
 import tributary.core.tokenManager.TokenManager;
+import tributary.core.tributaryObject.ConsumerGroup;
+import tributary.core.tributaryObject.Topic;
+import tributary.core.tributaryObject.TributaryCluster;
 
 public class TributaryAdminTest {
     private TributaryController controller;

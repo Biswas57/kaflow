@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TributaryController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">tributary.api</a> &gt; <span class="el_source">TributaryController.java</span></div><h1>TributaryController.java</h1><pre class="source lang-java linenums">package tributary.api;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import tributary.core.tributaryObject.producers.*;
+import tributary.core.rebalancingStrategy.RebalancingStrategy;
+import tributary.core.tokenManager.TokenManager;
+import tributary.core.tributaryFactory.*;
+import tributary.core.tributaryObject.AdminObject;
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.ConsumerGroup;
+import tributary.core.tributaryObject.Message;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.Topic;
+import tributary.core.tributaryObject.TributaryCluster;
+
+public class TributaryController {
+    private TributaryCluster cluster;
+    private ObjectFactory objectFactory;
+    private Map&lt;String, Class&lt;?&gt;&gt; typeMap;
+
+<span class="fc" id="L28">    public TributaryController() {</span>
+<span class="fc" id="L29">        this.cluster = TributaryCluster.getInstance();</span>
+<span class="fc" id="L30">        this.objectFactory = new StringFactory();</span>
+<span class="fc" id="L31">        this.typeMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L32">        typeMap.put(&quot;integer&quot;, Integer.class);</span>
+<span class="fc" id="L33">        typeMap.put(&quot;string&quot;, String.class);</span>
+<span class="fc" id="L34">        typeMap.put(&quot;bytes&quot;, byte[].class);</span>
+<span class="fc" id="L35">    }</span>
+
+    /*
+     * All Helper methods involved in the the creation, deletion and manipulation of
+     * Tributary objects.
+     */
+    public Topic&lt;?&gt; getTopic(String topicId) {
+<span class="fc" id="L42">        Topic&lt;?&gt; topic = cluster.getTopic(topicId);</span>
+<span class="fc" id="L43">        return topic;</span>
+    }
+
+    public ConsumerGroup&lt;?&gt; getConsumerGroup(String groupId) {
+<span class="fc" id="L47">        ConsumerGroup&lt;?&gt; group = cluster.getConsumerGroup(groupId);</span>
+<span class="fc" id="L48">        return group;</span>
+    }
+
+    public Producer&lt;?&gt; getProducer(String producerId) {
+<span class="fc" id="L52">        Producer&lt;?&gt; producer = cluster.getProducer(producerId);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (producer == null) {</span>
+<span class="fc" id="L54">            System.out.println(&quot;Producer &quot; + producerId + &quot; does not exist.\n&quot;);</span>
+<span class="fc" id="L55">            return null;</span>
+        }
+<span class="fc" id="L57">        return producer;</span>
+    }
+
+    public void setObjectFactoryType(String type) throws IllegalArgumentException {
+<span class="fc" id="L61">        Class&lt;?&gt; typeClass = typeMap.get(type);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (typeClass == null) {</span>
+<span class="fc" id="L63">            throw new IllegalArgumentException(&quot;Unsupported type: &quot; + type + &quot;\n&quot;);</span>
+        }
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        this.objectFactory = (typeClass.equals(Integer.class)) ? new IntegerFactory() : new StringFactory();</span>
+<span class="fc" id="L66">    }</span>
+
+    public Consumer&lt;?&gt; findConsumer(String consumerId) {
+<span class="fc" id="L69">        Consumer&lt;?&gt; specifiedConsumer = null;</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (ConsumerGroup&lt;?&gt; group : cluster.listConsumerGroups()) {</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            for (Consumer&lt;?&gt; consumer : group.listConsumers()) {</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                if (consumer.getId().equals(consumerId)) {</span>
+<span class="fc" id="L73">                    specifiedConsumer = consumer;</span>
+                }
+<span class="fc" id="L75">            }</span>
+<span class="fc" id="L76">        }</span>
+<span class="fc" id="L77">        return specifiedConsumer;</span>
+    }
+
+    public Partition&lt;?&gt; findPartition(String partitionId) {
+<span class="fc" id="L81">        Partition&lt;?&gt; specifiedPartition = null;</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        for (Topic&lt;?&gt; topic : cluster.listTopics()) {</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            for (Partition&lt;?&gt; partition : topic.listPartitions()) {</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                if (partition.getId().equals(partitionId)) {</span>
+<span class="fc" id="L85">                    specifiedPartition = partition;</span>
+<span class="fc" id="L86">                    break;</span>
+                }
+<span class="fc" id="L88">            }</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (specifiedPartition != null)</span>
+<span class="fc" id="L90">                break;</span>
+<span class="fc" id="L91">        }</span>
+<span class="fc" id="L92">        return specifiedPartition;</span>
+    }
+
+    public ObjectFactory getFactory() {
+<span class="nc" id="L96">        return objectFactory;</span>
+    }
+
+    public TributaryCluster getCluster() {
+<span class="nc" id="L100">        return cluster;</span>
+    }
+
+    /*
+     * All creation methods.
+     * These methods are outsourced to the ObjectFactory class.
+     */
+    public void createTopic(String topicId, String type) throws IllegalArgumentException {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (getTopic(topicId) != null) {</span>
+<span class="fc" id="L109">            System.out.println(&quot;Topic &quot; + topicId + &quot; already exists.\n&quot;);</span>
+<span class="fc" id="L110">            return;</span>
+        }
+<span class="fc" id="L112">        setObjectFactoryType(type);</span>
+<span class="fc" id="L113">        objectFactory.createTopic(topicId);</span>
+<span class="fc" id="L114">    }</span>
+
+    public void createPartition(String topicId, String partitionId) throws IllegalArgumentException {
+<span class="fc" id="L117">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (topic == null) {</span>
+<span class="fc" id="L119">            System.out.println(&quot;Topic &quot; + topicId + &quot; does not exist.&quot;);</span>
+<span class="fc" id="L120">            return;</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        } else if (topic.containsPartition(partitionId)) {</span>
+<span class="fc" id="L122">            System.out.println(&quot;Partition &quot; + partitionId + &quot; already exists in topic.\n&quot;);</span>
+<span class="fc" id="L123">            return;</span>
+        }
+<span class="fc" id="L125">        String topicType = topic.getType().getSimpleName().toLowerCase();</span>
+<span class="fc" id="L126">        setObjectFactoryType(topicType);</span>
+<span class="fc" id="L127">        objectFactory.createPartition(topicId, partitionId);</span>
+<span class="fc" id="L128">    }</span>
+
+    public void createConsumerGroup(String groupId, String topicId, String rebalancing)
+            throws IllegalArgumentException {
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (getConsumerGroup(groupId) != null) {</span>
+<span class="fc" id="L133">            System.out.println(&quot;Consumer group &quot; + groupId + &quot; already exists.\n&quot;);</span>
+<span class="fc" id="L134">            return;</span>
+        }
+
+<span class="fc" id="L137">        String type = getTopic(topicId).getType().getSimpleName().toLowerCase();</span>
+<span class="fc" id="L138">        setObjectFactoryType(type);</span>
+<span class="fc" id="L139">        objectFactory.createConsumerGroup(groupId, topicId, rebalancing);</span>
+<span class="fc" id="L140">    }</span>
+
+    public void createConsumer(String groupId, String consumerId) throws IllegalArgumentException {
+<span class="fc" id="L143">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (group.containsConsumer(consumerId)) {</span>
+<span class="fc" id="L145">            System.out.println(&quot;Consumer &quot; + consumerId + &quot;already exists in the group.\n&quot;);</span>
+<span class="fc" id="L146">            return;</span>
+        }
+<span class="fc" id="L148">        String topicType = group.getAssignedTopics().get(0).getType().getSimpleName().toLowerCase();</span>
+<span class="fc" id="L149">        setObjectFactoryType(topicType);</span>
+<span class="fc" id="L150">        objectFactory.createConsumer(groupId, consumerId);</span>
+<span class="fc" id="L151">    }</span>
+
+    public void createProducer(String producerId, String topicId, String allocation) throws IllegalArgumentException {
+<span class="fc" id="L154">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="fc" id="L155">        setObjectFactoryType(topic.getType().getSimpleName().toLowerCase());</span>
+<span class="fc" id="L156">        objectFactory.createProducer(producerId, topicId, allocation);</span>
+<span class="fc" id="L157">    }</span>
+
+    public synchronized void createEvent(String producerId, String topicId, String eventId, String partitionId)
+            throws IOException {
+<span class="fc" id="L161">        Producer&lt;?&gt; producer = getProducer(producerId);</span>
+<span class="fc" id="L162">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="pc bpc" id="L163" title="2 of 4 branches missed.">        if (producer == null || topic == null) {</span>
+<span class="nc" id="L164">            System.out.println(&quot;Producer &quot; + producerId + &quot; or topic &quot; + topicId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L165">            return;</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        } else if (!verifyProducer(producer, topic)) {</span>
+<span class="fc" id="L167">            System.out.println(&quot;Producer does not have permission to produce to this topic.\n&quot;);</span>
+<span class="fc" id="L168">            return;</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        } else if (!topic.getType().equals(producer.getType())) {</span>
+<span class="nc" id="L170">            System.out.println(&quot;Producer type does not match topic type.\n&quot;);</span>
+<span class="nc" id="L171">            return;</span>
+        }
+
+<span class="fc" id="L174">        synchronized (topic) {</span>
+<span class="fc" id="L175">            String topicType = topic.getType().getSimpleName().toLowerCase();</span>
+<span class="fc" id="L176">            setObjectFactoryType(topicType);</span>
+<span class="fc" id="L177">            objectFactory.createEvent(producerId, topicId, eventId, partitionId);</span>
+<span class="fc" id="L178">        }</span>
+<span class="fc" id="L179">    }</span>
+
+    public boolean verifyProducer(Producer&lt;?&gt; prod, Topic&lt;?&gt; topic) {
+<span class="fc" id="L182">        String adminToken = cluster.getAdminProdToken();</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (prod.listAssignedTopics().contains(topic)) {</span>
+<span class="fc" id="L184">            return true;</span>
+<span class="pc bpc" id="L185" title="3 of 4 branches missed.">        } else if (adminToken != null &amp;&amp; prod.getToken() != null) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">            if (adminToken.equals(prod.getToken()))</span>
+<span class="nc" id="L187">                return true;</span>
+        }
+
+<span class="fc" id="L190">        return false;</span>
+    }
+
+    /*
+     * The delete consumer method is the only delete method so far.
+     * This was to demonstrate the ability for consumer groups to automatially
+     * rebalance once a consumer is deleted.
+     * Simple demonstration of the Observer Pattern implemented
+     * There is no added functionality when deleting other tributary objects.
+     */
+    public void deleteConsumer(String consumerId) {
+<span class="fc" id="L201">        cluster.deleteConsumer(consumerId);</span>
+<span class="fc" id="L202">    }</span>
+
+    /*
+     * Show the entirety of Topic and ConsumerGroup objects.
+     * Consumer Groups will show the group, the consumers and the partitions
+     * assigned to each consumer.
+     * Topics will show the topic, the partitions and the respective events in order
+     * of consumption in eahc partition.
+     */
+    public void showTopic(String topicId) {
+<span class="fc" id="L212">        Topic&lt;?&gt; topic = cluster.getTopic(topicId);</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if (topic != null) {</span>
+<span class="fc" id="L214">            topic.showTopic();</span>
+        } else {
+<span class="nc" id="L216">            System.out.println(&quot;Topic not found: &quot; + topicId + &quot;\n&quot;);</span>
+        }
+<span class="fc" id="L218">    }</span>
+
+    public void showGroup(String groupId) {
+<span class="nc" id="L221">        ConsumerGroup&lt;?&gt; group = cluster.getConsumerGroup(groupId);</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">        if (group != null) {</span>
+<span class="nc" id="L223">            group.showGroup();</span>
+        } else {
+<span class="nc" id="L225">            System.out.println(&quot;Group not found: &quot; + groupId + &quot;\n&quot;);</span>
+        }
+<span class="nc" id="L227">    }</span>
+
+    /*
+     * Consume events from a partition. The number of events to consume is specified
+     * by numberOfEvents.
+     * The consumer must be assigned to the partition to consume events.
+     */
+    public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
+<span class="fc" id="L235">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="fc" id="L236">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="fc" id="L237">        String topicId = partition.getAllocatedTopicId();</span>
+<span class="fc" id="L238">        Topic&lt;?&gt; topic = getTopic(topicId);</span>
+
+<span class="pc bpc" id="L240" title="2 of 4 branches missed.">        if (consumer == null || partition == null) {</span>
+<span class="nc" id="L241">            System.out.println(&quot;Consumer &quot; + consumerId + &quot; or partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L242">            return;</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">        } else if (!verifyConsumer(consumer, topic)) {</span>
+<span class="fc" id="L244">            System.out.println(&quot;Consumer Group of Consumer does not have permission to consume from the topic.\n&quot;);</span>
+<span class="fc" id="L245">            return;</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        } else if (!consumer.listAssignedPartitions().contains(partition)) {</span>
+<span class="fc" id="L247">            System.out.println(&quot;Consumer is not assigned to the partition.\n&quot;);</span>
+<span class="fc" id="L248">            return;</span>
+        }
+
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        if (topic.getType().equals(Integer.class)) {</span>
+<span class="fc" id="L252">            consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">        } else if (topic.getType().equals(String.class)) {</span>
+<span class="fc" id="L254">            consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);</span>
+        } else {
+<span class="nc" id="L256">            System.out.println(&quot;Unsupported type: &quot; + topic.getType().getSimpleName() + &quot;\n&quot;);</span>
+        }
+<span class="fc" id="L258">    }</span>
+
+    private &lt;T&gt; void consumeEventsGeneric(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type,
+            int numberOfEvents) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L263">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L265">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L266">        synchronized (typedPartition) {</span>
+<span class="fc" id="L267">            consumeHelper(typedConsumer, typedPartition, numberOfEvents);</span>
+<span class="fc" id="L268">        }</span>
+<span class="fc" id="L269">    }</span>
+
+    private &lt;T&gt; void consumeHelper(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int numberOfEvents) {
+<span class="fc" id="L272">        List&lt;Message&lt;T&gt;&gt; messages = partition.listMessages();</span>
+<span class="fc" id="L273">        int currentOffset = partition.getOffset(consumer);</span>
+<span class="fc" id="L274">        int count = 0;</span>
+
+<span class="fc bfc" id="L276" title="All 4 branches covered.">        for (int i = currentOffset; i &lt; messages.size() &amp;&amp; count &lt; numberOfEvents; i++, count++) {</span>
+<span class="fc" id="L277">            consumer.consume(messages.get(i), partition);</span>
+        }
+
+<span class="fc bfc" id="L280" title="All 2 branches covered.">        if (count &lt; numberOfEvents) {</span>
+<span class="fc" id="L281">            System.out.println(&quot;Not enough messages to consume.\nConsumed &quot; + count + &quot; messages.\n&quot;);</span>
+        } else {
+<span class="fc" id="L283">            System.out.println(&quot;Consumed &quot; + count + &quot; messages.\n&quot;);</span>
+        }
+<span class="fc" id="L285">    }</span>
+
+    public boolean verifyConsumer(Consumer&lt;?&gt; consumer, Topic&lt;?&gt; topic) {
+<span class="fc" id="L288">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(consumer.getGroup());</span>
+<span class="fc" id="L289">        String adminToken = cluster.getAdminConsToken();</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">        if (group.listAssignedTopics().contains(topic)) {</span>
+<span class="fc" id="L291">            return true;</span>
+<span class="pc bpc" id="L292" title="3 of 4 branches missed.">        } else if (adminToken != null &amp;&amp; group.getToken() != null) {</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">            if (adminToken.equals(group.getToken()))</span>
+<span class="nc" id="L294">                return true;</span>
+        }
+<span class="fc" id="L296">        return false;</span>
+    }
+
+    /*
+     * Update the rebalancing strategy for a consumer group.
+     * Update the Offset of a consumer to allow for message replay.
+     * Update the admin token for a consumer group or producer.
+     */
+    public void updateRebalancing(String groupId, String rebalancing) {
+<span class="fc" id="L305">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(groupId);</span>
+<span class="fc" id="L306">        RebalancingStrategy&lt;?&gt; prevMethod = group.getRebalanceMethod();</span>
+<span class="fc" id="L307">        group.setRebalancingMethod(rebalancing);</span>
+<span class="fc" id="L308">        group.rebalance();</span>
+
+<span class="fc" id="L310">        RebalancingStrategy&lt;?&gt; currMethod = group.getRebalanceMethod();</span>
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">        if (prevMethod.equals(currMethod)) {</span>
+<span class="nc" id="L312">            System.out.println(&quot;Updated the rebalancing strategy for the &quot;</span>
+<span class="nc" id="L313">                    + groupId + &quot; group to &quot; + currMethod.toString() + &quot; rebalancing\n&quot;);</span>
+        }
+<span class="fc" id="L315">    }</span>
+
+    public void updatePartitionOffset(String consumerId, String partitionId, int offset) {
+<span class="fc" id="L318">        Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="fc" id="L319">        Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="fc" id="L320">        Topic&lt;?&gt; topic = getTopic(partition.getAllocatedTopicId());</span>
+
+<span class="pc bpc" id="L322" title="3 of 6 branches missed.">        if (consumer == null || partition == null || topic == null) {</span>
+<span class="nc" id="L323">            System.out.println(&quot;Consumer, partition, or topic not found.\n&quot;);</span>
+<span class="nc" id="L324">            return;</span>
+        }
+<span class="fc" id="L326">        updatePartitionOffsetGeneric(consumer, partition, offset);</span>
+<span class="fc" id="L327">    }</span>
+
+    private &lt;T&gt; void updatePartitionOffsetGeneric(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition,
+            int offset) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L332">        Consumer&lt;T&gt; typedconsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L334">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L335">        updateTypedConsumerOffset(typedconsumer, typedPartition, offset);</span>
+<span class="fc" id="L336">    }</span>
+
+    private &lt;T&gt; void updateTypedConsumerOffset(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int offset) {
+        // uses 1 indexing here because zero indexing is used in the consume method
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        if (Math.abs(offset) &gt; partition.getOffset(consumer)) {</span>
+<span class="fc" id="L341">            System.out.println(</span>
+                    &quot;Playback or Backtrack Offset cannot be greater than the number of messages in the partition.\n&quot;);
+<span class="fc" id="L343">            return;</span>
+            // if number is 0 return the last message in the partition
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        } else if (offset == 0) {</span>
+<span class="fc" id="L346">            partition.setOffset(consumer, partition.listMessages().size());</span>
+            // if number negative return the last nth message
+<span class="pc bpc" id="L348" title="1 of 2 branches missed.">        } else if (offset &lt; 0) {</span>
+<span class="nc" id="L349">            partition.setOffset(consumer, partition.listMessages().size() + offset + 1);</span>
+            // if number positive return the message at nth position in partition
+        } else {
+<span class="fc" id="L352">            partition.setOffset(consumer, offset);</span>
+        }
+<span class="fc" id="L354">    }</span>
+
+    public void updateConsumerGroupAdmin(String newGroupId, String oldGroupId, String password) {
+<span class="fc" id="L357">        ConsumerGroup&lt;?&gt; oldGroup = getConsumerGroup(oldGroupId);</span>
+<span class="fc bfc" id="L358" title="All 4 branches covered.">        if (oldGroup == null &amp;&amp; cluster.getAdminConsToken() != null) {</span>
+<span class="fc" id="L359">            System.out.println(&quot;Admin token exists but old Admin could not be identified.\n&quot;);</span>
+<span class="fc" id="L360">            return;</span>
+<span class="fc bfc" id="L361" title="All 4 branches covered.">        } else if (oldGroup != null &amp;&amp; cluster.getAdminConsToken() == null) {</span>
+<span class="fc" id="L362">            System.out.println(&quot;Old admin token not found.\n&quot;);</span>
+<span class="fc" id="L363">            return;</span>
+<span class="pc bpc" id="L364" title="1 of 4 branches missed.">        } else if (oldGroup != null &amp;&amp; cluster.getAdminConsToken() != null) {</span>
+            // removes admin permissions from oldgroup by stripping all assigned topics and
+            // rebalancing partitions
+<span class="fc" id="L367">            oldGroup.clearAssignments();</span>
+<span class="fc" id="L368">            oldGroup.setToken(null);</span>
+<span class="fc" id="L369">            oldGroup.rebalance();</span>
+
+            // password/token authentication here.
+<span class="fc" id="L372">            String token = cluster.getAdminConsToken();</span>
+<span class="fc bfc" id="L373" title="All 2 branches covered.">            if (!TokenManager.validateToken(token, oldGroup.getId(), oldGroup.getCreatedTime(), password)) {</span>
+<span class="fc" id="L374">                System.out.println(&quot;Incorrect token for old Consumer Group Admin.\n&quot;);</span>
+<span class="fc" id="L375">                return;</span>
+            }
+        }
+
+<span class="fc" id="L379">        ConsumerGroup&lt;?&gt; newGroup = getConsumerGroup(newGroupId);</span>
+<span class="pc bpc" id="L380" title="1 of 2 branches missed.">        if (newGroup == null) {</span>
+<span class="nc" id="L381">            System.out.println(&quot;New Consumer Group Admin &quot; + newGroupId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L382">            return;</span>
+        }
+
+<span class="fc" id="L385">        String token = TokenManager.generateToken(newGroup.getId(), newGroup.getCreatedTime());</span>
+<span class="fc" id="L386">        cluster.setAdminConsToken(token);</span>
+<span class="fc" id="L387">        newGroup.setToken(token);</span>
+<span class="fc" id="L388">        assignTopicGeneric(newGroup);</span>
+
+        // reassign all partitions across consumers in the new admin group
+<span class="fc" id="L391">        newGroup.rebalance();</span>
+
+        // show assigned topics to show admin perms of new group Admin
+<span class="fc" id="L394">        newGroup.showTopics();</span>
+<span class="fc" id="L395">        newGroup.showGroup();</span>
+<span class="fc" id="L396">    }</span>
+
+    public void updateProducerAdmin(String newProdId, String oldProdId, String password) {
+<span class="fc" id="L399">        Producer&lt;?&gt; oldProd = getProducer(oldProdId);</span>
+<span class="pc bpc" id="L400" title="1 of 4 branches missed.">        if (oldProd == null &amp;&amp; cluster.getAdminProdToken() != null) {</span>
+<span class="nc" id="L401">            System.out.println(&quot;Admin token exists but old Admin could not be identified.\n&quot;);</span>
+<span class="nc" id="L402">            return;</span>
+<span class="fc bfc" id="L403" title="All 4 branches covered.">        } else if (oldProd != null &amp;&amp; cluster.getAdminProdToken() == null) {</span>
+<span class="fc" id="L404">            System.out.println(&quot;Old admin token not found.\n&quot;);</span>
+<span class="fc" id="L405">            return;</span>
+<span class="pc bpc" id="L406" title="1 of 4 branches missed.">        } else if (oldProd != null &amp;&amp; cluster.getAdminProdToken() != null) {</span>
+            // removes admin permissions from old prod by stripping all assigned topics
+<span class="fc" id="L408">            oldProd.clearAssignments();</span>
+<span class="fc" id="L409">            oldProd.setToken(null);</span>
+
+            // password/token authentication here.
+<span class="fc" id="L412">            String token = cluster.getAdminProdToken();</span>
+<span class="pc bpc" id="L413" title="1 of 2 branches missed.">            if (!TokenManager.validateToken(token, oldProd.getId(), oldProd.getCreatedTime(), password)) {</span>
+<span class="nc" id="L414">                System.out.println(&quot;Invalid token for old Producer Admin.\n&quot;);</span>
+<span class="nc" id="L415">                return;</span>
+            }
+        }
+
+<span class="fc" id="L419">        Producer&lt;?&gt; newProd = getProducer(newProdId);</span>
+<span class="pc bpc" id="L420" title="1 of 2 branches missed.">        if (newProd == null) {</span>
+<span class="nc" id="L421">            System.out.println(&quot;New Consumer Group Admin &quot; + newProdId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L422">            return;</span>
+        }
+
+<span class="fc" id="L425">        String token = TokenManager.generateToken(newProd.getId(), newProd.getCreatedTime());</span>
+<span class="fc" id="L426">        cluster.setAdminProdToken(token);</span>
+<span class="fc" id="L427">        newProd.setToken(token);</span>
+<span class="fc" id="L428">        assignTopicGeneric(newProd);</span>
+
+        // show assigned topics to show admin perms of new Prod Admin
+<span class="fc" id="L431">        newProd.showTopics();</span>
+<span class="fc" id="L432">    }</span>
+
+    public &lt;T&gt; void assignTopicGeneric(AdminObject&lt;T&gt; admin) {
+<span class="fc bfc" id="L435" title="All 2 branches covered.">        for (Topic&lt;?&gt; topic : cluster.listTopics()) {</span>
+<span class="pc bpc" id="L436" title="1 of 4 branches missed.">            if (topic.getType() == admin.getType() &amp;&amp; !admin.getAssignedTopics().contains(topic)) {</span>
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L438">                Topic&lt;T&gt; typedTopic = (Topic&lt;T&gt;) topic;</span>
+<span class="fc" id="L439">                admin.assignTopic(typedTopic);</span>
+            }
+<span class="fc" id="L441">        }</span>
+<span class="fc" id="L442">    }</span>
+
+    /*
+     * All parallel operations.
+     * Parallel produce events.
+     * Parallel consume events in a partition.
+     * Parallel operations demonstrate the system's ability to hand multiple
+     * concurrent threads.
+     */
+
+    public void parallelProduce(String[] parts) {
+<span class="fc" id="L453">        ExecutorService executorService = Executors.newCachedThreadPool();</span>
+
+<span class="fc bfc" id="L455" title="All 2 branches covered.">        for (int i = 0; i &lt; parts.length;) {</span>
+<span class="fc" id="L456">            String producerId = parts[i];</span>
+<span class="fc" id="L457">            String topicId = parts[i + 1];</span>
+<span class="fc" id="L458">            String eventFile = parts[i + 2];</span>
+
+<span class="fc" id="L460">            Producer&lt;?&gt; producer = getProducer(producerId);</span>
+<span class="fc" id="L461">            Topic&lt;?&gt; topic = getTopic(topicId);</span>
+<span class="pc bpc" id="L462" title="2 of 4 branches missed.">            if (producer == null || topic == null) {</span>
+<span class="nc" id="L463">                System.out.println(&quot;Producer &quot; + producerId + &quot; or topic &quot; + topicId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L464">                break;</span>
+<span class="pc bpc" id="L465" title="1 of 2 branches missed.">            } else if (!topic.getType().equals(producer.getType())) {</span>
+<span class="nc" id="L466">                System.out.println(&quot;Producer &quot; + producerId + &quot; type does not match Topic &quot; + topicId + &quot; type.\n&quot;);</span>
+<span class="nc" id="L467">                break;</span>
+            }
+
+<span class="fc" id="L470">            String partitionId = null;</span>
+<span class="pc bpc" id="L471" title="1 of 2 branches missed.">            if (producer instanceof ManualProducer) {</span>
+<span class="pc bpc" id="L472" title="1 of 2 branches missed.">                if (i + 3 &lt; parts.length) {</span>
+<span class="fc" id="L473">                    partitionId = parts[i + 3];</span>
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">                    if (findPartition(partitionId) == null) {</span>
+<span class="nc" id="L475">                        System.out.println(&quot;Partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L476">                        break;</span>
+                    }
+<span class="fc" id="L478">                    i += 4;</span>
+                } else {
+<span class="nc" id="L480">                    System.out.println(&quot;Insufficient parameters for manual producer &quot; + producerId + &quot;\n&quot;);</span>
+<span class="nc" id="L481">                    break;</span>
+                }
+            } else {
+<span class="nc" id="L484">                i += 3;</span>
+            }
+
+<span class="fc" id="L487">            final String finalPartitionId = partitionId;</span>
+<span class="fc" id="L488">            executorService.submit(() -&gt; {</span>
+                try {
+<span class="fc" id="L490">                    createEvent(producerId, topicId, eventFile, finalPartitionId);</span>
+<span class="nc" id="L491">                } catch (IOException e) {</span>
+<span class="nc" id="L492">                    System.out.println(&quot;Error producing event: &quot; + e.getMessage());</span>
+<span class="fc" id="L493">                }</span>
+<span class="fc" id="L494">            });</span>
+<span class="fc" id="L495">        }</span>
+
+<span class="fc" id="L497">        executorService.shutdown();</span>
+        try {
+<span class="fc" id="L499">            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
+<span class="nc" id="L500">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L501">            System.err.println(&quot;Parallel produce interrupted: &quot; + e.getMessage());</span>
+<span class="fc" id="L502">        }</span>
+<span class="fc" id="L503">    }</span>
+
+    public void parallelConsume(String[] parts) {
+<span class="fc" id="L506">        ExecutorService executorService = Executors.newFixedThreadPool(parts.length / 2);</span>
+
+<span class="fc bfc" id="L508" title="All 2 branches covered.">        for (int i = 0; i &lt; parts.length;) {</span>
+<span class="fc" id="L509">            String consumerId = parts[i];</span>
+<span class="fc" id="L510">            String partitionId = parts[i + 1];</span>
+
+<span class="fc" id="L512">            Partition&lt;?&gt; partition = findPartition(partitionId);</span>
+<span class="fc" id="L513">            Consumer&lt;?&gt; consumer = findConsumer(consumerId);</span>
+<span class="pc bpc" id="L514" title="2 of 4 branches missed.">            if (consumer == null || partition == null) {</span>
+<span class="nc" id="L515">                System.out.println(&quot;Consumer &quot; + consumerId + &quot; or partition &quot; + partitionId + &quot; not found.\n&quot;);</span>
+<span class="nc" id="L516">                return;</span>
+            }
+
+<span class="fc" id="L519">            Topic&lt;?&gt; topic = getTopic(partition.getAllocatedTopicId());</span>
+<span class="fc" id="L520">            int currentOffset = parallelConsumerOffset(consumer, partition, topic.getType());</span>
+<span class="fc" id="L521">            int partitionSize = partition.listMessages().size();</span>
+
+<span class="fc" id="L523">            int numberOfEvents = partitionSize - currentOffset - 1;</span>
+
+<span class="pc bpc" id="L525" title="1 of 4 branches missed.">            if (parts.length &gt; i + 2 &amp;&amp; isInteger(parts[i + 2])) {</span>
+<span class="fc" id="L526">                numberOfEvents = Integer.parseInt(parts[i + 2]);</span>
+<span class="fc" id="L527">                i += 3;</span>
+            } else {
+<span class="fc" id="L529">                i += 2;</span>
+            }
+
+<span class="fc" id="L532">            final int finalNumberOfEvents = numberOfEvents;</span>
+<span class="fc" id="L533">            executorService.submit(() -&gt; consumeEvents(consumerId, partitionId, finalNumberOfEvents));</span>
+<span class="fc" id="L534">        }</span>
+
+<span class="fc" id="L536">        executorService.shutdown();</span>
+        try {
+<span class="fc" id="L538">            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
+<span class="nc" id="L539">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L540">            System.err.println(&quot;Parallel consume interrupted: &quot; + e.getMessage());</span>
+<span class="fc" id="L541">        }</span>
+<span class="fc" id="L542">    }</span>
+
+    private &lt;T&gt; int parallelConsumerOffset(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L546">        Consumer&lt;T&gt; typedconsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L548">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+
+        try {
+<span class="fc" id="L551">            return typedPartition.getOffset(typedconsumer);</span>
+<span class="fc" id="L552">        } catch (NullPointerException e) {</span>
+<span class="fc" id="L553">            typedPartition.setOffset(typedconsumer, 0);</span>
+<span class="fc" id="L554">            return 0;</span>
+        }
+    }
+
+    private boolean isInteger(String str) {
+        try {
+<span class="fc" id="L560">            Integer.parseInt(str);</span>
+<span class="fc" id="L561">            return true;</span>
+<span class="fc" id="L562">        } catch (NumberFormatException e) {</span>
+<span class="fc" id="L563">            return false;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

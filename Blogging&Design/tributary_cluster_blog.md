@@ -1,19 +1,9 @@
 # Index
-1. [Design Focused Implementation](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog)
-2. [Security Feature Implementation](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-security-implementation-blog)
-3. [Reflection](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
+1. [Design Focused Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog)
+2. [Security Feature Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-security-implementation-blog)
+3. [Reflection Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
 
 # Tributary Cluster Design-Focused Blog
-## Project Overview
-Modern software often relies on many small microservices that work together to provide a complete application. Event-driven architecture (EDA) makes up much of the backbone of modern software which microservices rely upon to run smoothly. In essence, EDA is a system with 2 sets of nodes &rarr; event sources (Producers) and event handlers (Consumers). 
-
-This library is based on a heavily simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo).
-
-The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, in other words, a Tributary-like platform. Our library enhances the traditional in-memory EDA, which often relies on a single message queue shared by multiple consumers, potentially causing bottlenecks and delays. By adopting a log-based approach, we overcome the limitations of message replay and memory storage seen in in-memory message brokers. This improvement enhances data storage, replayability, and adds greater functionality to message processing, enabling more efficient and flexible handling of events across multiple channels.
-
-## Breakdown of Engineering Requirements
-**NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](UML_final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](../Engineering_Requirements.md)
-
 This structure might change because in the real Kafka Producer and Consumers exist outside the one cluster and there are additional components called brokers that allow me to add more low-level features to the system. However, for the purposes of this project, I will keep the system simple and easy to understand.
 1. Content Structure:
        Tributary Cluster &rarr; Topics &rarr; Partitions &rarr; Messages.
@@ -71,9 +61,9 @@ Other Notes:
 - Messages from a certain offset onwards are processed, until the most recent message at the latest offset is reached to catch errors and failures or for processing historical data. This feature is crucial when a system feature may not be working as it's supposed to.
 - Backtrack Replay: Consumers can replay messages from a specified backtrack in their partition, ie. -2 = 2nd latest message processed
 - Controlled Replay: Consumers can replay messages from a specific offset. ie. 2 = 2nd message in the partition
-<p align="center">
-  <img src="images/controlledReplay.png" width="500px" />
-</p>
+
+
+![](images/controlledReplay.png)
 > ℹ  NOTE: The above image demonstrates a consumer starting at offset 6 that performed normal consumption until offset 9. This consumer then triggered a
 > controlled replay from offset 4 that played back all the messages from that offset until the most recently consumed message (i.e messages 6, 7, 8 and 9
 > were consumed again).
@@ -178,8 +168,11 @@ Usability Checklist: Using the command line interface, the checklist will be run
 ### UML Diagram Progression
 [1st Draft UML (initial design)](UML_1st_draft.pdf) &rarr; [2nd Draft UML](UML_2nd_draft.pdf) &rarr; [3rd Draft UML](UML_3rd_draft.pdf) &rarr; [final_design.pdf](UML_final_design.pdf)
 
+
+
+
 # Tributary Cluster Security Implementation Blog
-There are a few major security aspects to take into consideration when analyzing the soundness and reliability of a stream processing application.
+There are a few major security aspects to take into consideration when analyzing the soundness and reliability of this stream processing library.
 
 **Access Control:** While it’s easy to see why access control is important in any system, it’s particularly important when being granted access means gaining a level of control over critical data. This is a scenario not uncommon when dealing with big data processors such as that involved in stream processing applications. Let’s consider an organization working with Apache Kafka. Such an organization will have developed producers and consumers that communicate with a Kafka cluster on a continuous basis.Without access controls in place, any client could be configured to read from or write to any particular topic within the Kafka system. As your organization matures and begins to utilize the Kafka cluster on a larger scale and for various types of data (some more important than others), it’s likely that a fly-by-night approach to securing the implementation of the platform will not suffice. In this instance, it’s critical that all clients attempting to read or write to the cluster be properly authenticated and authorized for the topics with which they are attempting to interact, to ensure that improper access to potentially sensitive data is prevented. The focus is to utilise access control lists (ACLs) to authorize particular applications to read from or write to particular topics – thus providing secure access on a more granular level.
 
@@ -228,7 +221,18 @@ Tributary Cluster manages access to topics, partitions, and message consumption 
 Implementing RBAC allows us to extend the system's flexibility by adding fine-grained controls over who can produce, consume, or replay messages, aligning with the structure of your Consumer Groups and Rebalancing Strategies. This would also prevent unauthorized message consumption or accidental data access, especially during message replay or rebalancing operations.
 
 
-# Reflection
+# Acheivements and Final Reflection
+### Acheivements
+- Developed an Event-Driven Processing System, emulating Apache Kafka's event streaming capabilities in Java, with parallel data processing and message playback.
+- Ensured thread safety and type safety across user threads by utilising Java Generics and Concurrency techniques such as Covariance and Synchronization to safeguard user data during event processing.
+- Implemented an RBAC system with token-based authentication, SHA-256 hashing and RSA message encryption to ensure secure role management and confidentiality of data transmitted for producers and consumers.
+- Achieved an ~85% test coverage by conducting 75+ JUnit and Mockito test to ensure system reliability.
+- Designed a message replay feature that allows Events to be replayed from specific offsets, enabling error checking and correction without compromising the system’s performance.
+- Developed a dynamic event rebalancing mechanism, called Range and Round Robin Strategies within Consumer Groups, which honed my skills in algorithmic design
+- Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
+- Conducted extensive usability tests and created a detailed CLI for managing and interacting with the Tributary system, showcasing functionality through a comprehensive set of commands.
+- Designed and documented the entire system structure providing a clear overview and understanding of the system’s architecture and seamlessly integrated all these key features to provide users with efficient and useful pipeline for event processing.
+
 **BELOW REFLECTION COMPLETED ON 16/04/2024** &rarr; completed immediately after transferred from GitLab to GitHub for version control
 - Overall a very important project that helped me understand the importance of system design as a Backend Software Engineer and the different patterns that can be used to make a system not only more aesthetically pleasing but also more efficient and maintainable.
 - Went through a lot of struggles and put in a lot of effort to produce a system that I am proud of.
@@ -243,17 +247,6 @@ Implementing RBAC allows us to extend the system's flexibility by adding fine-gr
     - I just went with the flow and started coding and then I realised all it took was a bit of planning and a bit of research and I was steadily making progress.
 - Unfortunately, 1 thing I didn't manage to complete in time was J unit testing, which I am disappointed about.
 - However, I am proud of the fact that I got through to the end and I will be using this project as a threshold for my ability and motivation in the future.
-
-### Acheivements
-- Developed an Event-Driven Processing System, emulating Apache Kafka's event streaming capabilities in Java, with parallel data processing and message playback.
-- Ensured thread safety and type safety across user threads by utilising Java Generics and Concurrency techniques such as Covariance and Synchronization to safeguard user data during event processing.
-- Implemented an RBAC system with token-based authentication, SHA-256 hashing and RSA message encryption to ensure secure role management and confidentiality of data transmitted for producers and consumers.
-- Achieved an ~85% test coverage by conducting 75+ JUnit and Mockito test to ensure system reliability.
-- Designed a message replay feature that allows Events to be replayed from specific offsets, enabling error checking and correction without compromising the system’s performance.
-- Developed a dynamic event rebalancing mechanism, called Range and Round Robin Strategies within Consumer Groups, which honed my skills in algorithmic design
-- Integrated key OOP Design patterns such as Singleton & Abstract Factory patterns to compact and synchronize Event production consumption, and Strategy & Observer patterns to streamline Event allocation.
-- Conducted extensive usability tests and created a detailed CLI for managing and interacting with the Tributary system, showcasing functionality through a comprehensive set of commands.
-- Designed and documented the entire system structure providing a clear overview and understanding of the system’s architecture and seamlessly integrated all these key features to provide users with efficient and useful pipeline for event processing.
 
 ## Ongoing Updates and Implementations
 ### Sunday 14/04/2024

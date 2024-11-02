@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Topic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">tributary.core.tributaryObject</a> &gt; <span class="el_source">Topic.java</span></div><h1>Topic.java</h1><pre class="source lang-java linenums">package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Topic&lt;T&gt; extends TributaryObject {
+    private Class&lt;T&gt; type;
+    private List&lt;Partition&lt;T&gt;&gt; partitions;
+
+    public Topic(String topicId, Class&lt;T&gt; type) {
+<span class="fc" id="L11">        super(topicId);</span>
+<span class="fc" id="L12">        this.type = type;</span>
+<span class="fc" id="L13">        this.partitions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L14">    }</span>
+
+    public Class&lt;T&gt; getType() {
+<span class="fc" id="L17">        return type;</span>
+    }
+
+    public void addPartition(Partition&lt;T&gt; partition) {
+<span class="fc" id="L21">        partitions.add(partition);</span>
+<span class="fc" id="L22">    }</span>
+
+    public void removePartition(String partitionId) {
+<span class="nc" id="L25">        partitions.removeIf(p -&gt; p.getId().equals(partitionId));</span>
+<span class="nc" id="L26">    }</span>
+
+    public Partition&lt;T&gt; getPartition(String partitionId) {
+<span class="fc" id="L29">        return partitions.stream().filter(p -&gt; p.getId().equals(partitionId)).findFirst().orElse(null);</span>
+    }
+
+    public List&lt;Partition&lt;T&gt;&gt; listPartitions() {
+<span class="fc" id="L33">        return partitions;</span>
+    }
+
+    public boolean containsPartition(String partitionId) {
+<span class="fc" id="L37">        return partitions.stream().anyMatch(p -&gt; p.getId().equals(partitionId));</span>
+    }
+
+    public void showTopic() {
+<span class="fc" id="L41">        System.out.println(&quot;Topic ID: &quot; + getId());</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        for (Partition&lt;T&gt; partition : partitions) {</span>
+<span class="fc" id="L43">            System.out.print(&quot;Partition ID: &quot; + partition.getId() + &quot; - Messages: &quot;);</span>
+<span class="fc" id="L44">            partition.listMessages().forEach(m -&gt; System.out.print(m.getId() + &quot;, &quot;));</span>
+<span class="fc" id="L45">            System.out.println();</span>
+<span class="fc" id="L46">        }</span>
+<span class="fc" id="L47">        System.out.println(&quot;\n--------------------------------------------------\n&quot;);</span>
+<span class="fc" id="L48">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryAdminTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2024-11-01T12:02:12" hostname="bissi-smells.modem" time="0.091">
+<testsuite name="tributary.TributaryAdminTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2024-11-02T01:40:50" hostname="bissi-smells.modem" time="0.085">
   <properties/>
-  <testcase name="testUpdateAdminPermissions()" classname="tributary.TributaryAdminTest" time="0.033"/>
-  <testcase name="testAdminAccessControlVerification()" classname="tributary.TributaryAdminTest" time="0.007"/>
-  <testcase name="testRebalanceAfterAdminChange()" classname="tributary.TributaryAdminTest" time="0.007"/>
+  <testcase name="testUpdateAdminPermissions()" classname="tributary.TributaryAdminTest" time="0.03"/>
+  <testcase name="testAdminAccessControlVerification()" classname="tributary.TributaryAdminTest" time="0.008"/>
+  <testcase name="testRebalanceAfterAdminChange()" classname="tributary.TributaryAdminTest" time="0.005"/>
   <testcase name="testAdminProductionAndConsumption()" classname="tributary.TributaryAdminTest" time="0.025"/>
-  <testcase name="testRevokeAdminPermissionsOnChange()" classname="tributary.TributaryAdminTest" time="0.006"/>
+  <testcase name="testRevokeAdminPermissionsOnChange()" classname="tributary.TributaryAdminTest" time="0.005"/>
   <testcase name="testCreateAndChangeAdmins()" classname="tributary.TributaryAdminTest" time="0.005"/>
-  <testcase name="testInvalidAdminAssignmentWithoutPermissions()" classname="tributary.TributaryAdminTest" time="0.005"/>
+  <testcase name="testInvalidAdminAssignmentWithoutPermissions()" classname="tributary.TributaryAdminTest" time="0.003"/>
   <system-out><![CDATA[Created String topic with ID: banana1
 
 Created partition with ID: bananaFryingMethod1 for topic: banana1

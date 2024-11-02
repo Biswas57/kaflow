@@ -3,9 +3,9 @@ package tributary.core.rebalancingStrategy;
 import java.util.ArrayList;
 import java.util.List;
 
-import tributary.api.Consumer;
-import tributary.api.Partition;
-import tributary.api.Topic;
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.Topic;
 
 public class RangeStrategy<T> implements RebalancingStrategy<T> {
     @Override

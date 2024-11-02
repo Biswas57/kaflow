@@ -6,14 +6,12 @@ import java.nio.file.Paths;
 
 import org.json.JSONObject;
 
-import tributary.api.Consumer;
-import tributary.api.ConsumerGroup;
-import tributary.api.Partition;
-import tributary.api.Topic;
-import tributary.api.TributaryCluster;
-import tributary.api.producers.ManualProducer;
-import tributary.api.producers.Producer;
-import tributary.api.producers.RandomProducer;
+import tributary.core.tributaryObject.producers.*;
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.ConsumerGroup;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.Topic;
+import tributary.core.tributaryObject.TributaryCluster;
 
 public class IntegerFactory extends ObjectFactory {
     public IntegerFactory() {

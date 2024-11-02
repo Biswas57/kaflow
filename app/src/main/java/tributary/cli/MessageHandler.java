@@ -1,9 +1,9 @@
 package tributary.cli;
 
 import java.io.IOException;
-
-import tributary.core.TributaryController;
 import java.util.Arrays;
+
+import tributary.api.TributaryController;
 
 public class MessageHandler {
     private TributaryController controller;

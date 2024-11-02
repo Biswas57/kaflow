@@ -8,21 +8,24 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import tributary.api.Consumer;
-import tributary.api.Partition;
-import tributary.api.TributaryCluster;
-import tributary.core.TributaryController;
+import tributary.api.TributaryController;
+import tributary.api.TributaryHelper;
 import tributary.core.rebalancingStrategy.RangeStrategy;
 import tributary.core.rebalancingStrategy.RoundRobinStrategy;
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.TributaryCluster;
 
 public class TributaryTest2 {
 
 	private TributaryController controller;
+	private TributaryHelper helper;
 	private TributaryCluster cluster;
 
 	@BeforeEach
 	public void setup() {
 		controller = new TributaryController();
+		helper = new TributaryHelper();
 		cluster = TributaryCluster.getInstance();
 	}
 
@@ -68,7 +71,7 @@ public class TributaryTest2 {
 		// Consumer Group creation
 		controller.createConsumerGroup("bananaChefs", "banana", "range");
 		assertEquals(0, cluster.getConsumerGroup("bananaChefs").listConsumers().size());
-		assertSame(controller.getConsumerGroup("bananaChefs").getRebalanceMethodName(),
+		assertSame(helper.getConsumerGroup("bananaChefs").getRebalanceMethodName(),
 				RangeStrategy.class.getSimpleName());
 
 		controller.createConsumerGroup("bananaChefs", "banana", "range");
@@ -81,7 +84,7 @@ public class TributaryTest2 {
 		assertEquals(3, cluster.getConsumerGroup("bananaChefs").listConsumers().size());
 
 		controller.updateRebalancing("bananaChefs", "roundrobin");
-		assertSame(controller.getConsumerGroup("bananaChefs").getRebalanceMethodName(),
+		assertSame(helper.getConsumerGroup("bananaChefs").getRebalanceMethodName(),
 				RoundRobinStrategy.class.getSimpleName());
 
 		// Test invalid event creation (wrong data type)
@@ -120,8 +123,8 @@ public class TributaryTest2 {
 		// Consumer offset setup and event consumption
 		String partitionId = "bananaCookingMethod1";
 		String consumerId = "beginnerChef1";
-		Partition<Integer> partition = (Partition<Integer>) controller.findPartition(partitionId);
-		Consumer<Integer> consumer = (Consumer<Integer>) controller.findConsumer(consumerId);
+		Partition<Integer> partition = (Partition<Integer>) helper.findPartition(partitionId);
+		Consumer<Integer> consumer = (Consumer<Integer>) helper.findConsumer(consumerId);
 
 		// Adjust event count in partition if necessary
 		while (partition.listMessages().size() < 3) {

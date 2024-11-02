@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Partition.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">tributary.core.tributaryObject</a> &gt; <span class="el_source">Partition.java</span></div><h1>Partition.java</h1><pre class="source lang-java linenums">package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+public class Partition&lt;T&gt; extends TributaryObject {
+    private List&lt;Message&lt;T&gt;&gt; messages;
+    private String allocatedTopic;
+    private Map&lt;Consumer&lt;T&gt;, Integer&gt; offset;
+
+    public Partition(String topicId, String partitionId) {
+<span class="fc" id="L14">        super(partitionId);</span>
+<span class="fc" id="L15">        this.allocatedTopic = topicId;</span>
+<span class="fc" id="L16">        this.messages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L17">        this.offset = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L18">    }</span>
+
+    public void addMessage(Message&lt;T&gt; message) {
+<span class="fc" id="L21">        messages.add(message);</span>
+<span class="fc" id="L22">    }</span>
+
+    public String getAllocatedTopicId() {
+<span class="fc" id="L25">        return allocatedTopic;</span>
+    }
+
+    public List&lt;Message&lt;T&gt;&gt; listMessages() {
+<span class="fc" id="L29">        return messages;</span>
+    }
+
+    public Message&lt;T&gt; getMessage(String messageId) {
+<span class="nc" id="L33">        return messages.stream().filter(m -&gt; m.getId().equals(messageId)).findFirst().orElse(null);</span>
+    }
+
+    public void setOffset(Consumer&lt;T&gt; consumer, int offset) {
+<span class="fc" id="L37">        this.offset.put(consumer, offset);</span>
+<span class="fc" id="L38">    }</span>
+
+    public void removeOffset(Consumer&lt;T&gt; consumer) {
+<span class="nc" id="L41">        offset.remove(consumer);</span>
+<span class="nc" id="L42">    }</span>
+
+    public int getOffset(Consumer&lt;T&gt; consumer) {
+<span class="fc" id="L45">        return offset.get(consumer);</span>
+    }
+
+    public void listOffsets() {
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        for (Map.Entry&lt;Consumer&lt;T&gt;, Integer&gt; entry : offset.entrySet()) {</span>
+<span class="nc" id="L50">            System.out.println(&quot;Consumer &quot; + entry.getKey().getId() + &quot; offset: &quot; + entry.getValue());</span>
+<span class="nc" id="L51">        }</span>
+<span class="nc" id="L52">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

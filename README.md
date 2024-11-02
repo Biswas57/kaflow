@@ -1,16 +1,23 @@
 
 ## Project Overview
-Modern software often relies on many small microservices that work together to provide a complete application. Event-driven architecture (EDA) makes up much of the backbone of modern software which microservices rely upon to run smoothly. In essence, EDA is a system with 2 sets of nodes &rarr; event sources (Producers) and event handlers (Consumers). 
+Today, the ability to derive insights from vast amounts of data is crucial for business success, thus, businesses must strive for the acceleration in data processing. Many modern software often relies on many small microservices that work together to provide a complete application and achieve such efficient data processes. These microservices rely on Event-driven architecture (EDA), which rests on the concept of Stream Processing, makes up much of the backbone of modern software to run smoothly. 
 
-This library is based on a heavily simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo).
+EDA systems consist of two main types of nodes: event sources and event handlers, known as Producers and Consumers. Stream processing in event-driven systems can serve various purposes. For example, a stream processor may create specific events for detection by downstream applications in the data pipeline. It may also perform real-time operations on event data, such as alerting a stockbroker when a stock hits an all-time high or calculating the real-time percentage change in a stock’s price over the past year.
 
-The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, in other words, a Tributary-like platform. Our library enhances the traditional in-memory EDA, which often relies on a single message queue shared by multiple consumers, potentially causing bottlenecks and delays. By adopting a log-based approach, we overcome the limitations of message replay and memory storage seen in in-memory message brokers. This improvement enhances data storage, replayability, and adds greater functionality to message processing, enabling more efficient and flexible handling of events across multiple channels.
+This Java library is based on an extremely simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo). The 
 
-## Breakdown of Engineering Requirements
-**NOTE:** A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](Engineering_Requirements.md)
+The fundamental premise on which Event-Driven Architecture rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, which is the reason for this project being named 'Tributary Cluster'. Stream processing, therefore, allows for data to move through a data pipeline in a manner that enables the analysis or utilization of this data in the most efficient manner possible. This is opposed to batch processing where data is collected and stored to be operated upon at a later time. This library enhances the traditional in-memory stream EDA, which often relies on a single message queue shared by multiple consumers causing bottlenecks and delays, by incorporating elements of batch processing in certain scenarios such as replayability in event logs and delayed and parallel event consumption. By adopting a log-based approach, we overcome the limitations of message playback and memory storage seen in single message queue brokers. This improvement enhances data storage, replayability, and adds greater functionality to message processing, enabling more efficient and flexible handling of events across multiple channels.
+
+Conclusively, Tributary Cluster project leverages a log-based event streaming approach, enhancing traditional EDA systems by addressing the limitations of single message queue brokers and facilitating efficient, secure data handling. By adopting these principles, this project provides a robust framework for real-time data processing, supporting scalability, replayability, and secure event management.
+
+### Breakdown of Engineering Requirements
+A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the capabilities, constrains and functionality of the system can be found in the [**Engineering Requirements**](Engineering_Requirements.md). Further a full recount of the engineering process can be found in the following links:
+1. [Design Focused Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog)
+2. [Security Feature Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-security-implementation-blog)
+3. [Reflection Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
 
 ### CLI Commands and Usability Testing
-To run usability tests on your solution I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system.
+To run usability tests on this library I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system.
 
 <table>
   <tr>
@@ -217,7 +224,7 @@ To run usability tests on your solution I needed to develop a way to interact wi
         </li>
       </ul>
     </td>
-    <td>A message confirming the new rebalancing method.</td>
+    <td>A message confirming the new rebalancing method. Shows all consumers in the rebalanced consumer group, and which partitions each consumer is receiving events from.</td>
   </tr>
   <tr>
     <td>
@@ -232,5 +239,29 @@ To run usability tests on your solution I needed to develop a way to interact wi
       </ul>
     </td>
     <td>The id and contents of each event received in order.</td>
+  </tr>
+    <tr>
+    <td>
+      <code>update admin producer &lt;newAdminProducer&gt; &lt;oldAdminProducer&gt; &lt;password&gt;</code>
+    </td>
+    <td>
+      <ul>
+        <li>Transfers the admin role from the old admin producer to the new admin producer.</li>
+        <li>If there is no previous admin, the old admin Producer's ID and current password are not required</li>
+      </ul>
+    </td>
+    <td>Displays the topics and partitions the new admin producer has access to.</td>
+  </tr>
+  <tr>
+    <td>
+      <code>update admin group &lt;newAdminGroup&gt; &lt;oldAdminGroup&gt; &lt;password&gt;</code>
+    </td>
+    <td>
+      <ul>
+        <li>Transfers the admin role from the old consumer group to the new consumer group.</li>
+        <li>If there is no previous admin, the old admin Consumer Group's ID and current password are not required</li>
+      </ul>
+    </td>
+    <td>Displays the topics and partitions the new admin group has access to, and lists all consumers in the new admin group along with their assigned partitions.</td>
   </tr>
 </table>

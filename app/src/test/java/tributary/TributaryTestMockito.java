@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import tributary.api.*;
-import tributary.core.TributaryController;
+import tributary.api.TributaryController;
+import tributary.core.tributaryObject.TributaryCluster;
 
 public class TributaryTestMockito {
     @Mock

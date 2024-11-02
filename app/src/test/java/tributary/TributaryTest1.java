@@ -11,18 +11,21 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import tributary.api.Consumer;
-import tributary.api.Partition;
-import tributary.api.TributaryCluster;
-import tributary.core.TributaryController;
+import tributary.api.TributaryController;
+import tributary.api.TributaryHelper;
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.TributaryCluster;
 
 public class TributaryTest1 {
     private TributaryController controller;
     private TributaryCluster cluster;
+    private TributaryHelper helper = new TributaryHelper();
 
     @BeforeEach
     public void setup() {
         controller = new TributaryController();
+        helper = new TributaryHelper();
         cluster = TributaryCluster.getInstance();
     }
 
@@ -73,7 +76,7 @@ public class TributaryTest1 {
                 "Partition assignment should be equal before Consumer deletion",
                 () -> assertEquals(cluster.getConsumerGroup("bananaChefs")
                         .getConsumer("deleteBeginnerChef").listAssignedPartitions().size(), 1),
-                () -> assertEquals(1, controller.findConsumer("beginnerChef").listAssignedPartitions().size()));
+                () -> assertEquals(1, helper.findConsumer("beginnerChef").listAssignedPartitions().size()));
 
         // After deleting the consumer, the partition should be reassigned to the other
         // consumer (ie. rebalanced using the Observer Patter)
@@ -83,8 +86,8 @@ public class TributaryTest1 {
                 2);
 
         controller.showTopic("banana");
-        Partition<String> partition = (Partition<String>) controller.findPartition("bananaCookingMethods");
-        Consumer<String> consumer = (Consumer<String>) controller.findConsumer("beginnerChef");
+        Partition<String> partition = (Partition<String>) helper.findPartition("bananaCookingMethods");
+        Consumer<String> consumer = (Consumer<String>) helper.findConsumer("beginnerChef");
 
         // Partition offset starts at -1 because list of Messages in Partition are 0
         // indexed

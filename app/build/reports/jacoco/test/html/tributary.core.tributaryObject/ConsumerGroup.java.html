@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConsumerGroup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">tributary.core.tributaryObject</a> &gt; <span class="el_source">ConsumerGroup.java</span></div><h1>ConsumerGroup.java</h1><pre class="source lang-java linenums">package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import tributary.core.rebalancingStrategy.RangeStrategy;
+import tributary.core.rebalancingStrategy.RebalancingStrategy;
+import tributary.core.rebalancingStrategy.RoundRobinStrategy;
+
+public class ConsumerGroup&lt;T&gt; extends AdminObject&lt;T&gt; {
+    private List&lt;Consumer&lt;T&gt;&gt; consumers;
+    private RebalancingStrategy&lt;T&gt; rebalanceMethod;
+
+    public ConsumerGroup(String groupId, Topic&lt;T&gt; assignedTopic, String rebalanceMethod) {
+<span class="fc" id="L15">        super(groupId, assignedTopic.getType());</span>
+<span class="fc" id="L16">        this.consumers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L17">        assignTopic(assignedTopic);</span>
+<span class="fc" id="L18">        setRebalancingMethod(rebalanceMethod);</span>
+<span class="fc" id="L19">    }</span>
+
+    public void setRebalancingMethod(String rebalanceMethod) {
+<span class="pc bpc" id="L22" title="1 of 3 branches missed.">        switch (rebalanceMethod) {</span>
+            case &quot;roundrobin&quot;:
+<span class="fc" id="L24">                this.rebalanceMethod = new RoundRobinStrategy&lt;&gt;();</span>
+<span class="fc" id="L25">                break;</span>
+            case &quot;range&quot;:
+<span class="fc" id="L27">                this.rebalanceMethod = new RangeStrategy&lt;&gt;();</span>
+<span class="fc" id="L28">                break;</span>
+            default:
+<span class="nc" id="L30">                System.out.println(&quot;Unknown rebalancing strategy: &quot; + rebalanceMethod);</span>
+                break;
+        }
+<span class="fc" id="L33">    }</span>
+
+    public RebalancingStrategy&lt;T&gt; getRebalanceMethod() {
+<span class="fc" id="L36">        return rebalanceMethod;</span>
+    }
+
+    public String getRebalanceMethodName() {
+<span class="fc" id="L40">        return rebalanceMethod.getClass().getSimpleName();</span>
+    }
+
+    public void addConsumer(Consumer&lt;T&gt; consumer) {
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (!consumers.contains(consumer)) {</span>
+<span class="fc" id="L45">            consumers.add(consumer);</span>
+        } else {
+<span class="nc" id="L47">            System.out.println(&quot;Consumer already exists in the group&quot;);</span>
+        }
+<span class="fc" id="L49">    }</span>
+
+    public boolean containsConsumer(String consumerId) {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        return getConsumer(consumerId) != null;</span>
+    }
+
+    public List&lt;Consumer&lt;T&gt;&gt; listConsumers() {
+<span class="fc" id="L56">        return new ArrayList&lt;&gt;(consumers);</span>
+    }
+
+    public Consumer&lt;T&gt; getConsumer(String consumerId) {
+<span class="fc" id="L60">        return consumers.stream().filter(c -&gt; c.getId().equals(consumerId)).findFirst().orElse(null);</span>
+    }
+
+    public void removeConsumer(String consumerId) {
+<span class="fc" id="L64">        consumers.removeIf(c -&gt; c.getId().equals(consumerId));</span>
+<span class="fc" id="L65">        System.out.println(&quot;Deleted consumer with ID: &quot; + consumerId);</span>
+<span class="fc" id="L66">        rebalance();</span>
+<span class="fc" id="L67">        showGroup();</span>
+<span class="fc" id="L68">    }</span>
+
+    public void showGroup() {
+<span class="fc" id="L71">        System.out.println(&quot;Consumer Group ID: &quot; + getId());</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        for (Consumer&lt;T&gt; consumer : listConsumers()) {</span>
+<span class="fc" id="L73">            System.out.print(&quot;Consumer ID: &quot; + consumer.getId() + &quot; - Assigned Partitions: &quot;);</span>
+<span class="fc" id="L74">            consumer.listAssignedPartitions().forEach(p -&gt; System.out.print(p.getId() + &quot;, &quot;));</span>
+<span class="fc" id="L75">            System.out.println();</span>
+<span class="fc" id="L76">        }</span>
+<span class="fc" id="L77">        System.out.println(&quot;\n--------------------------------------------------\n&quot;);</span>
+<span class="fc" id="L78">    }</span>
+
+    public void rebalance() {
+<span class="fc" id="L81">        rebalanceMethod.rebalance(getAssignedTopics(), listConsumers());</span>
+<span class="fc" id="L82">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

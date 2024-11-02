@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.EncryptionManagerTest" tests="20" skipped="0" failures="0" errors="0" timestamp="2024-11-01T12:02:12" hostname="bissi-smells.modem" time="0.047">
+<testsuite name="tributary.EncryptionManagerTest" tests="20" skipped="0" failures="0" errors="0" timestamp="2024-11-02T01:40:50" hostname="bissi-smells.modem" time="0.048">
   <properties/>
   <testcase name="testIntegerBoundaryValues()" classname="tributary.EncryptionManagerTest" time="0.021"/>
   <testcase name="testVeryLargeStringEncryptionDecryption()" classname="tributary.EncryptionManagerTest" time="0.011"/>
   <testcase name="testGCD()" classname="tributary.EncryptionManagerTest" time="0.0"/>
-  <testcase name="testModularInverse()" classname="tributary.EncryptionManagerTest" time="0.001"/>
-  <testcase name="testEntireFlowIntegerHandler()" classname="tributary.EncryptionManagerTest" time="0.0"/>
+  <testcase name="testModularInverse()" classname="tributary.EncryptionManagerTest" time="0.0"/>
+  <testcase name="testEntireFlowIntegerHandler()" classname="tributary.EncryptionManagerTest" time="0.001"/>
   <testcase name="testDecryptOnly()" classname="tributary.EncryptionManagerTest" time="0.001"/>
-  <testcase name="testGenerateCoprimeEdgeCases()" classname="tributary.EncryptionManagerTest" time="0.0"/>
+  <testcase name="testGenerateCoprimeEdgeCases()" classname="tributary.EncryptionManagerTest" time="0.001"/>
   <testcase name="testNumericStringEncryptionDecryption()" classname="tributary.EncryptionManagerTest" time="0.0"/>
-  <testcase name="testModularExponentiation()" classname="tributary.EncryptionManagerTest" time="0.0"/>
+  <testcase name="testModularExponentiation()" classname="tributary.EncryptionManagerTest" time="0.001"/>
   <testcase name="testComplexStringWithMixedContent()" classname="tributary.EncryptionManagerTest" time="0.0"/>
-  <testcase name="testModularExponentiationEdgeCases()" classname="tributary.EncryptionManagerTest" time="0.001"/>
-  <testcase name="testEntireFlowWithSpecialCharacters()" classname="tributary.EncryptionManagerTest" time="0.001"/>
+  <testcase name="testModularExponentiationEdgeCases()" classname="tributary.EncryptionManagerTest" time="0.0"/>
+  <testcase name="testEntireFlowWithSpecialCharacters()" classname="tributary.EncryptionManagerTest" time="0.002"/>
   <testcase name="testLargeIntegerEncryptionDecryption()" classname="tributary.EncryptionManagerTest" time="0.001"/>
   <testcase name="testEncryptionDecryptionCycle()" classname="tributary.EncryptionManagerTest" time="0.0"/>
   <testcase name="testModularInverseEdgeCases()" classname="tributary.EncryptionManagerTest" time="0.001"/>
-  <testcase name="testEncryptionDecryptionWithEdgeCases()" classname="tributary.EncryptionManagerTest" time="0.0"/>
+  <testcase name="testEncryptionDecryptionWithEdgeCases()" classname="tributary.EncryptionManagerTest" time="0.001"/>
   <testcase name="testGenerateCoprime()" classname="tributary.EncryptionManagerTest" time="0.0"/>
-  <testcase name="testMultiPartStringEncryptionDecryption()" classname="tributary.EncryptionManagerTest" time="0.0"/>
+  <testcase name="testMultiPartStringEncryptionDecryption()" classname="tributary.EncryptionManagerTest" time="0.001"/>
   <testcase name="testEntireFlow()" classname="tributary.EncryptionManagerTest" time="0.0"/>
-  <testcase name="testExtendedSpecialCharactersInString()" classname="tributary.EncryptionManagerTest" time="0.0"/>
+  <testcase name="testExtendedSpecialCharactersInString()" classname="tributary.EncryptionManagerTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

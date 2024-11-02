@@ -2,7 +2,7 @@ package tributary.core.tributaryFactory;
 
 import java.io.IOException;
 
-import tributary.api.TributaryCluster;
+import tributary.core.tributaryObject.TributaryCluster;
 
 public abstract class ObjectFactory {
     private TributaryCluster cluster = TributaryCluster.getInstance();
