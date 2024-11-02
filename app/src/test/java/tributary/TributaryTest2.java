@@ -87,6 +87,8 @@ public class TributaryTest2 {
 		assertSame(helper.getConsumerGroup("bananaChefs").getRebalanceMethodName(),
 				RoundRobinStrategy.class.getSimpleName());
 
+		System.out.println(helper.getTopic("banana").getType());
+		System.out.println(helper.getProducer("bananaBoiler").getType());
 		// Test invalid event creation (wrong data type)
 		assertThrows(IllegalArgumentException.class, () -> {
 			controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingMethod1");

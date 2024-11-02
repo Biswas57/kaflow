@@ -57,14 +57,6 @@ public class TributaryHelper {
         return producer;
     }
 
-    public void setObjectFactoryType(String type) throws IllegalArgumentException {
-        Class<?> typeClass = typeMap.get(type);
-        if (typeClass == null) {
-            throw new IllegalArgumentException("Unsupported type: " + type + "\n");
-        }
-        this.objectFactory = (typeClass.equals(Integer.class)) ? new IntegerFactory() : new StringFactory();
-    }
-
     public Consumer<?> findConsumer(String consumerId) {
         Consumer<?> specifiedConsumer = null;
         for (ConsumerGroup<?> group : cluster.listConsumerGroups()) {

@@ -891,7 +891,9 @@
 ! 
 ! ECreated consumer with ID: beginnerChef3 for group: bananaChefs group
 ! 
-! \The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod1.
+! class java.lang.Integer
+! class java.lang.Integer
+! \The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod2.
 ! 
 ! [The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingStyle4.
 ! 
@@ -905,9 +907,11 @@
 ! 
 ! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 ! 
-! dThe event: bananaBoilingNums has been consumed by consumer beginnerChef1. It contains the contents:
-! duration = 5
-! temperature = 100
+! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+! 
+! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
+! duration = 3
+! temperature = 180
 ! Consumed 1 messages.
 ! 
 ! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
@@ -1028,9 +1032,9 @@
 #'
 #'TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
 #'
-#'SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
-#'
 #'UThe event: grillBanana has been manually allocated to partition bananaCookingMethods
+#'
+#'SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
 #'
 #(Topic banana already exists.
 #(
@@ -1100,9 +1104,9 @@
 #,
 #,TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
 #,
-#,SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
-#,
 #,UThe event: grillBanana has been manually allocated to partition bananaCookingMethods
+#,
+#,SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
 #,
 #,+Consumer is not assigned to the partition.
 #,

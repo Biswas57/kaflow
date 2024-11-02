@@ -45,6 +45,14 @@ public class TributaryController {
      * These methods are all streamlines to the ObjectFactory class.
      */
 
+    public void setObjectFactoryType(String type) throws IllegalArgumentException {
+        Class<?> typeClass = typeMap.get(type);
+        if (typeClass == null) {
+            throw new IllegalArgumentException("Unsupported type: " + type + "\n");
+        }
+        this.objectFactory = (typeClass.equals(Integer.class)) ? new IntegerFactory() : new StringFactory();
+    }
+
     /**
      * Creates a new topic in the Tributary Cluster.
      *
@@ -58,7 +66,7 @@ public class TributaryController {
             System.out.println("Topic " + topicId + " already exists.\n");
             return;
         }
-        helper.setObjectFactoryType(type);
+        setObjectFactoryType(type);
         objectFactory.createTopic(topicId);
     }
 
@@ -80,7 +88,7 @@ public class TributaryController {
             return;
         }
         String topicType = helper.getTopicType(topicId);
-        helper.setObjectFactoryType(topicType);
+        setObjectFactoryType(topicType);
         objectFactory.createPartition(topicId, partitionId);
     }
 
@@ -102,7 +110,7 @@ public class TributaryController {
         }
 
         String type = helper.getTopicType(topicId);
-        helper.setObjectFactoryType(type);
+        setObjectFactoryType(type);
         objectFactory.createConsumerGroup(groupId, topicId, rebalancing);
     }
 
@@ -120,7 +128,7 @@ public class TributaryController {
             return;
         }
         String topicType = helper.getTopicType(group.getAssignedTopics().get(0).getId());
-        helper.setObjectFactoryType(topicType);
+        setObjectFactoryType(topicType);
         objectFactory.createConsumer(groupId, consumerId);
     }
 
@@ -135,8 +143,8 @@ public class TributaryController {
      *                                  mismatch.
      */
     public void createProducer(String producerId, String topicId, String allocation) throws IllegalArgumentException {
-        String topicType = helper.getTopicType(topicId);
-        helper.setObjectFactoryType(topicType);
+        String topicType = helper.getTopic(topicId).getType().getSimpleName().toLowerCase();
+        setObjectFactoryType(topicType);
         objectFactory.createProducer(producerId, topicId, allocation);
     }
 
@@ -166,7 +174,7 @@ public class TributaryController {
 
         synchronized (topic) {
             String topicType = topic.getType().getSimpleName().toLowerCase();
-            helper.setObjectFactoryType(topicType);
+            setObjectFactoryType(topicType);
             objectFactory.createEvent(producerId, topicId, eventId, partitionId);
         }
     }
@@ -240,13 +248,15 @@ public class TributaryController {
     public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
         Consumer<?> consumer = helper.findConsumer(consumerId);
         Partition<?> partition = helper.findPartition(partitionId);
-        String topicId = partition.getAllocatedTopicId();
-        Topic<?> topic = helper.getTopic(topicId);
 
         if (consumer == null || partition == null) {
             System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.\n");
             return;
-        } else if (!helper.verifyConsumer(consumer, topic)) {
+        }
+
+        String topicId = partition.getAllocatedTopicId();
+        Topic<?> topic = helper.getTopic(topicId);
+        if (!helper.verifyConsumer(consumer, topic)) {
             System.out.println("Consumer Group of Consumer does not have permission to consume from the topic.\n");
             return;
         } else if (!consumer.listAssignedPartitions().contains(partition)) {

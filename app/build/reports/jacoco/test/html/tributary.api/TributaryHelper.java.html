@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TributaryHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">tributary.api</a> &gt; <span class="el_source">TributaryHelper.java</span></div><h1>TributaryHelper.java</h1><pre class="source lang-java linenums">package tributary.api;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import tributary.core.tributaryObject.producers.*;
+import tributary.core.tributaryFactory.*;
+import tributary.core.tributaryObject.AdminObject;
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.ConsumerGroup;
+import tributary.core.tributaryObject.Message;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.Topic;
+import tributary.core.tributaryObject.TributaryCluster;
+
+public class TributaryHelper {
+    private TributaryCluster cluster;
+    private ObjectFactory objectFactory;
+    private Map&lt;String, Class&lt;?&gt;&gt; typeMap;
+
+<span class="fc" id="L22">    public TributaryHelper() {</span>
+<span class="fc" id="L23">        this.cluster = TributaryCluster.getInstance();</span>
+<span class="fc" id="L24">        this.objectFactory = new StringFactory();</span>
+<span class="fc" id="L25">        this.typeMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L26">        typeMap.put(&quot;integer&quot;, Integer.class);</span>
+<span class="fc" id="L27">        typeMap.put(&quot;string&quot;, String.class);</span>
+<span class="fc" id="L28">        typeMap.put(&quot;bytes&quot;, byte[].class);</span>
+<span class="fc" id="L29">    }</span>
+
+    /*
+     * General Helper methods used by most other methods.
+     * Involved in the the creation, deletion and manipulation of
+     * Tributary objects.
+     */
+    public Topic&lt;?&gt; getTopic(String topicId) {
+<span class="fc" id="L37">        Topic&lt;?&gt; topic = cluster.getTopic(topicId);</span>
+<span class="fc" id="L38">        return topic;</span>
+    }
+
+    public String getTopicType(String topicId) {
+<span class="fc" id="L42">        Topic&lt;?&gt; topic = cluster.getTopic(topicId);</span>
+<span class="fc" id="L43">        return topic.getType().getSimpleName().toLowerCase();</span>
+    }
+
+    public ConsumerGroup&lt;?&gt; getConsumerGroup(String groupId) {
+<span class="fc" id="L47">        ConsumerGroup&lt;?&gt; group = cluster.getConsumerGroup(groupId);</span>
+<span class="fc" id="L48">        return group;</span>
+    }
+
+    public Producer&lt;?&gt; getProducer(String producerId) {
+<span class="fc" id="L52">        Producer&lt;?&gt; producer = cluster.getProducer(producerId);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (producer == null) {</span>
+<span class="fc" id="L54">            System.out.println(&quot;Producer &quot; + producerId + &quot; does not exist.\n&quot;);</span>
+<span class="fc" id="L55">            return null;</span>
+        }
+<span class="fc" id="L57">        return producer;</span>
+    }
+
+    public Consumer&lt;?&gt; findConsumer(String consumerId) {
+<span class="fc" id="L61">        Consumer&lt;?&gt; specifiedConsumer = null;</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        for (ConsumerGroup&lt;?&gt; group : cluster.listConsumerGroups()) {</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            for (Consumer&lt;?&gt; consumer : group.listConsumers()) {</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                if (consumer.getId().equals(consumerId)) {</span>
+<span class="fc" id="L65">                    specifiedConsumer = consumer;</span>
+                }
+<span class="fc" id="L67">            }</span>
+<span class="fc" id="L68">        }</span>
+<span class="fc" id="L69">        return specifiedConsumer;</span>
+    }
+
+    public Partition&lt;?&gt; findPartition(String partitionId) {
+<span class="fc" id="L73">        Partition&lt;?&gt; specifiedPartition = null;</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        for (Topic&lt;?&gt; topic : cluster.listTopics()) {</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            for (Partition&lt;?&gt; partition : topic.listPartitions()) {</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">                if (partition.getId().equals(partitionId)) {</span>
+<span class="fc" id="L77">                    specifiedPartition = partition;</span>
+<span class="fc" id="L78">                    break;</span>
+                }
+<span class="fc" id="L80">            }</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            if (specifiedPartition != null)</span>
+<span class="fc" id="L82">                break;</span>
+<span class="fc" id="L83">        }</span>
+<span class="fc" id="L84">        return specifiedPartition;</span>
+    }
+
+    public ObjectFactory getFactory() {
+<span class="nc" id="L88">        return objectFactory;</span>
+    }
+
+    public TributaryCluster getCluster() {
+<span class="nc" id="L92">        return cluster;</span>
+    }
+
+    /*
+     * All creation method Helpers.
+     * These Helper methods are specific to the process of creating Tributary
+     * Objects.
+     */
+
+    public boolean verifyProducer(Producer&lt;?&gt; prod, Topic&lt;?&gt; topic) {
+<span class="fc" id="L102">        String adminToken = cluster.getAdminProdToken();</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (prod.listAssignedTopics().contains(topic)) {</span>
+<span class="fc" id="L104">            return true;</span>
+<span class="pc bpc" id="L105" title="3 of 4 branches missed.">        } else if (adminToken != null &amp;&amp; prod.getToken() != null) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (adminToken.equals(prod.getToken()))</span>
+<span class="nc" id="L107">                return true;</span>
+        }
+
+<span class="fc" id="L110">        return false;</span>
+    }
+
+    /*
+     * These Consumer helper methods are used to consume events from a partition.
+     * They are specific to the process of consuming events.
+     */
+
+    public &lt;T&gt; void consumeEventsGeneric(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type,
+            int numberOfEvents) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L121">        Consumer&lt;T&gt; typedConsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L123">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L124">        synchronized (typedPartition) {</span>
+<span class="fc" id="L125">            consumeHelper(typedConsumer, typedPartition, numberOfEvents);</span>
+<span class="fc" id="L126">        }</span>
+<span class="fc" id="L127">    }</span>
+
+    private &lt;T&gt; void consumeHelper(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int numberOfEvents) {
+<span class="fc" id="L130">        List&lt;Message&lt;T&gt;&gt; messages = partition.listMessages();</span>
+<span class="fc" id="L131">        int currentOffset = partition.getOffset(consumer);</span>
+<span class="fc" id="L132">        int count = 0;</span>
+
+<span class="fc bfc" id="L134" title="All 4 branches covered.">        for (int i = currentOffset; i &lt; messages.size() &amp;&amp; count &lt; numberOfEvents; i++, count++) {</span>
+<span class="fc" id="L135">            consumer.consume(messages.get(i), partition);</span>
+        }
+
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (count &lt; numberOfEvents) {</span>
+<span class="fc" id="L139">            System.out.println(&quot;Not enough messages to consume.\nConsumed &quot; + count + &quot; messages.\n&quot;);</span>
+        } else {
+<span class="fc" id="L141">            System.out.println(&quot;Consumed &quot; + count + &quot; messages.\n&quot;);</span>
+        }
+<span class="fc" id="L143">    }</span>
+
+    public boolean verifyConsumer(Consumer&lt;?&gt; consumer, Topic&lt;?&gt; topic) {
+<span class="fc" id="L146">        ConsumerGroup&lt;?&gt; group = getConsumerGroup(consumer.getGroup());</span>
+<span class="fc" id="L147">        String adminToken = cluster.getAdminConsToken();</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        if (group.listAssignedTopics().contains(topic)) {</span>
+<span class="fc" id="L149">            return true;</span>
+<span class="pc bpc" id="L150" title="3 of 4 branches missed.">        } else if (adminToken != null &amp;&amp; group.getToken() != null) {</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            if (adminToken.equals(group.getToken()))</span>
+<span class="nc" id="L152">                return true;</span>
+        }
+<span class="fc" id="L154">        return false;</span>
+    }
+
+    /*
+     * All update helper methods.
+     * These methods are used in assistance to update the state of Tributary
+     * objects.
+     */
+
+    public &lt;T&gt; void updatePartitionOffsetGeneric(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition,
+            int offset) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L166">        Consumer&lt;T&gt; typedconsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L168">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+<span class="fc" id="L169">        updateTypedConsumerOffset(typedconsumer, typedPartition, offset);</span>
+<span class="fc" id="L170">    }</span>
+
+    private &lt;T&gt; void updateTypedConsumerOffset(Consumer&lt;T&gt; consumer, Partition&lt;T&gt; partition, int offset) {
+        // uses 1 indexing here because zero indexing is used in the consume method
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (Math.abs(offset) &gt; partition.getOffset(consumer)) {</span>
+<span class="fc" id="L175">            System.out.println(</span>
+                    &quot;Playback or Backtrack Offset cannot be greater than the number of messages in the partition.\n&quot;);
+<span class="fc" id="L177">            return;</span>
+            // if number is 0 return the last message in the partition
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        } else if (offset == 0) {</span>
+<span class="fc" id="L180">            partition.setOffset(consumer, partition.listMessages().size());</span>
+            // if number negative return the last nth message
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">        } else if (offset &lt; 0) {</span>
+<span class="nc" id="L183">            partition.setOffset(consumer, partition.listMessages().size() + offset + 1);</span>
+            // if number positive return the message at nth position in partition
+        } else {
+<span class="fc" id="L186">            partition.setOffset(consumer, offset);</span>
+        }
+<span class="fc" id="L188">    }</span>
+
+    public &lt;T&gt; void assignTopicGeneric(AdminObject&lt;T&gt; admin) {
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        for (Topic&lt;?&gt; topic : cluster.listTopics()) {</span>
+<span class="pc bpc" id="L192" title="1 of 4 branches missed.">            if (topic.getType() == admin.getType() &amp;&amp; !admin.getAssignedTopics().contains(topic)) {</span>
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L194">                Topic&lt;T&gt; typedTopic = (Topic&lt;T&gt;) topic;</span>
+<span class="fc" id="L195">                admin.assignTopic(typedTopic);</span>
+            }
+<span class="fc" id="L197">        }</span>
+<span class="fc" id="L198">    }</span>
+
+    /*
+     * All parallel produce and consumer Helper methods.
+     * These methods are specifically used to assist in the parallel production and
+     * consumption of events.
+     */
+
+    public &lt;T&gt; int parallelConsumerOffset(Consumer&lt;?&gt; consumer, Partition&lt;?&gt; partition, Class&lt;T&gt; type) {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L208">        Consumer&lt;T&gt; typedconsumer = (Consumer&lt;T&gt;) consumer;</span>
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L210">        Partition&lt;T&gt; typedPartition = (Partition&lt;T&gt;) partition;</span>
+
+        try {
+<span class="fc" id="L213">            return typedPartition.getOffset(typedconsumer);</span>
+<span class="fc" id="L214">        } catch (NullPointerException e) {</span>
+<span class="fc" id="L215">            typedPartition.setOffset(typedconsumer, 0);</span>
+<span class="fc" id="L216">            return 0;</span>
+        }
+    }
+
+    public boolean isInteger(String str) {
+        try {
+<span class="fc" id="L222">            Integer.parseInt(str);</span>
+<span class="fc" id="L223">            return true;</span>
+<span class="fc" id="L224">        } catch (NumberFormatException e) {</span>
+<span class="fc" id="L225">            return false;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

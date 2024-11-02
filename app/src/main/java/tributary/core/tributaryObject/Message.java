@@ -41,10 +41,10 @@ public class Message<T> extends TributaryObject {
         String type = json.optString("PayloadType").toLowerCase();
 
         @SuppressWarnings("unchecked")
-        Class<T> payloadType = (Class<T>) typeMap.get(type); // Cast to Class<T>
-        if (payloadType == null) {
+        Class<T> jsonType = (Class<T>) typeMap.get(type); // Cast to Class<T>
+        if (jsonType == null) {
             throw new IllegalArgumentException("Invalid payload type: " + type);
-        } else if (payloadType != prodType) {
+        } else if (jsonType != prodType) {
             throw new IllegalArgumentException("Unsupported type: " + type);
         }
 
@@ -52,7 +52,7 @@ public class Message<T> extends TributaryObject {
         Map<String, String> content = new LinkedHashMap<>();
 
         // Fetch the appropriate handler for the payload type
-        TypeHandler<T> handler = TypeHandlerFactory.getHandler(payloadType);
+        TypeHandler<T> handler = TypeHandlerFactory.getHandler(prodType);
         if (handler == null) {
             throw new IllegalArgumentException("Unsupported type: " + type);
         }
@@ -67,7 +67,7 @@ public class Message<T> extends TributaryObject {
             content.put(key, encrypted);
         }
 
-        return new Message<>(messageId, createdDate, payloadType, content);
+        return new Message<>(messageId, createdDate, prodType, content);
     }
 
     public LocalDateTime getCreatedDate() {
