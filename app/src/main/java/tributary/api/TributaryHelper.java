@@ -1,8 +1,6 @@
 package tributary.api;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import tributary.core.tributaryObject.producers.*;
 import tributary.core.tributaryFactory.*;
@@ -17,15 +15,10 @@ import tributary.core.tributaryObject.TributaryCluster;
 public class TributaryHelper {
     private TributaryCluster cluster;
     private ObjectFactory objectFactory;
-    private Map<String, Class<?>> typeMap;
 
     public TributaryHelper() {
         this.cluster = TributaryCluster.getInstance();
         this.objectFactory = new StringFactory();
-        this.typeMap = new HashMap<>();
-        typeMap.put("integer", Integer.class);
-        typeMap.put("string", String.class);
-        typeMap.put("bytes", byte[].class);
     }
 
     /*
