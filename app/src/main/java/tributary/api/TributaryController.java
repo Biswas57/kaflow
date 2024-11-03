@@ -40,11 +40,6 @@ public class TributaryController {
         typeMap.put("bytes", byte[].class);
     }
 
-    /*
-     * All creation methods for Objects in the Tributary Cluster .
-     * These methods are all streamlines to the ObjectFactory class.
-     */
-
     public void setObjectFactoryType(String type) throws IllegalArgumentException {
         Class<?> typeClass = typeMap.get(type);
         if (typeClass == null) {
@@ -52,6 +47,15 @@ public class TributaryController {
         }
         this.objectFactory = (typeClass.equals(Integer.class)) ? new IntegerFactory() : new StringFactory();
     }
+
+    public TributaryHelper getHelper() {
+        return helper;
+    }
+
+    /*
+     * All creation methods for Objects in the Tributary Cluster .
+     * These methods are all streamlines to the ObjectFactory class.
+     */
 
     /**
      * Creates a new topic in the Tributary Cluster.
