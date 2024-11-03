@@ -13,11 +13,11 @@ The fundamental premise on which Event-Driven Architecture rests is the ability 
 ## Structure
 A **Tributary Cluster** contains a series of **topics**. A topic contains events which are logically grouped together. For example, a cluster could contain two topics: one for images-related events and one for video-related events. You can think of them like a table in a database or a folder in a file system.
 
-<img src="images/tributaryClusterExample.png" width="400px" />
+<img src="Blogging&Design/images/tributaryClusterExample.png" width="400px" />
 
 Within each topic, there are a series of partitions - each partition is a queue where new messages are appended at the end of the partition.
 
-<img src="images/topicExample.png" width="600px" />
+<img src="Blogging&Design/images/topicExample.png" width="600px" />
 
 A unit of data within a Tributary is a **message**, or record or event. For example, to update their profile a user may send a message to Partition 1 in Topic A, and this message will be appended to Partition 1 in Topic A. Each message has an optional key to indicate which partition it should be appended to.
 
@@ -42,7 +42,7 @@ Individual messages contain the following information:
 - Key; and
 - Value. The value is an object containing relevant information for a topic. Considering information required for different topics may change, you should consider using a generic type here.
 
-<img src="images/messageStructure.png" width="600px" />
+<img src="Blogging&Design/images/messageStructure.png" width="600px" />
 
 ## 1.3. Producers
 
@@ -73,9 +73,9 @@ When a new consumer group is created, the consumers in the group begin their con
 
 For example, in the image below Topic D is consumed by Consumer Group A, which has its 3 consumers assigned to the 5 partitions. Topic D is also consumed by Consumer Group B, which has its 4 consumers assigned to the 5 partitions.
 
-<img src="images/consumerAllocation1.png" width="600px" />
+<img src="Blogging&Design/images/consumerAllocation1.png" width="600px" />
 
-<img src="images/consumerAllocation2.png" width="600px" />
+<img src="Blogging&Design/images/consumerAllocation2.png" width="600px" />
 
 ### 1.4.3. Consumer Rebalancing
 
@@ -87,7 +87,7 @@ If a partition is assigned a new consumer after rebalancing, the new consumer wi
 
 **Range** - The partitions are divided up evenly and allocated to the consumers. If there is an odd number of partitions, the first consumer takes one extra.
 
-<img src="images/rangeAllocation.png" width="600px" />
+<img src="Blogging&Design/images/rangeAllocation.png" width="600px" />
 
 In the above example, Partitions 0, 1, 2, 3 are allocated to Consumer I and Partitions 4, 5 and 6 are allocated to Consumer II.
 
@@ -95,7 +95,7 @@ In the above example, Partitions 0, 1, 2, 3 are allocated to Consumer I and Part
 
 **Round Robin** - In a round robin fashion, the partitions are allocated like cards being dealt out, where consumers take turns being allocated the next partition.
 
-<img src="images/roundAllocation.png" width="600px" />
+<img src="Blogging&Design/images/roundAllocation.png" width="600px" />
 
 In the above example, Partitions 0, 2, 4 and 6 are allocated to Consumer I, and Partitions 1, 3 and 5 are allocated to Consumer II.
 
@@ -103,7 +103,7 @@ In the above example, Partitions 0, 2, 4 and 6 are allocated to Consumer I, and 
 
 One of the most powerful aspects of event streaming is the ability to **replay** messages that are stored in the queue. The way this can occur is via a **controlled replay**, which is done from a message offset in a partition. Messages from that point onwards are streamed through the pipeline, until the most recent message at the latest offset is reached.
 
-![](/images/controlledReplay.png)
+![](Blogging&Design/images/controlledReplay.png)
 
 > ℹ  NOTE: The above image demonstrates a consumer starting at offset 6 that performed normal consumption until offset 9. This consumer then triggered a
 > controlled replay from offset 4 that played back all the messages from that offset until the most recently consumed message (i.e messages 6, 7, 8 and 9
@@ -138,11 +138,9 @@ You can think of all of this very similarly to the Java API. It is a library tha
 
 ## 2.3. Command Line Interface
 
-In order to run usability tests on your solution I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface.
+To run usability tests on this library I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I wrote a wrapper class called `TributaryCLI` that allows users to input commands that create, modify, and interact with a tributary cluster system. This class is in a separate package to the `api/core` packages of my library, as it shouldn't be a part of ther library that other engineers developing their event-driven systems would use.
 
-To do so, you should write a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system. This class should be in a separate package to the `api/core` packages of your library, as it shouldn't be a part of your library that other engineers developing their own event-driven systems would use.
-
-As an **example** of what commands your CLI may provide, the following table has CRUD operations that you can implement - you can add/modify/remove CRUD operations as you see fit. If you choose to implement the table as is, note that you are free to modify the naming/syntax/output of commands. **The only requirement for the CLI is that you can use it to showcase an implementation of the [Engineering Requirements](#1-engineering-requirements) discussed in Section 1**.
+As an **example** of what commands my CLI may provide, the following table has CRUD operations I have implemented - developers who wish to add to this library can add/modify/remove CRUD operations as they see fit. If they choose to implement the table as is, please keep in mind that developers are free to modify the naming/syntax/output of commands. **The only requirement for the CLI is to use it to showcase an implementation of the [Engineering Requirements](https://github.com/Biswas57/Tributary-Cluster/blob/main/Engineering_Requirements.md#engineering-requirements) discussed in Section 1**.
 
 
 <table>
@@ -350,7 +348,7 @@ As an **example** of what commands your CLI may provide, the following table has
         </li>
       </ul>
     </td>
-    <td>A message confirming the new rebalancing method.</td>
+    <td>A message confirming the new rebalancing method. Shows all consumers in the rebalanced consumer group, and which partitions each consumer is receiving events from.</td>
   </tr>
   <tr>
     <td>
@@ -365,5 +363,29 @@ As an **example** of what commands your CLI may provide, the following table has
       </ul>
     </td>
     <td>The id and contents of each event received in order.</td>
+  </tr>
+    <tr>
+    <td>
+      <code>update admin producer &lt;newAdminProducer&gt; &lt;oldAdminProducer&gt; &lt;password&gt;</code>
+    </td>
+    <td>
+      <ul>
+        <li>Transfers the admin role from the old admin producer to the new admin producer.</li>
+        <li>If there is no previous admin, the old admin Producer's ID and current password are not required</li>
+      </ul>
+    </td>
+    <td>Displays the topics and partitions the new admin producer has access to.</td>
+  </tr>
+  <tr>
+    <td>
+      <code>update admin group &lt;newAdminGroup&gt; &lt;oldAdminGroup&gt; &lt;password&gt;</code>
+    </td>
+    <td>
+      <ul>
+        <li>Transfers the admin role from the old consumer group to the new consumer group.</li>
+        <li>If there is no previous admin, the old admin Consumer Group's ID and current password are not required</li>
+      </ul>
+    </td>
+    <td>Displays the topics and partitions the new admin group has access to, and lists all consumers in the new admin group along with their assigned partitions.</td>
   </tr>
 </table>
