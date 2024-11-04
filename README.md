@@ -16,6 +16,57 @@ A complete visual overview of the entire system exist, showcasing the system in 
 2. [Security Feature Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-security-implementation-blog)
 3. [Reflection Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
 
+## Initialisation and Developer Use
+To help other developers interact with the Tributary Cluster library, the main entry point is the `TributaryCLI` class. This class provides a command-line interface to create, modify, and interact with the tributary cluster system.
+
+### Path to Main Function:
+```
+app/src/main/java/tributary/cli/TributaryCLI.java
+```
+
+### Steps to Run the TributaryCLI:
+
+1. **Clone the Repository**: If you haven't already, clone the repository to your local machine:
+
+    ```bash
+    git clone https://github.com/YourUsername/Tributary-Cluster.git
+    ```
+
+2. **Navigate to the Project Directory**:
+
+    ```bash
+    cd Tributary-Cluster
+    ```
+
+3. **Build the Project**: The project uses Gradle for build automation. Build the project using:
+
+    ```bash
+    ./gradlew build
+    ```
+
+    If you're on Windows, use:
+
+    ```cmd
+    gradlew.bat build
+    ```
+
+4. **Run the CLI**: After building, you can run the `TributaryCLI` using Gradle's run task:
+
+    ```bash
+    ./gradlew run
+    ```
+
+    Alternatively, you can run the main class directly using the Java command:
+
+    ```bash
+    java -cp build/classes/java/main tributary.cli.TributaryCLI
+    ```
+
+    Ensure that the classpath points to the directory where your compiled classes are located.
+
+5. **Interact with the CLI**: Once the `TributaryCLI` is running, you can enter commands as described in the previous section to interact with the Tributary Cluster.
+
+
 ### CLI Commands and Usability Testing
 To run usability tests on this library I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system.
 
