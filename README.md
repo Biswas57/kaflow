@@ -26,7 +26,7 @@ app/src/main/java/tributary/cli/TributaryCLI.java
 
 ### Steps to Run the TributaryCLI:
 
-1. **Clone the Repository**: If you haven't already, clone the repository to your local machine:
+1. **Clone the Repository**:
 
     ```bash
     git clone https://github.com/YourUsername/Tributary-Cluster.git
@@ -62,9 +62,9 @@ app/src/main/java/tributary/cli/TributaryCLI.java
     java -cp build/classes/java/main tributary.cli.TributaryCLI
     ```
 
-    Ensure that the classpath points to the directory where your compiled classes are located.
+    Ensure the classpath points to the directory where your compiled classes are located.
 
-5. **Interact with the CLI**: Once the `TributaryCLI` is running, you can enter commands as described in the previous section to interact with the Tributary Cluster.
+5. **Interact with the CLI**: Once the `TributaryCLI` is running, you can enter commands described in the follwoing section to interact with the Tributary Cluster.
 
 
 ### CLI Commands and Usability Testing
