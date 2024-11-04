@@ -165,7 +165,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
     - Synchronization was applied in key areas to prevent race conditions and ensure data integrity during parallel operations
        
 ### UML Diagram Progression
-[1st Draft UML (initial design)](UML_1st_draft.pdf) &rarr; [2nd Draft UML](UML_2nd_draft.pdf) &rarr; [3rd Draft UML](UML_3rd_draft.pdf) &rarr; [final_design.pdf](UML_final_design.pdf)
+[1st Draft UML (initial design)](UML_1st_draft.pdf) &rarr; [2nd Draft UML](UML_2nd_draft.pdf) &rarr; [3rd Draft UML](UML_3rd_draft.pdf) &rarr; [4th Draft UML](UML_4th_draft.pdf) &rarr; [final_design.pdf](UML_final_design.pdf)
 
 # Acheivements and Final Reflection
 ### Acheivements
