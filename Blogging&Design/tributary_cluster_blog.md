@@ -168,59 +168,6 @@ Usability Checklist: Using the command line interface, the checklist will be run
 ### UML Diagram Progression
 [1st Draft UML (initial design)](UML_1st_draft.pdf) &rarr; [2nd Draft UML](UML_2nd_draft.pdf) &rarr; [3rd Draft UML](UML_3rd_draft.pdf) &rarr; [final_design.pdf](UML_final_design.pdf)
 
-
-
-
-# Tributary Cluster Security Implementation Blog
-There are a few major security aspects to take into consideration when analyzing the soundness and reliability of this stream processing library.
-
-**Access Control:** While it’s easy to see why access control is important in any system, it’s particularly important when being granted access means gaining a level of control over critical data. This is a scenario not uncommon when dealing with big data processors such as that involved in stream processing applications. Let’s consider an organization working with Apache Kafka. Such an organization will have developed producers and consumers that communicate with a Kafka cluster on a continuous basis.Without access controls in place, any client could be configured to read from or write to any particular topic within the Kafka system. As your organization matures and begins to utilize the Kafka cluster on a larger scale and for various types of data (some more important than others), it’s likely that a fly-by-night approach to securing the implementation of the platform will not suffice. In this instance, it’s critical that all clients attempting to read or write to the cluster be properly authenticated and authorized for the topics with which they are attempting to interact, to ensure that improper access to potentially sensitive data is prevented. The focus is to utilise access control lists (ACLs) to authorize particular applications to read from or write to particular topics – thus providing secure access on a more granular level.
-
-**Data Security:** Just as authentication and authorization are critical security aspects to consider when dealing in stream processing, ensuring the security of the data as it is being transmitted over the network by such applications is also of the utmost importance. Continuing to use Kafka as our example platform, data-in-transit via write operations from producers to Kafka brokers and via read operations executed by consumers against these Kafka brokers, should be protected from undue access by unauthorized systems. In an effort to provide a more thorough security policy for such a stream processing implementation, this data should be encrypted when it is communicated between client applications and Kafka.
-
-### Project Deliverables/Outcomes
-<table>
-  <tr>
-    <th>Deliverable</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>PostgreSQL Backend</td>
-    <td>A fully functional PostgreSQL backend replacing JSON files for message (logs and records of processes) storage.</td>
-  </tr>
-  <tr>
-    <td>TLS/SSL Encryption</td>
-    <td>Implement TLS/SSL encryption for transmitting messages between producers, consumers, and the Tributary Cluster.</td>
-  </tr>
-  <tr>
-    <td>RBAC System</td>
-    <td>An access control system for regulating who can produce, consume, or replay messages based on roles and permissions.</td>
-  </tr>
-  <tr>
-    <td>Documentation & Final Report</td>
-    <td>
-      Detailed documentation covering system design and security implementations for interacting with the Tributary Cluster. 
-      The final report will summarize the project’s objectives, achievements, challenges, and how the security features relate to industry use, 
-      emphasizing the importance of security.
-    </td>
-  </tr>
-</table>
-
-## Features Implemented
-### Encryption for Data in Transit (TLS/SSL)
-Since the Kafka system relies heavily on message transmission between producers, consumers, and partitions within the Tributary Cluster, ensuring that data in transit is protected is critical. This is particularly relevant because the system operates in environments that handle large volumes of potentially sensitive data. So Adding TLS/SSL encryption ensures that messages between components (producers, consumers, topics) cannot be intercepted or tampered with while they are in transit. Given that the system supports multiple producers and consumers working concurrently, securing these communication channels protects the integrity and confidentiality of your data, preventing man-in-the-middle attacks.
-
-To implement this, TLS/SSL can be layered on top of your existing network communication between producers and consumers without major architectural changes. Given your system’s focus on thread safety and concurrency, ensuring that encrypted messages are processed concurrently across threads would showcase a strong understanding of both security and software design.
-
-### Role-Based Access Control (RBAC)
-Tributary Cluster manages access to topics, partitions, and message consumption by consumers. This structure lends itself well to role-based access control (RBAC), which ensures that only authorized producers or consumers can access certain topics, partitions, or message replay features. The fact that my system supports consumer groups, message replay, and partition-based message handling means that there are natural points in the architecture where access control would be essential. For example:
-- Only certain producers should be able to publish to sensitive topics.
-- Certain consumers should have access to replay functionality, but not everyone.
-- Some partitions may store high-priority or sensitive data, requiring specific authorization.
-
-Implementing RBAC allows us to extend the system's flexibility by adding fine-grained controls over who can produce, consume, or replay messages, aligning with the structure of your Consumer Groups and Rebalancing Strategies. This would also prevent unauthorized message consumption or accidental data access, especially during message replay or rebalancing operations.
-
-
 # Acheivements and Final Reflection
 ### Acheivements
 - Developed an Event-Driven Processing System, emulating Apache Kafka's event streaming capabilities in Java, with parallel data processing and message playback.
