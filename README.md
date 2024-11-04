@@ -6,8 +6,8 @@ Tributary Cluster is a form of Event-Driven Architecture (EDA) that uses Stream 
 
 ### Breakdown of Engineering Requirements
 A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the required capabilities, constrains and functionality of the system, that had been created in the beginnging of this project (so it is a little outdated) can be found in the [**Engineering Requirements**](Engineering_Requirements.md). Furthermore, a full recount of the engineering process can be found in the following links:
-1. [Design Focused Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog)
-2. [Security Feature Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-security-implementation-blog)
+1. [Security Analysis Report](Blogging&Design/security_analysis_report.pdf)
+2. [Design Focused Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog)
 3. [Reflection Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
 
 ## Initialisation and Developer Use
