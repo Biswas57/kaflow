@@ -78,7 +78,8 @@ public class EncryptionManager {
         return result;
     }
 
-    // Extended Euclidean Algorithm to find modular inverse of e mod phi(N)
+    // Extended Euclidean Algorithm to find modular
+    // inverse of e mod phi(N)
     public static long modularInverse(long a, long m) {
         long m0 = m, x0 = 0, x1 = 1;
 
@@ -89,7 +90,8 @@ public class EncryptionManager {
             long q = a / m;
             long t = m;
 
-            // m is remainder now, process same as Euclid's algo
+            // m is remainder now, process
+            // same as Euclid's algo
             m = a % m;
             a = t;
             t = x0;
