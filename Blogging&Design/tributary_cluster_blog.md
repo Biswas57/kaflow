@@ -311,7 +311,7 @@ Usability Checklist: Using the command line interface, the checklist will be run
 **Progress**
 - Message Playback with Offset Manipulation: I finally got around to implementing message playback with offset manipulation. This means you can replay events from any point, which makes debugging and testing quite easy.
 - Parallel Produce and Consume: Added the ability to produce and consume events in parallel. This was a big one, involving lots of learning and implementing Java's concurrency tools like ExecutorService over simple synchronization.
-    - The reason I chose Executor Service over simple synchronization of certain methods was because ExecutorService allows a programme to have multiple threads running at the same time in something called a thread and the library itself ensures these thread do not get mixed up.
+    - The reason I chose ExecutorService over simple synchronization of certain methods was because this java package allows a program to have multiple instances running simultaneously in something called a thread and the Executor Service package itself ensures these thread do not get mixed up.
     - Simply using synchronisation used alot of resources as it involved creating a new thread and destorying it everytime the function was called.
     - Also using synchronization, the programme limits the execution to one thread at a time. To fix this I would need to manage thread creation and coordination manually, which can be complex and inefficient for larger systems.
 
