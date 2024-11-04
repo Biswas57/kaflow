@@ -1,6 +1,9 @@
 package tributary.core.encryptionManager;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import io.github.cdimascio.dotenv.Dotenv;
@@ -50,9 +53,11 @@ public class EncryptionManager {
         long d = modularInverse(e, totient);
 
         for (int i = 0; i < ciphertextArray.length; i++) {
+            // plaintext = ciphertext^d mod n
             long decryptedLong = modularExponentiation(Long.parseLong(ciphertextArray[i]), d, n);
             decryptedBytes[i] = (byte) decryptedLong;
         }
+
         return new String(decryptedBytes, StandardCharsets.UTF_8);
     }
 
@@ -67,7 +72,7 @@ public class EncryptionManager {
             if ((exp & 1) == 1) { // If exp is odd
                 result = (result * base) % mod;
             }
-            exp >>= 1; // exp = exp / 2 but better
+            exp >>= 1; // exp = exp / 2
             base = (base * base) % mod;
         }
 
@@ -135,6 +140,44 @@ public class EncryptionManager {
 
     public long getPublicKey() {
         return e;
+    }
+
+    public static long[] stringToLongArray(String input) {
+        String[] words = input.split(" ");
+        List<Long> longList = new ArrayList<>();
+
+        for (String word : words) {
+            byte[] wordBytes = word.getBytes(StandardCharsets.UTF_8);
+
+            // Ensure the word can be represented within a single long (max 8 bytes)
+            if (wordBytes.length > 8) {
+                throw new IllegalArgumentException("Word is too long to convert to a single long value.");
+            }
+
+            // Pad the byte array to 8 bytes if it's shorter
+            byte[] paddedBytes = new byte[8];
+            System.arraycopy(wordBytes, 0, paddedBytes, 8 - wordBytes.length, wordBytes.length);
+
+            // Convert the padded byte array to a long and add to list
+            longList.add(ByteBuffer.wrap(paddedBytes).getLong());
+        }
+
+        return longList.stream().mapToLong(Long::longValue).toArray();
+    }
+
+    public static String longArrayToString(long[] longArray) {
+        StringBuilder result = new StringBuilder();
+
+        for (long l : longArray) {
+            // Convert the long to a byte array
+            byte[] bytes = ByteBuffer.allocate(8).putLong(l).array();
+
+            // Trim leading zero bytes and convert remaining bytes back to a String
+            String word = new String(bytes, StandardCharsets.UTF_8).trim();
+            result.append(word).append(" ");
+        }
+
+        return result.toString().trim();
     }
 
     public static void main(String[] args) {

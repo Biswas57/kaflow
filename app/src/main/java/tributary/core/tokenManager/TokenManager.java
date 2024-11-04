@@ -11,10 +11,10 @@ public class TokenManager {
 
     public static String generateToken(String id, long timestamp) {
         String data = id + ":" + timestamp + ":" + ADMIN_KEY;
-        return hashSHA256(data);
+        return algorithm(data);
     }
 
-    private static String hashSHA256(String data) {
+    private static String algorithm(String data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(data.getBytes());
@@ -28,8 +28,8 @@ public class TokenManager {
         }
     }
 
-    public static boolean validateToken(String token, String adminId, long adminTimeCreated, String password) {
-        String data = adminId + ":" + adminTimeCreated + ":" + password;
-        return hashSHA256(data).equals(token);
+    public static boolean validateToken(String token, String adminId, long adminBirthTime, String password) {
+        String data = adminId + ":" + adminBirthTime + ":" + password;
+        return algorithm(data).equals(token);
     }
 }

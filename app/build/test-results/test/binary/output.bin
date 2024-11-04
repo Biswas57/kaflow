@@ -895,9 +895,9 @@
 ! class java.lang.Integer
 ! \The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod2.
 ! 
-! [The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingStyle4.
+! \The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod3.
 ! 
-! ZThe event: bananaBoilingDur has been randomly allocated to partition bananaCookingStyle4.
+! [The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod1.
 ! 
 ! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
 ! 
@@ -907,11 +907,8 @@
 ! 
 ! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 ! 
-! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
-! 
-! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-! duration = 3
-! temperature = 180
+! cThe event: bananaBoilingDur has been consumed by consumer beginnerChef1. It contains the contents:
+! duration = 5
 ! Consumed 1 messages.
 ! 
 ! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
@@ -927,19 +924,19 @@
 !  Not enough messages to consume.
 ! Consumed 0 messages.
 ! 
-! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
-! 
 ! VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
 ! 
-! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-! duration = 3
-! temperature = 180
-! Consumed 1 messages.
+! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 ! 
 ! +Consumer is not assigned to the partition.
 ! 
 ! _The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
 ! duration = 3
+! Consumed 1 messages.
+! 
+! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
+! duration = 3
+! temperature = 180
 ! Consumed 1 messages.
 ! 
 #"%Created String topic with ID: banana
@@ -1104,9 +1101,9 @@
 #,
 #,TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
 #,
-#,UThe event: grillBanana has been manually allocated to partition bananaCookingMethods
-#,
 #,SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
+#,
+#,UThe event: grillBanana has been manually allocated to partition bananaCookingMethods
 #,
 #,+Consumer is not assigned to the partition.
 #,
@@ -1120,7 +1117,7 @@
 #-
 #-2Consumer beginnerChefalready exists in the group.
 #-
-#-TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
-#-
 #-SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
+#-
+#-TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
 #-
