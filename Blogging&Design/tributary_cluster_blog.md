@@ -429,7 +429,7 @@ Optimized system, Implemented Security features.
     - SCRATCHED THIS IDEA: Figure out how to make Tributary Cluster a proper published Java Library
     - Probably using springboot for this
     - Need to figure out what exactly are the consumers and producers and what is means to send a message to the broker and how is it consumed
-    - does this require sockets?
+    - does this require web sockets? connections to specific IP's? how should I do this, who do I talk to?
     - will i need to change all the outputs in the application to returnable strings instead of something that prints out to the std output?
 - Make first producer and Consumer Group created the admins
 - Implement Byte type handling
