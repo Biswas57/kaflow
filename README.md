@@ -1,6 +1,6 @@
 
 ## Project Overview
-This Java library is based on an extremely simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo). The 
+This Java library is based on an extremely simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo). 
 
 Tributary Cluster is a form of Event-Driven Architecture (EDA) that uses Stream Processing. The fundamental premise on which EDA rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, which is why this project is named 'Tributary Cluster'. Therefore, stream processing allows data to move through a data pipeline to be analysed and processed asynchronously and efficiently in real-time. This is opposed to batch processing where data is collected and stored to be operated upon later. 
 
