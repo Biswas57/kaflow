@@ -421,3 +421,18 @@ Optimized system, Implemented Security features.
 - Implement return Strings instead of stdout (maybe)
 - Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
 - Implement a mechanism that locks an account or restricts access after a certain number of failed login attempts to prevent brute force attacks.
+
+### 29/01/2025
+**Future Goals**
+- Implement TokenManager testing suite.
+- Turn Tributary cluster in to an end-to-end application
+       - SCRATCHED THIS IDEA: Figure out how to make Tributary Cluster a proper published Java Library
+       - Probably using springboot for this
+       - Need to figure out what exactly are the consumers and producers and what is means to send a message to the broker and how is it consumed
+       - does this require sockets?
+       - will i need to change all the outputs in the application to returnable strings instead of something that prints out to the std output?
+- Make first producer and Consumer Group created the admins
+- Implement Byte type handling
+- Implement return Strings instead of stdout (maybe)
+- Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
+- Implement a mechanism that locks an account or restricts access after a certain number of failed login attempts to prevent brute force attacks. maybe?
