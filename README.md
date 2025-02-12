@@ -2,7 +2,7 @@
 ## Project Overview
 This Java library is based on an extremely simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo). 
 
-Tributary Cluster is a form of Event-Driven Architecture (EDA) that uses Stream Processing. The fundamental premise on which EDA rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, which is why this project is named 'Tributary Cluster'. Therefore, stream processing allows data to move through a data pipeline to be analysed and processed asynchronously and efficiently in real-time. This is opposed to batch processing where data is collected and stored to be operated upon later. 
+Kaflow is a form of Event-Driven Architecture (EDA) that uses Stream Processing. The fundamental premise on which EDA rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, which is why this project is named 'Kaflow'. Therefore, stream processing allows data to move through a data pipeline to be analysed and processed asynchronously and efficiently in real-time. This is opposed to batch processing where data is collected and stored to be operated upon later. 
 
 This library enhances the traditional in-memory stream EDA, which often relies on a single message queue shared by multiple consumers causing bottlenecks and delays, by incorporating elements of batch processing in certain scenarios such as replayability in event logs and delayed and parallel event consumption. By adopting a log-based approach, we overcome the limitations of message playback and memory storage seen in single message queue brokers. This improvement enhances data storage, replayability, and adds greater functionality to message processing, enabling more efficient and flexible handling of events across multiple channels.
 
@@ -13,7 +13,7 @@ A complete visual overview of the entire system exist, showcasing the system in 
 3. [Reflection Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
 
 ## Initialisation and Developer Use
-To help other developers interact with the Tributary Cluster library, the main entry point is the `TributaryCLI` class. This class provides a command-line interface to create, modify, and interact with the tributary cluster system.
+To help other developers interact with the Kaflow library, the main entry point is the `TributaryCLI` class. This class provides a command-line interface to create, modify, and interact with the Kaflow system.
 
 ### Path to Main Function:
 ```
@@ -60,11 +60,11 @@ app/src/main/java/tributary/cli/TributaryCLI.java
 
     Ensure the classpath points to the directory where your compiled classes are located.
 
-5. **Interact with the CLI**: Once the `TributaryCLI` is running, you can enter commands described in the follwoing section to interact with the Tributary Cluster.
+5. **Interact with the CLI**: Once the `TributaryCLI` is running, you can enter commands described in the follwoing section to interact with the Kaflow.
 
 
 ### CLI Commands and Usability Testing
-To run usability tests on this library I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a tributary cluster system.
+To run usability tests on this library I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a Kaflow system.
 
 <table>
   <tr>
