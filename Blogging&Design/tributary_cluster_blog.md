@@ -1,6 +1,6 @@
 # Index
 1. [Design Focused Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog)
-3. [Reflection Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
+3. [Reflection Blog](https://github.com/Biswas57/kaflow/blob/main/Blogging%26Design/tributary_cluster_blog.md#ongoing-updates-and-implementations)
 
 # Tributary Cluster Design-Focused Blog
 This structure might change because in the real Kafka Producer and Consumers exist outside the one cluster and there are additional components called brokers that allow me to add more low-level features to the system. However, for the purposes of this project, I will keep the system simple and easy to understand.
@@ -422,6 +422,23 @@ Optimized system, Implemented Security features.
 - Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
 - Implement a mechanism that locks an account or restricts access after a certain number of failed login attempts to prevent brute force attacks.
 
+### 29/01/2025
+**Future Goals**
+- Implement TokenManager testing suite.
+- Turn Tributary cluster in to an end-to-end application
+    - SCRATCHED THIS IDEA: Figure out how to make Tributary Cluster a proper published Java Library
+    - Probably using springboot for this
+    - Need to figure out what exactly are the consumers and producers and what is means to send a message to the broker and how is it consumed
+    - does this require web sockets? connections to specific IP's? how should I do this, who do I talk to?
+    - will i need to change all the outputs in the application to returnable strings instead of something that prints out to the std output?
+- Make first producer and Consumer Group created the admins
+- Implement Byte type handling
+- Implement return Strings instead of stdout (maybe)
+- Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
+- Implement a mechanism that locks an account or restricts access after a certain number of failed login attempts to prevent brute force attacks. maybe?
+
+### 12/02/2025
+**Complete this weekend**
 ### 29/01/2025
 **Future Goals**
 - Implement TokenManager testing suite.
