@@ -3,6 +3,9 @@ package tributary.core.tributaryObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import tributary.core.rebalancingStrategy.RangeStrategy;
 import tributary.core.rebalancingStrategy.RebalancingStrategy;
 import tributary.core.rebalancingStrategy.RoundRobinStrategy;
@@ -67,14 +70,28 @@ public class ConsumerGroup<T> extends AdminObject<T> {
         showGroup();
     }
 
-    public void showGroup() {
-        System.out.println("Consumer Group ID: " + getId());
+    public JSONObject showGroup() {
+        // Create a JSON object to hold the consumer group details.
+        JSONObject groupJson = new JSONObject();
+
+        // Create an array to hold each consumer's details.
+        JSONArray consumersArray = new JSONArray();
         for (Consumer<T> consumer : listConsumers()) {
-            System.out.print("Consumer ID: " + consumer.getId() + " - Assigned Partitions: ");
-            consumer.listAssignedPartitions().forEach(p -> System.out.print(p.getId() + ", "));
-            System.out.println();
+            JSONObject consumerJson = new JSONObject();
+
+            // For each consumer, add an array of assigned partition IDs.
+            JSONArray partitionsArray = new JSONArray();
+            for (Partition<T> partition : consumer.listAssignedPartitions()) {
+                partitionsArray.put(partition.getId());
+            }
+            consumerJson.put("partitions", partitionsArray);
+            consumersArray.put(consumerJson);
+            consumerJson.put("id", consumer.getId());
         }
-        System.out.println("\n--------------------------------------------------\n");
+        groupJson.put("consumers", consumersArray);
+        groupJson.put("id", this.getId());
+
+        return groupJson;
     }
 
     public void rebalance() {

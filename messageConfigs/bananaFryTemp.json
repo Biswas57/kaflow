@@ -1,0 +1,7 @@
+{
+    "eventId": "bananaFryNums",
+    "PayloadType": "Integer",
+    "messageContents": {
+        "temperature": 180
+    }
+}

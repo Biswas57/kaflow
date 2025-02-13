@@ -3,6 +3,9 @@ package tributary.core.tributaryObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class Topic<T> extends TributaryObject {
     private Class<T> type;
     private List<Partition<T>> partitions;
@@ -37,13 +40,24 @@ public class Topic<T> extends TributaryObject {
         return partitions.stream().anyMatch(p -> p.getId().equals(partitionId));
     }
 
-    public void showTopic() {
-        System.out.println("Topic ID: " + getId());
+    public JSONObject showTopic() {
+        JSONObject topicJson = new JSONObject();
+
+        JSONArray partitionsArray = new JSONArray();
         for (Partition<T> partition : partitions) {
-            System.out.print("Partition ID: " + partition.getId() + " - Messages: ");
-            partition.listMessages().forEach(m -> System.out.print(m.getId() + ", "));
-            System.out.println();
+            JSONObject partitionJson = new JSONObject();
+
+            JSONArray messagesArray = new JSONArray();
+            for (Message<T> message : partition.listMessages()) {
+                messagesArray.put(message.getId());
+            }
+            partitionJson.put("messages", messagesArray);
+            partitionsArray.put(partitionJson);
+            partitionJson.put("id", partition.getId());
         }
-        System.out.println("\n--------------------------------------------------\n");
+        topicJson.put("partitions", partitionsArray);
+        topicJson.put("id", this.getId());
+
+        return topicJson;
     }
 }

@@ -1,0 +1,7 @@
+{
+    "eventId": "bananaFryDur",
+    "PayloadType": "Integer",
+    "messageContents": {
+        "duration": 3
+    }
+}

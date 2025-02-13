@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TributaryController",
+            "request": "launch",
+            "mainClass": "tributary.api.TributaryController",
+            "projectName": "app"
+        },
+        {
+            "type": "java",
             "name": "TokenManager",
             "request": "launch",
             "mainClass": "tributary.core.tokenManager.TokenManager",

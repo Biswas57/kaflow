@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONObject;
+
 import tributary.core.tributaryObject.producers.*;
 import tributary.core.rebalancingStrategy.RebalancingStrategy;
 import tributary.core.tokenManager.TokenManager;
@@ -212,13 +214,13 @@ public class TributaryController {
      *
      * @param topicId The identifier of the topic to display.
      */
-    public void showTopic(String topicId) {
+    public JSONObject showTopic(String topicId) {
         Topic<?> topic = cluster.getTopic(topicId);
-        if (topic != null) {
-            topic.showTopic();
-        } else {
+        if (topic == null) {
             System.out.println("Topic not found: " + topicId + "\n");
+            return null;
         }
+        return topic.showTopic();
     }
 
     /**
@@ -227,13 +229,14 @@ public class TributaryController {
      *
      * @param groupId The identifier of the consumer group to display.
      */
-    public void showGroup(String groupId) {
+    public JSONObject showGroup(String groupId) {
         ConsumerGroup<?> group = cluster.getConsumerGroup(groupId);
-        if (group != null) {
-            group.showGroup();
-        } else {
+        if (group == null) {
             System.out.println("Group " + groupId + " not found\n");
+            return null;
         }
+
+        return group.showGroup();
     }
 
     /*
@@ -250,21 +253,28 @@ public class TributaryController {
      * @param numberOfEvents The number of events to consume.
      */
     public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
+        // Find the consumer first
         Consumer<?> consumer = helper.findConsumer(consumerId);
-        Partition<?> partition = helper.findPartition(partitionId);
+        if (consumer == null) {
+            System.out.println("Consumer " + consumerId + " not found.\n");
+            return;
+        }
 
-        if (consumer == null || partition == null) {
-            System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.\n");
+        // Retrieve the partition from the consumer's assigned partitions
+        Partition<?> partition = consumer.getPartition(partitionId); // Ensure this method exists
+        if (partition == null) {
+            System.out.println("Partition " + partitionId + " not found for consumer " + consumerId + ".\n");
             return;
         }
 
         String topicId = partition.getAllocatedTopicId();
         Topic<?> topic = helper.getTopic(topicId);
         if (!helper.verifyConsumer(consumer, topic)) {
-            System.out.println("Consumer Group of Consumer does not have permission to consume from the topic.\n");
+            System.out.println("Consumer Group of consumer " + consumerId
+                    + " does not have permission to consume from topic " + topicId + ".\n");
             return;
         } else if (!consumer.listAssignedPartitions().contains(partition)) {
-            System.out.println("Consumer is not assigned to the partition.\n");
+            System.out.println("Consumer " + consumerId + " is not assigned to partition " + partitionId + ".\n");
             return;
         }
 
@@ -515,5 +525,53 @@ public class TributaryController {
         } catch (InterruptedException e) {
             System.err.println("Parallel consume interrupted: " + e.getMessage());
         }
+    }
+
+    public static void main(String[] args) {
+        TributaryController controller = new TributaryController();
+
+        // Create a topic "banana" with type "string"
+        controller.createTopic("banana", "string");
+
+        // Create partitions for the "banana" topic
+        controller.createPartition("banana", "bananaCookingMethod1");
+        controller.createPartition("banana", "bananaCookingMethod2");
+        controller.createPartition("banana", "bananaCookingMethod3");
+        controller.createPartition("banana", "bananaCookingStyle4");
+
+        // Create a consumer group "bananaChefs" for the "banana" topic
+        controller.createConsumerGroup("bananaChefs", "banana", "roundrobin");
+
+        // Create consumers within the "bananaChefs" group
+        controller.createConsumer("bananaChefs", "chef1");
+        controller.createConsumer("bananaChefs", "chef2");
+        controller.createConsumer("bananaChefs", "chef3");
+        controller.createConsumer("bananaChefs", "chef4");
+
+        // Create producers for the "banana" topic
+        controller.createProducer("bananaBoiler", "banana", "manual");
+        controller.createProducer("bananaFrier", "banana", "random");
+
+        // Create events using the JSON file names provided
+        try {
+            controller.createEvent("bananaBoiler", "banana", "blendBanana", "bananaCookingMethod3");
+            controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingStyle4");
+            controller.createEvent("bananaBoiler", "banana", "freezeBanana", "bananaCookingMethod1");
+            controller.createEvent("bananaFrier", "banana", "fryBanana", "bananaCookingMethod2");
+            controller.createEvent("bananaFrier", "banana", "grillBanana", "bananaCookingMethod3");
+            controller.createEvent("bananaFrier", "banana", "roastBanana", "bananaCookingStyle4");
+            controller.createEvent("bananaBoiler", "banana", "steamBanana", "bananaCookingMethod1");
+        } catch (IOException e) {
+            System.out.println(e);
+            e.printStackTrace();
+        }
+
+        // Retrieve JSON representations of the topic and consumer group
+        JSONObject topicJson = controller.showTopic("banana");
+        JSONObject groupJson = controller.showGroup("bananaChefs");
+
+        // Print the JSON outputs
+        System.out.println("Topic JSON:\n" + topicJson.toString(2));
+        System.out.println("Consumer Group JSON:\n" + groupJson.toString(2));
     }
 }

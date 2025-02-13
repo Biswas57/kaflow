@@ -1,0 +1,10 @@
+{
+    "eventId": "fryBanana",
+    "PayloadType": "String",
+    "messageContents": {
+        "medium": "Veg Oil",
+        "temperature": "180C",
+        "duration": "3mins",
+        "description": "Fry the banana in veg oil at 180C for 3 mins to make a banana fritter."
+    }
+}

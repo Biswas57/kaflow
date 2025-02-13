@@ -1,0 +1,9 @@
+{
+    "eventId": "blendBanana",
+    "PayloadType": "String",
+    "messageContents": {
+        "speed": "High",
+        "duration": "2 mins",
+        "description": "Blend the banana with ice on high speed for 2 mins to make a smoothie."
+    }
+}

@@ -4,10 +4,10 @@
     - Create Commands
     - Update Commands
     - Parallel Commands
-
-2. Change Error Messages to Exceptions
+2. Hashmaps of Tributary objects instead of Lists, memory yes higher but efficiency more
+3. Change Error Messages to Exceptions
     - idk how this will affect the system, maybe I have to catch to catch the error in the Springboot application
-3. Build spring boot App with the same number of endpoints as CLI commands
+4. Build spring boot App with the same number of endpoints as CLI commands
 
 
 Low Priority Changes:

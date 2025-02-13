@@ -49,13 +49,10 @@ public class Consumer<T> extends TributaryObject {
     }
 
     public void unassignPartition(String partitionId) {
-        for (Partition<T> partition : assignedPartitions) {
-            if (partition.getId().equals(partitionId)) {
-                assignedPartitions.remove(partition);
-                partition.removeOffset(this);
-                return;
-            }
-        }
+        Partition<T> partition = getPartition(partitionId);
+        assignedPartitions.remove(partition);
+        partition.removeOffset(this);
+        return;
     }
 
     public List<Partition<T>> listAssignedPartitions() {
@@ -64,5 +61,14 @@ public class Consumer<T> extends TributaryObject {
 
     public void clearAssignments() {
         this.assignedPartitions.clear();
+    }
+
+    public Partition<T> getPartition(String partitionId) {
+        for (Partition<T> partition : assignedPartitions) {
+            if (partition.getId().equals(partitionId)) {
+                return partition;
+            }
+        }
+        return null;
     }
 }
