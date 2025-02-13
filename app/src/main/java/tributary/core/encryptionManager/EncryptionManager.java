@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -18,17 +17,20 @@ public class EncryptionManager {
     private final long e; // Public key exponent
 
     public EncryptionManager() {
+        // Instead of these, I am going to parse the stored prime nums in the Consumer
         long p1 = Long.parseLong(PRIME1);
         long p2 = Long.parseLong(PRIME2);
 
         // Calculate modulus N
+        // int p1 = PrimeNumGenerator.generatePrime();
+        // int p2 = PrimeNumGenerator.generatePrime();
         n = p1 * p2;
 
         // Calculate Euler's totient φ(N)
         totient = getEulersTotient(p1, p2);
 
         // Choose e (public key) coprime with totient
-        e = generateCoprime(totient);
+        e = PrimeNumGenerator.generateCoprime(totient);
     }
 
     // RSA encryption with refined encoding
@@ -108,28 +110,6 @@ public class EncryptionManager {
         return x1;
     }
 
-    // Helper function to generate a coprime of n
-    public static long generateCoprime(long n) {
-        Random rand = new Random();
-        long coprime;
-
-        do {
-            coprime = rand.nextInt((int) (n - 1)) + 1;
-        } while (gcd(n, coprime) != 1);
-
-        return coprime;
-    }
-
-    // Helper function to calculate the GCD of two numbers
-    public static long gcd(long a, long b) {
-        while (b != 0) {
-            long temp = b;
-            b = a % b;
-            a = temp;
-        }
-        return a;
-    }
-
     public long getModulus() {
         return n;
     }
@@ -183,7 +163,7 @@ public class EncryptionManager {
     public static void main(String[] args) {
         EncryptionManager encryptionManager = new EncryptionManager();
 
-        String originalMessage = "NFDUSIFNIOWENOIFW";
+        String originalMessage = "100";
         System.out.println("Original Message: " + originalMessage);
 
         // Encrypt the message

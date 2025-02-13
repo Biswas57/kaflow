@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryTest2" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-11-04T22:02:55" hostname="bissi-smells.modem" time="0.014">
+<testsuite name="tributary.TributaryTest2" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-02-13T07:11:22" hostname="C02DC0J8ML7J" time="0.023">
   <properties/>
-  <testcase name="mainComplexTest()" classname="tributary.TributaryTest2" time="0.014"/>
+  <testcase name="mainComplexTest()" classname="tributary.TributaryTest2" time="0.023"/>
   <system-out><![CDATA[Created Integer topic with ID: banana
 
 Created partition with ID: bananaCookingMethod1 for topic: banana
@@ -28,7 +28,7 @@ Created consumer with ID: beginnerChef3 for group: bananaChefs group
 
 class java.lang.Integer
 class java.lang.Integer
-The event: bananaBoilingNums has been randomly allocated to partition bananaCookingMethod2.
+The event: bananaBoilingNums has been randomly allocated to partition bananaCookingStyle4.
 
 The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod3.
 
@@ -59,19 +59,19 @@ Consumed 1 messages.
 Not enough messages to consume.
 Consumed 0 messages.
 
+The event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+
 The event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
 
-The event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
+The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
+duration = 3
+temperature = 180
+Consumed 1 messages.
 
 Consumer is not assigned to the partition.
 
 The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
 duration = 3
-Consumed 1 messages.
-
-The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 3
-temperature = 180
 Consumed 1 messages.
 
 ]]></system-out>

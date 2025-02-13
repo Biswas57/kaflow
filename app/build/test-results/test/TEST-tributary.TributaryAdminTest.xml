@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="tributary.TributaryAdminTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2024-11-04T22:02:55" hostname="bissi-smells.modem" time="0.066">
+<testsuite name="tributary.TributaryAdminTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-02-13T07:11:22" hostname="C02DC0J8ML7J" time="0.233">
   <properties/>
-  <testcase name="testUpdateAdminPermissions()" classname="tributary.TributaryAdminTest" time="0.025"/>
-  <testcase name="testAdminAccessControlVerification()" classname="tributary.TributaryAdminTest" time="0.006"/>
-  <testcase name="testRebalanceAfterAdminChange()" classname="tributary.TributaryAdminTest" time="0.004"/>
-  <testcase name="testAdminProductionAndConsumption()" classname="tributary.TributaryAdminTest" time="0.02"/>
-  <testcase name="testRevokeAdminPermissionsOnChange()" classname="tributary.TributaryAdminTest" time="0.003"/>
-  <testcase name="testCreateAndChangeAdmins()" classname="tributary.TributaryAdminTest" time="0.003"/>
-  <testcase name="testInvalidAdminAssignmentWithoutPermissions()" classname="tributary.TributaryAdminTest" time="0.003"/>
+  <testcase name="testUpdateAdminPermissions()" classname="tributary.TributaryAdminTest" time="0.09"/>
+  <testcase name="testAdminAccessControlVerification()" classname="tributary.TributaryAdminTest" time="0.022"/>
+  <testcase name="testRebalanceAfterAdminChange()" classname="tributary.TributaryAdminTest" time="0.019"/>
+  <testcase name="testAdminProductionAndConsumption()" classname="tributary.TributaryAdminTest" time="0.063"/>
+  <testcase name="testRevokeAdminPermissionsOnChange()" classname="tributary.TributaryAdminTest" time="0.012"/>
+  <testcase name="testCreateAndChangeAdmins()" classname="tributary.TributaryAdminTest" time="0.012"/>
+  <testcase name="testInvalidAdminAssignmentWithoutPermissions()" classname="tributary.TributaryAdminTest" time="0.008"/>
   <system-out><![CDATA[Created String topic with ID: banana1
 
 Created partition with ID: bananaFryingMethod1 for topic: banana1

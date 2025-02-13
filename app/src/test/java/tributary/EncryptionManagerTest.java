@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import tributary.core.encryptionManager.EncryptionManager;
+import tributary.core.encryptionManager.PrimeNumGenerator;
 import tributary.core.typeHandlerFactory.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -79,24 +80,24 @@ class EncryptionManagerTest {
     @Test
     void testGenerateCoprime() {
         long n = 40;
-        long coprime = EncryptionManager.generateCoprime(n);
+        long coprime = PrimeNumGenerator.generateCoprime(n);
 
-        assertEquals(1, EncryptionManager.gcd(n, coprime), "Generated coprime should have a GCD of 1 with n");
+        assertEquals(1, PrimeNumGenerator.gcd(n, coprime), "Generated coprime should have a GCD of 1 with n");
     }
 
     @Test
     void testGenerateCoprimeEdgeCases() {
         long n = 2;
-        long coprime = EncryptionManager.generateCoprime(n);
+        long coprime = PrimeNumGenerator.generateCoprime(n);
 
-        assertEquals(1, EncryptionManager.gcd(n, coprime), "Generated coprime for n=2 should have a GCD of 1 with n");
+        assertEquals(1, PrimeNumGenerator.gcd(n, coprime), "Generated coprime for n=2 should have a GCD of 1 with n");
     }
 
     @Test
     void testGCD() {
-        assertEquals(5, EncryptionManager.gcd(35, 10), "GCD of 35 and 10 should be 5");
-        assertEquals(1, EncryptionManager.gcd(17, 4), "GCD of 17 and 4 should be 1 (coprime)");
-        assertEquals(4, EncryptionManager.gcd(8, 4), "GCD of 8 and 4 should be 4");
+        assertEquals(5, PrimeNumGenerator.gcd(35, 10), "GCD of 35 and 10 should be 5");
+        assertEquals(1, PrimeNumGenerator.gcd(17, 4), "GCD of 17 and 4 should be 1 (coprime)");
+        assertEquals(4, PrimeNumGenerator.gcd(8, 4), "GCD of 8 and 4 should be 4");
     }
 
     @Test
@@ -215,10 +216,13 @@ class EncryptionManagerTest {
         assertEquals(numericString, handler.stringToValue(decrypted));
     }
 
+    /*
+     * This is to check that even when decrypting the 
+     */
     @Test
     void testDecryptOnly() {
         IntegerHandler handler = new IntegerHandler();
-        String payload5 = "69041";
+        String payload5 = "831";
         publicKey = 39599;
 
         String decrypted = encryptionManager.decrypt(payload5, publicKey);
@@ -227,7 +231,7 @@ class EncryptionManagerTest {
         int number = handler.stringToValue(decrypted);
         assertEquals(5, number);
 
-        String payload100 = "24688 67794 67794";
+        String payload100 = "615 990 990";
         publicKey = 39599;
 
         decrypted = encryptionManager.decrypt(payload100, publicKey);

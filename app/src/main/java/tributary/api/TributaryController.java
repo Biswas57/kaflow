@@ -232,7 +232,7 @@ public class TributaryController {
         if (group != null) {
             group.showGroup();
         } else {
-            System.out.println("Group not found: " + groupId + "\n");
+            System.out.println("Group " + groupId + " not found\n");
         }
     }
 
