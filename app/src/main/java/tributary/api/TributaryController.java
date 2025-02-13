@@ -252,19 +252,19 @@ public class TributaryController {
      * @param partitionId    The identifier of the partition to consume from.
      * @param numberOfEvents The number of events to consume.
      */
-    public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
+    public JSONObject consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
         // Find the consumer first
         Consumer<?> consumer = helper.findConsumer(consumerId);
         if (consumer == null) {
             System.out.println("Consumer " + consumerId + " not found.\n");
-            return;
+            return null;
         }
 
         // Retrieve the partition from the consumer's assigned partitions
         Partition<?> partition = consumer.getPartition(partitionId); // Ensure this method exists
         if (partition == null) {
             System.out.println("Partition " + partitionId + " not found for consumer " + consumerId + ".\n");
-            return;
+            return null;
         }
 
         String topicId = partition.getAllocatedTopicId();
@@ -272,19 +272,20 @@ public class TributaryController {
         if (!helper.verifyConsumer(consumer, topic)) {
             System.out.println("Consumer Group of consumer " + consumerId
                     + " does not have permission to consume from topic " + topicId + ".\n");
-            return;
-        } else if (!consumer.listAssignedPartitions().contains(partition)) {
-            System.out.println("Consumer " + consumerId + " is not assigned to partition " + partitionId + ".\n");
-            return;
+            return null;
         }
 
+        JSONObject data;
         if (topic.getType().equals(Integer.class)) {
-            helper.consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);
+            data = helper.consumeEventsGeneric(consumer, partition, Integer.class, numberOfEvents);
         } else if (topic.getType().equals(String.class)) {
-            helper.consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);
+            data = helper.consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);
         } else {
             System.out.println("Unsupported type: " + topic.getType().getSimpleName() + "\n");
-        }
+            return null;
+        } 
+
+        return data;
     }
 
     /*
@@ -554,12 +555,12 @@ public class TributaryController {
 
         // Create events using the JSON file names provided
         try {
-            controller.createEvent("bananaBoiler", "banana", "blendBanana", "bananaCookingMethod3");
-            controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingStyle4");
+            controller.createEvent("bananaBoiler", "banana", "blendBanana", "bananaCookingMethod1");
+            controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingStyle1");
             controller.createEvent("bananaBoiler", "banana", "freezeBanana", "bananaCookingMethod1");
-            controller.createEvent("bananaFrier", "banana", "fryBanana", "bananaCookingMethod2");
-            controller.createEvent("bananaFrier", "banana", "grillBanana", "bananaCookingMethod3");
-            controller.createEvent("bananaFrier", "banana", "roastBanana", "bananaCookingStyle4");
+            controller.createEvent("bananaFrier", "banana", "fryBanana", null);
+            controller.createEvent("bananaFrier", "banana", "grillBanana", null);
+            controller.createEvent("bananaFrier", "banana", "roastBanana", null);
             controller.createEvent("bananaBoiler", "banana", "steamBanana", "bananaCookingMethod1");
         } catch (IOException e) {
             System.out.println(e);
@@ -567,11 +568,11 @@ public class TributaryController {
         }
 
         // Retrieve JSON representations of the topic and consumer group
-        JSONObject topicJson = controller.showTopic("banana");
-        JSONObject groupJson = controller.showGroup("bananaChefs");
+        JSONObject consume1 = controller.consumeEvents("chef1", "bananaCookingMethod1", 1);
+        JSONObject consumeMultiple = controller.consumeEvents("chef1", "bananaCookingMethod1", 4);
 
         // Print the JSON outputs
-        System.out.println("Topic JSON:\n" + topicJson.toString(2));
-        System.out.println("Consumer Group JSON:\n" + groupJson.toString(2));
+        System.out.println(consume1.toString(2));
+        System.out.println(consumeMultiple.toString(2));
     }
 }

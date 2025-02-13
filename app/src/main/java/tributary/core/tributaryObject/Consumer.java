@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONObject;
+
 import tributary.core.encryptionManager.EncryptionManager;
 import tributary.core.typeHandlerFactory.TypeHandler;
 import tributary.core.typeHandlerFactory.TypeHandlerFactory;
@@ -19,24 +21,44 @@ public class Consumer<T> extends TributaryObject {
         this.assignedPartitions = new ArrayList<>();
     }
 
-    public void consume(Message<T> message, Partition<T> partition) {
-        StringBuilder contentBuilder = new StringBuilder();
-        TypeHandler<T> handler = TypeHandlerFactory.getHandler(message.getPayloadType());
+    /**
+     * Consumes a message from the specified partition, decrypts its content, and returns the
+     * result as a JSONObject.
+     *
+     * @param message   The message to be consumed.
+     * @param partition The partition from which the message is consumed.
+     * @return A JSONObject containing the message id, creation date, decrypted content,
+     *         and the id of the consuming consumer.
+     */
+    public JSONObject consume(Message<T> message, Partition<T> partition) {
+        // Create a JSON object to hold decrypted content
+        JSONObject contentJson = new JSONObject();
+        Class<T> type = message.getPayloadType();
+        TypeHandler<T> handler = TypeHandlerFactory.getHandler(type);
 
+        // For each entry in the message content, decrypt the value and add it to the JSON object
         for (Map.Entry<String, String> entry : message.getContent().entrySet()) {
             String encrypted = entry.getValue();
             String decrypted = encryptionManager.decrypt(encrypted, message.getPublicKey());
-            Object value = handler.stringToValue(decrypted);
-            contentBuilder.append(entry.getKey()).append(" = ").append(handler.handle(value)).append("\n");
+            Object value = handler.handle(decrypted);
+            contentJson.put(entry.getKey(), value);
         }
 
-        if (contentBuilder.length() > 0) {
-            contentBuilder.setLength(contentBuilder.length() - 1);
-        }
-
-        System.out.println("The event: " + message.getId() + " has been consumed by consumer " + getId()
-                + ". It contains the contents:\n" + contentBuilder);
+        // Update partition offset for this consumer
         partition.setOffset(this, partition.getOffset(this) + 1);
+
+        // Include header as part of return data
+        JSONObject headerJson = new JSONObject();
+        headerJson.put("messageId", message.getId());
+        headerJson.put("createdDate", message.getCreatedDate().toString());
+        headerJson.put("payloadType", type.getSimpleName());
+
+        // Create the result JSON object
+        JSONObject result = new JSONObject();
+        result.put("header", headerJson);
+        result.put("content", contentJson);
+
+        return result;
     }
 
     public String getGroup() {

@@ -2,6 +2,9 @@ package tributary.api;
 
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import tributary.core.tributaryObject.producers.*;
 import tributary.core.tributaryFactory.*;
 import tributary.core.tributaryObject.AdminObject;
@@ -108,24 +111,27 @@ public class TributaryHelper {
      * They are specific to the process of consuming events.
      */
 
-    public <T> void consumeEventsGeneric(Consumer<?> consumer, Partition<?> partition, Class<T> type,
+    public <T> JSONObject consumeEventsGeneric(Consumer<?> consumer, Partition<?> partition, Class<T> type,
             int numberOfEvents) {
         @SuppressWarnings("unchecked")
         Consumer<T> typedConsumer = (Consumer<T>) consumer;
         @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
         synchronized (typedPartition) {
-            consumeHelper(typedConsumer, typedPartition, numberOfEvents);
+            return consumeHelper(typedConsumer, typedPartition, numberOfEvents);
         }
     }
 
-    private <T> void consumeHelper(Consumer<T> consumer, Partition<T> partition, int numberOfEvents) {
+    private <T> JSONObject consumeHelper(Consumer<T> consumer, Partition<T> partition, int numberOfEvents) {
         List<Message<T>> messages = partition.listMessages();
         int currentOffset = partition.getOffset(consumer);
         int count = 0;
 
+        JSONArray eventsArray = new JSONArray();
+
         for (int i = currentOffset; i < messages.size() && count < numberOfEvents; i++, count++) {
-            consumer.consume(messages.get(i), partition);
+            JSONObject eventJson = consumer.consume(messages.get(i), partition);
+            eventsArray.put(eventJson);
         }
 
         if (count < numberOfEvents) {
@@ -133,6 +139,11 @@ public class TributaryHelper {
         } else {
             System.out.println("Consumed " + count + " messages.\n");
         }
+
+        JSONObject result = new JSONObject();
+        result.put("events", eventsArray);
+
+        return result;
     }
 
     public boolean verifyConsumer(Consumer<?> consumer, Topic<?> topic) {
