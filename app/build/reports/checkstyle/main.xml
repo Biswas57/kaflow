@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <checkstyle version="10.3.3">
+<<<<<<< Updated upstream
 <file name="/Users/biswas.simkhada/Desktop/kaflow/app/src/main/java/tributary/core/encryptionManager/EncryptionManager.java">
 <error line="88" column="9" severity="error" message="Each variable declaration must be in its own statement." source="com.puppycrawl.tools.checkstyle.checks.coding.MultipleVariableDeclarationsCheck"/>
 </file>
@@ -69,5 +70,69 @@
 <file name="/Users/biswas.simkhada/Desktop/kaflow/app/src/main/java/tributary/api/TributaryController.java">
 </file>
 <file name="/Users/biswas.simkhada/Desktop/kaflow/app/src/main/java/tributary/api/TributaryHelper.java">
+=======
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/encryptionManager/EncryptionManager.java">
+<error line="12" column="33" severity="error" message="Name &apos;dotenv&apos; must match pattern &apos;^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$&apos;." source="com.puppycrawl.tools.checkstyle.checks.naming.ConstantNameCheck"/>
+<error line="85" column="9" severity="error" message="Each variable declaration must be in its own statement." source="com.puppycrawl.tools.checkstyle.checks.coding.MultipleVariableDeclarationsCheck"/>
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/Message.java">
+<error line="19" column="17" severity="error" message="Variable &apos;publicKey&apos; must be private and have accessor methods." source="com.puppycrawl.tools.checkstyle.checks.design.VisibilityModifierCheck"/>
+<error line="21" column="48" severity="error" message="Name &apos;typeMap&apos; must match pattern &apos;^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$&apos;." source="com.puppycrawl.tools.checkstyle.checks.naming.ConstantNameCheck"/>
+<error line="22" column="44" severity="error" message="Name &apos;encryptionManager&apos; must match pattern &apos;^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$&apos;." source="com.puppycrawl.tools.checkstyle.checks.naming.ConstantNameCheck"/>
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/producers/ManualProducer.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/producers/RandomProducer.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/producers/Producer.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/Consumer.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/TributaryCluster.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/ConsumerGroup.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/Partition.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/Topic.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/AdminObject.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryObject/TributaryObject.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryFactory/IntegerFactory.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryFactory/StringFactory.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tributaryFactory/ObjectFactory.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/rebalancingStrategy/RebalancingStrategy.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/rebalancingStrategy/RoundRobinStrategy.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/rebalancingStrategy/RangeStrategy.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/typeHandlerFactory/StringHandler.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/typeHandlerFactory/TypeHandler.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/typeHandlerFactory/IntegerHandler.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/typeHandlerFactory/ByteHandler.java">
+<error line="1" severity="error" message="File does not end with a newline." source="com.puppycrawl.tools.checkstyle.checks.NewlineAtEndOfFileCheck"/>
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/typeHandlerFactory/TypeHandlerFactory.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/core/tokenManager/TokenManager.java">
+<error line="9" column="33" severity="error" message="Name &apos;dotenv&apos; must match pattern &apos;^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$&apos;." source="com.puppycrawl.tools.checkstyle.checks.naming.ConstantNameCheck"/>
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/cli/MessageHandler.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/cli/TributaryCLI.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/api/TributaryController.java">
+</file>
+<file name="/Users/biswas.simk/Desktop/GitHub Personal Projects for Resume/kaflow/app/src/main/java/tributary/api/TributaryHelper.java">
+>>>>>>> Stashed changes
 </file>
 </checkstyle>

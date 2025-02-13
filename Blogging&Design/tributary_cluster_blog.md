@@ -439,17 +439,21 @@ Optimized system, Implemented Security features.
 
 ### 12/02/2025
 **Complete this weekend**
-### 29/01/2025
-**Future Goals**
-- Implement TokenManager testing suite.
+- Use Hashmap data structure Arrays 
 - Turn Tributary cluster in to an end-to-end application
-    - SCRATCHED THIS IDEA: Figure out how to make Tributary Cluster a proper published Java Library
+    - Figure out how to make Tributary Cluster a proper published Java Library (SCRATCHED THIS IDEA!!!!)
     - Probably using springboot for this
-    - Need to figure out what exactly are the consumers and producers and what is means to send a message to the broker and how is it consumed
+    - Consumers and producers will each have a separate instance of such classes 
+    - to send a message to the broker will mean for the producer application to send a POST request to the broker which the consumer will either consumer through a Push or Pull based consumption of messages in the broker
     - does this require web sockets? connections to specific IP's? how should I do this, who do I talk to?
-    - will i need to change all the outputs in the application to returnable strings instead of something that prints out to the std output?
-- Make first producer and Consumer Group created the admins
+    - will i need to change all the outputs in the application to returnable strings instead of something that prints out to the std output? Yes.
 - Implement Byte type handling
-- Implement return Strings instead of stdout (maybe)
+- Implement return Strings instead of stdout
+
+**Future Goals**
+- Make first producer and Consumer Group created the admins
 - Add message log for Admin Producer and Admin Consumer Group for added security incase of a breach.
 - Implement a mechanism that locks an account or restricts access after a certain number of failed login attempts to prevent brute force attacks. maybe?
+- Implement TokenManager testing suite.
+
+
