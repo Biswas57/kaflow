@@ -329,9 +329,7 @@ public class TributaryAPI {
     @PostMapping("/parallel/consume")
     public ResponseEntity<JSONObject> parallelConsume(@RequestBody String commands) {
         String[] parts = commands.split("\\s+");
-        controller.parallelConsume(parts);
-        JSONObject response = new JSONObject();
-        response.put("message", "Parallel consumption executed.");
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        JSONObject result = controller.parallelConsume(parts);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }
