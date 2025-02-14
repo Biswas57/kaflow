@@ -24,8 +24,7 @@ import tributary.core.tributaryObject.*;
  * This class represents the main controller for managing and interacting with
  * the components of the Tributary Cluster. It provides functionality to create,
  * update, and manage topics, partitions, producers, consumers, and consumer
- * groups,
- * as well as supporting parallel operations and event consumption.
+ * groups, as well as supporting parallel operations and event consumption.
  */
 public class TributaryController {
     private TributaryCluster cluster;
@@ -50,7 +49,7 @@ public class TributaryController {
     public void setObjectFactoryType(String type) throws IllegalArgumentException {
         Class<?> typeClass = typeMap.get(type);
         if (typeClass == null) {
-            throw new IllegalArgumentException("Unsupported type: " + type + "\n");
+            throw new IllegalArgumentException("Unsupported type: " + type);
         }
         this.objectFactory = (typeClass.equals(Integer.class)) ? new IntegerFactory() : new StringFactory();
     }
@@ -60,8 +59,7 @@ public class TributaryController {
     }
 
     /*
-     * All creation methods for Objects in the Tributary Cluster .
-     * These methods are all streamlines to the ObjectFactory class.
+     * Creation methods for objects in the Tributary Cluster.
      */
 
     /**
@@ -74,8 +72,7 @@ public class TributaryController {
      */
     public void createTopic(String topicId, String type) throws IllegalArgumentException {
         if (helper.getTopic(topicId) != null) {
-            System.out.println("Topic " + topicId + " already exists.\n");
-            return;
+            throw new IllegalArgumentException("Topic " + topicId + " already exists.");
         }
         setObjectFactoryType(type);
         objectFactory.createTopic(topicId);
@@ -92,11 +89,10 @@ public class TributaryController {
     public void createPartition(String topicId, String partitionId) throws IllegalArgumentException {
         Topic<?> topic = helper.getTopic(topicId);
         if (topic == null) {
-            System.out.println("Topic " + topicId + " does not exist.");
-            return;
+            throw new IllegalArgumentException("Topic " + topicId + " does not exist.");
         } else if (topic.containsPartition(partitionId)) {
-            System.out.println("Partition " + partitionId + " already exists in topic.\n");
-            return;
+            throw new IllegalArgumentException(
+                    "Partition " + partitionId + " already exists in topic " + topicId + ".");
         }
         String topicType = helper.getTopicType(topicId);
         setObjectFactoryType(topicType);
@@ -116,10 +112,8 @@ public class TributaryController {
     public void createConsumerGroup(String groupId, String topicId, String rebalancing)
             throws IllegalArgumentException {
         if (helper.getConsumerGroup(groupId) != null) {
-            System.out.println("Consumer group " + groupId + " already exists.\n");
-            return;
+            throw new IllegalArgumentException("Consumer group " + groupId + " already exists.");
         }
-
         String type = helper.getTopicType(topicId);
         setObjectFactoryType(type);
         objectFactory.createConsumerGroup(groupId, topicId, rebalancing);
@@ -135,8 +129,7 @@ public class TributaryController {
     public void createConsumer(String groupId, String consumerId) throws IllegalArgumentException {
         ConsumerGroup<?> group = helper.getConsumerGroup(groupId);
         if (group.containsConsumer(consumerId)) {
-            System.out.println("Consumer " + consumerId + "already exists in the group.\n");
-            return;
+            throw new IllegalArgumentException("Consumer " + consumerId + " already exists in group " + groupId + ".");
         }
         String topicType = helper.getTopicType(group.getAssignedTopics().get(0).getId());
         setObjectFactoryType(topicType);
@@ -150,7 +143,7 @@ public class TributaryController {
      * @param topicId    The topic the producer will publish to.
      * @param allocation The method of partition allocation (e.g., "random",
      *                   "manual").
-     * @throws IllegalArgumentException if the producer creation fails due to type
+     * @throws IllegalArgumentException if the producer creation fails due to a type
      *                                  mismatch.
      */
     public void createProducer(String producerId, String topicId, String allocation) throws IllegalArgumentException {
@@ -164,7 +157,7 @@ public class TributaryController {
      *
      * @param producerId  The identifier of the producer.
      * @param topicId     The topic to publish the event to.
-     * @param eventId     The event identifier (filename or other identifier).
+     * @param eventId     The event identifier (e.g., filename).
      * @param partitionId The partition identifier (optional).
      * @throws IOException if event creation fails.
      */
@@ -173,14 +166,11 @@ public class TributaryController {
         Producer<?> producer = helper.getProducer(producerId);
         Topic<?> topic = helper.getTopic(topicId);
         if (producer == null || topic == null) {
-            System.out.println("Producer " + producerId + " or topic " + topicId + " not found.\n");
-            return;
+            throw new IllegalArgumentException("Producer " + producerId + " or topic " + topicId + " not found.");
         } else if (!helper.verifyProducer(producer, topic)) {
-            System.out.println("Producer does not have permission to produce to this topic.\n");
-            return;
+            throw new IllegalArgumentException("Producer does not have permission to produce to this topic.");
         } else if (!topic.getType().equals(producer.getType())) {
-            System.out.println("Producer type does not match topic type.\n");
-            return;
+            throw new IllegalArgumentException("Producer type does not match topic type.");
         }
 
         synchronized (topic) {
@@ -189,12 +179,6 @@ public class TributaryController {
             objectFactory.createEvent(producerId, topicId, eventId, partitionId);
         }
     }
-
-    /*
-     * The delete consumer method is the only delete method so far.
-     * This method is to demonstrate the ability for consumer groups to automatially
-     * rebalance once a consumer is deleted.
-     */
 
     /**
      * Deletes a consumer from the Tributary Cluster and triggers a rebalance in its
@@ -206,49 +190,37 @@ public class TributaryController {
         cluster.deleteConsumer(consumerId);
     }
 
-    /*
-     * Show the entirety of Topic and ConsumerGroup objects.
-     * Consumer Groups will show the group, the consumers and the partitions
-     * assigned to each consumer.
-     * Topics will show the topic, the partitions and the respective events in order
-     * of consumption in eahc partition.
-     */
-
     /**
-     * Displays assigned partitions and messages of a specified topic.
+     * Returns a JSON representation of a specified topic, including its partitions
+     * and messages.
      *
      * @param topicId The identifier of the topic to display.
+     * @return A JSONObject representing the topic.
+     * @throws IllegalArgumentException if the topic is not found.
      */
     public JSONObject showTopic(String topicId) {
         Topic<?> topic = cluster.getTopic(topicId);
         if (topic == null) {
-            System.out.println("Topic not found: " + topicId + "\n");
-            return null;
+            throw new IllegalArgumentException("Topic " + topicId + " not found.");
         }
         return topic.showTopic();
     }
 
     /**
-     * Displays consumers and consumer partition assignments in a specified consumer
-     * group.
+     * Returns a JSON representation of a specified consumer group, including its
+     * consumers and their assigned partitions.
      *
      * @param groupId The identifier of the consumer group to display.
+     * @return A JSONObject representing the consumer group.
+     * @throws IllegalArgumentException if the group is not found.
      */
     public JSONObject showGroup(String groupId) {
         ConsumerGroup<?> group = cluster.getConsumerGroup(groupId);
         if (group == null) {
-            System.out.println("Group " + groupId + " not found\n");
-            return null;
+            throw new IllegalArgumentException("Group " + groupId + " not found.");
         }
-
         return group.showGroup();
     }
-
-    /*
-     * Consume events method. This method is used to consume events from a
-     * specified partition using a specified consumer and the number of events to
-     * consume.
-     */
 
     /**
      * Consumes events from a specified partition using a consumer.
@@ -256,28 +228,29 @@ public class TributaryController {
      * @param consumerId     The identifier of the consumer.
      * @param partitionId    The identifier of the partition to consume from.
      * @param numberOfEvents The number of events to consume.
+     * @return A JSONObject containing the consumed events.
+     * @throws IllegalArgumentException if the consumer or partition is not found,
+     *                                  or if access is denied.
      */
     public JSONObject consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
         // Find the consumer first
         Consumer<?> consumer = helper.findConsumer(consumerId);
         if (consumer == null) {
-            System.out.println("Consumer " + consumerId + " not found.\n");
-            return null;
+            throw new IllegalArgumentException("Consumer " + consumerId + " not found.");
         }
 
         // Retrieve the partition from the consumer's assigned partitions
-        Partition<?> partition = consumer.getPartition(partitionId); // Ensure this method exists
+        Partition<?> partition = consumer.getPartition(partitionId);
         if (partition == null) {
-            System.out.println("Partition " + partitionId + " not found for consumer " + consumerId + ".\n");
-            return null;
+            throw new IllegalArgumentException(
+                    "Partition " + partitionId + " not found for consumer " + consumerId + ".");
         }
 
         String topicId = partition.getAllocatedTopicId();
         Topic<?> topic = helper.getTopic(topicId);
         if (!helper.verifyConsumer(consumer, topic)) {
-            System.out.println("Consumer Group of consumer " + consumerId
-                    + " does not have permission to consume from topic " + topicId + ".\n");
-            return null;
+            throw new IllegalArgumentException("Consumer Group of consumer " + consumerId
+                    + " does not have permission to consume from topic " + topicId + ".");
         }
 
         JSONObject data;
@@ -286,19 +259,11 @@ public class TributaryController {
         } else if (topic.getType().equals(String.class)) {
             data = helper.consumeEventsGeneric(consumer, partition, String.class, numberOfEvents);
         } else {
-            System.out.println("Unsupported type: " + topic.getType().getSimpleName() + "\n");
-            return null;
+            throw new IllegalArgumentException("Unsupported type: " + topic.getType().getSimpleName());
         }
 
         return data;
     }
-
-    /*
-     * All update operations to update the state of Tributary objects.
-     * Update the rebalancing strategy for a consumer group.
-     * Update the Offset of a consumer to allow for message replay.
-     * Update the admin token for a consumer group or producer.
-     */
 
     /**
      * Updates the rebalancing strategy of a consumer group.
@@ -309,14 +274,17 @@ public class TributaryController {
      */
     public void updateRebalancing(String groupId, String rebalancing) {
         ConsumerGroup<?> group = helper.getConsumerGroup(groupId);
+        if (group == null) {
+            throw new IllegalArgumentException("Consumer group " + groupId + " not found.");
+        }
         RebalancingStrategy<?> prevMethod = group.getRebalanceMethod();
         group.setRebalancingMethod(rebalancing);
         group.rebalance();
 
         RebalancingStrategy<?> currMethod = group.getRebalanceMethod();
         if (prevMethod.equals(currMethod)) {
-            System.out.println("Updated the rebalancing strategy for the "
-                    + groupId + " group to " + currMethod.toString() + " rebalancing\n");
+            System.out.println("Updated the rebalancing strategy for the " + groupId
+                    + " group to " + currMethod.toString() + " rebalancing");
         }
     }
 
@@ -334,8 +302,7 @@ public class TributaryController {
         Topic<?> topic = helper.getTopic(partition.getAllocatedTopicId());
 
         if (consumer == null || partition == null || topic == null) {
-            System.out.println("Consumer, partition, or topic not found.\n");
-            return;
+            throw new IllegalArgumentException("Consumer, partition, or topic not found.");
         }
         helper.updatePartitionOffsetGeneric(consumer, partition, offset);
     }
@@ -350,11 +317,9 @@ public class TributaryController {
     public void updateConsumerGroupAdmin(String newGroupId, String oldGroupId, String password) {
         ConsumerGroup<?> oldGroup = helper.getConsumerGroup(oldGroupId);
         if (oldGroup == null && cluster.getAdminConsToken() != null) {
-            System.out.println("Admin token exists but old Admin could not be identified.\n");
-            return;
+            throw new IllegalArgumentException("Admin token exists but old Admin could not be identified.");
         } else if (oldGroup != null && cluster.getAdminConsToken() == null) {
-            System.out.println("Old admin token not found.\n");
-            return;
+            throw new IllegalArgumentException("Old admin token not found.");
         } else if (oldGroup != null && cluster.getAdminConsToken() != null) {
             oldGroup.clearAssignments();
             oldGroup.setToken(null);
@@ -362,15 +327,13 @@ public class TributaryController {
 
             String token = cluster.getAdminConsToken();
             if (!TokenManager.validateToken(token, oldGroup.getId(), oldGroup.getCreatedTime(), password)) {
-                System.out.println("Incorrect token for old Consumer Group Admin.\n");
-                return;
+                throw new IllegalArgumentException("Incorrect token for old Consumer Group Admin.");
             }
         }
 
         ConsumerGroup<?> newGroup = helper.getConsumerGroup(newGroupId);
         if (newGroup == null) {
-            System.out.println("New Consumer Group Admin " + newGroupId + " not found.\n");
-            return;
+            throw new IllegalArgumentException("New Consumer Group Admin " + newGroupId + " not found.");
         }
 
         String token = TokenManager.generateToken(newGroup.getId(), newGroup.getCreatedTime());
@@ -392,26 +355,22 @@ public class TributaryController {
     public void updateProducerAdmin(String newProdId, String oldProdId, String password) {
         Producer<?> oldProd = helper.getProducer(oldProdId);
         if (oldProd == null && cluster.getAdminProdToken() != null) {
-            System.out.println("Admin token exists but old Admin could not be identified.\n");
-            return;
+            throw new IllegalArgumentException("Admin token exists but old Admin could not be identified.");
         } else if (oldProd != null && cluster.getAdminProdToken() == null) {
-            System.out.println("Old admin token not found.\n");
-            return;
+            throw new IllegalArgumentException("Old admin token not found.");
         } else if (oldProd != null && cluster.getAdminProdToken() != null) {
             oldProd.clearAssignments();
             oldProd.setToken(null);
 
             String token = cluster.getAdminProdToken();
             if (!TokenManager.validateToken(token, oldProd.getId(), oldProd.getCreatedTime(), password)) {
-                System.out.println("Invalid token for old Producer Admin.\n");
-                return;
+                throw new IllegalArgumentException("Invalid token for old Producer Admin.");
             }
         }
 
         Producer<?> newProd = helper.getProducer(newProdId);
         if (newProd == null) {
-            System.out.println("New Producer Admin " + newProdId + " not found.\n");
-            return;
+            throw new IllegalArgumentException("New Producer Admin " + newProdId + " not found.");
         }
 
         String token = TokenManager.generateToken(newProd.getId(), newProd.getCreatedTime());
@@ -421,24 +380,16 @@ public class TributaryController {
         newProd.showTopics();
     }
 
-    /*
-     * All parallel operations.
-     * Parallel produce events.
-     * Parallel consume events in a partition.
-     * Parallel operations demonstrate the system's ability to hand multiple
-     * concurrent threads.
-     */
-
     /**
      * Produces a series of events in parallel.
      *
-     * @param parts An array of parameters for the producers events topics and
+     * @param parts An array of parameters for the producer's events, topics, and
      *              partitions.
+     * @throws IOException          if event creation fails.
+     * @throws InterruptedException if the thread is interrupted.
      */
     public void parallelProduce(String[] parts) throws IOException, InterruptedException {
         ExecutorService executorService = Executors.newCachedThreadPool();
-        // Create a list to hold Future<?> objects if you want to process exceptions
-        // later
         List<Future<?>> futures = new ArrayList<>();
 
         for (int i = 0; i < parts.length;) {
@@ -471,7 +422,6 @@ public class TributaryController {
             }
 
             final String finalPartitionId = partitionId;
-            // Submit a Callable that can throw IOException
             Future<?> future = executorService.submit(() -> {
                 try {
                     createEvent(producerId, topicId, eventFile, finalPartitionId);
@@ -485,7 +435,6 @@ public class TributaryController {
         executorService.shutdown();
         executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
-        // Process futures to rethrow IOException if present
         for (Future<?> future : futures) {
             try {
                 future.get();
@@ -503,9 +452,9 @@ public class TributaryController {
     /**
      * Consumes events in parallel from multiple partitions as specified by the
      * command parts.
-     * Returns a JSON object with an "events" key that maps to a JSON array
-     * containing the
-     * consumption result for each consumer (with the consumer's id as the key).
+     * Returns a JSON object with an "events" key mapping to a JSON array containing
+     * the
+     * consumption results for each consumer (with the consumer's id as the key).
      *
      * @param parts An array of parameters for the consumer events and the number of
      *              events to consume.
@@ -523,8 +472,8 @@ public class TributaryController {
             Partition<?> partition = helper.findPartition(partitionId);
             Consumer<?> consumer = helper.findConsumer(consumerId);
             if (consumer == null || partition == null) {
-                System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.\n");
-                return null;
+                throw new IllegalArgumentException(
+                        "Consumer " + consumerId + " or partition " + partitionId + " not found.");
             }
 
             Topic<?> topic = helper.getTopic(partition.getAllocatedTopicId());
@@ -541,8 +490,6 @@ public class TributaryController {
 
             final int finalNumberOfEvents = numberOfEvents;
             Future<JSONObject> future = executorService.submit(() -> {
-                // Call the consumeEvents method which now returns a JSONObject for the
-                // consumer's events.
                 return consumeEvents(consumer.getId(), partition.getId(), finalNumberOfEvents);
             });
             futures.add(future);
@@ -552,7 +499,7 @@ public class TributaryController {
         try {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
-            System.err.println("Parallel consume interrupted: " + e.getMessage());
+            throw new RuntimeException("Parallel consume interrupted: " + e.getMessage(), e);
         }
 
         JSONArray eventsArray = new JSONArray();
@@ -561,7 +508,7 @@ public class TributaryController {
                 JSONObject consumerEvents = future.get();
                 eventsArray.put(consumerEvents);
             } catch (Exception e) {
-                System.err.println("Error retrieving future result: " + e.getMessage());
+                throw new RuntimeException("Error retrieving future result: " + e.getMessage(), e);
             }
         }
 

@@ -7,14 +7,13 @@ import org.json.JSONObject;
 
 import tributary.core.tributaryObject.producers.*;
 import tributary.core.tributaryFactory.*;
-import tributary.core.tributaryObject.AdminObject;
-import tributary.core.tributaryObject.Consumer;
-import tributary.core.tributaryObject.ConsumerGroup;
-import tributary.core.tributaryObject.Message;
-import tributary.core.tributaryObject.Partition;
-import tributary.core.tributaryObject.Topic;
-import tributary.core.tributaryObject.TributaryCluster;
+import tributary.core.tributaryObject.*;
 
+/**
+ * Helper class for performing common operations related to the creation,
+ * deletion,
+ * and manipulation of Tributary objects.
+ */
 public class TributaryHelper {
     private TributaryCluster cluster;
     private ObjectFactory objectFactory;
@@ -24,60 +23,88 @@ public class TributaryHelper {
         this.objectFactory = new StringFactory();
     }
 
-    /*
-     * General Helper methods used by most other methods.
-     * Involved in the the creation, deletion and manipulation of
-     * Tributary objects.
+    /**
+     * Returns the Topic with the specified ID.
+     *
+     * @param topicId the topic identifier
+     * @return the Topic object
      */
     public Topic<?> getTopic(String topicId) {
         Topic<?> topic = cluster.getTopic(topicId);
         return topic;
     }
 
+    /**
+     * Returns the type of the topic as a lowercase string.
+     *
+     * @param topicId the topic identifier
+     * @return the type of the topic (e.g. "string", "integer")
+     */
     public String getTopicType(String topicId) {
         Topic<?> topic = cluster.getTopic(topicId);
         return topic.getType().getSimpleName().toLowerCase();
     }
 
+    /**
+     * Returns the ConsumerGroup with the specified ID.
+     *
+     * @param groupId the consumer group identifier
+     * @return the ConsumerGroup object
+     */
     public ConsumerGroup<?> getConsumerGroup(String groupId) {
         ConsumerGroup<?> group = cluster.getConsumerGroup(groupId);
         return group;
     }
 
+    /**
+     * Returns the Producer with the specified ID.
+     *
+     * @param producerId the producer identifier
+     * @return the Producer object
+     * @throws IllegalArgumentException if the producer is not found
+     */
     public Producer<?> getProducer(String producerId) {
         Producer<?> producer = cluster.getProducer(producerId);
         if (producer == null) {
-            System.out.println("Producer " + producerId + " does not exist.\n");
-            return null;
+            throw new IllegalArgumentException("Producer " + producerId + " does not exist.");
         }
         return producer;
     }
 
+    /**
+     * Finds and returns the Consumer with the specified ID.
+     *
+     * @param consumerId the consumer identifier
+     * @return the Consumer object or throws an exception if not found
+     * @throws IllegalArgumentException if the consumer is not found
+     */
     public Consumer<?> findConsumer(String consumerId) {
-        Consumer<?> specifiedConsumer = null;
         for (ConsumerGroup<?> group : cluster.listConsumerGroups()) {
             for (Consumer<?> consumer : group.listConsumers()) {
                 if (consumer.getId().equals(consumerId)) {
-                    specifiedConsumer = consumer;
+                    return consumer;
                 }
             }
         }
-        return specifiedConsumer;
+        throw new IllegalArgumentException("Consumer " + consumerId + " not found.");
     }
 
+    /**
+     * Finds and returns the Partition with the specified ID.
+     *
+     * @param partitionId the partition identifier
+     * @return the Partition object or throws an exception if not found
+     * @throws IllegalArgumentException if the partition is not found
+     */
     public Partition<?> findPartition(String partitionId) {
-        Partition<?> specifiedPartition = null;
         for (Topic<?> topic : cluster.listTopics()) {
             for (Partition<?> partition : topic.listPartitions()) {
                 if (partition.getId().equals(partitionId)) {
-                    specifiedPartition = partition;
-                    break;
+                    return partition;
                 }
             }
-            if (specifiedPartition != null)
-                break;
         }
-        return specifiedPartition;
+        throw new IllegalArgumentException("Partition " + partitionId + " not found.");
     }
 
     public ObjectFactory getFactory() {
@@ -89,28 +116,40 @@ public class TributaryHelper {
     }
 
     /*
-     * All creation method Helpers.
-     * These Helper methods are specific to the process of creating Tributary
-     * Objects.
+     * Creation method helper.
      */
 
+    /**
+     * Verifies that the given producer is allowed to publish to the specified
+     * topic.
+     *
+     * @param prod  the producer
+     * @param topic the topic
+     * @return true if verified, false otherwise
+     */
     public boolean verifyProducer(Producer<?> prod, Topic<?> topic) {
         String adminToken = cluster.getAdminProdToken();
         if (prod.listAssignedTopics().contains(topic)) {
             return true;
-        } else if (adminToken != null && prod.getToken() != null) {
-            if (adminToken.equals(prod.getToken()))
-                return true;
+        } else if (adminToken != null && prod.getToken() != null && adminToken.equals(prod.getToken())) {
+            return true;
         }
-
         return false;
     }
 
     /*
-     * These Consumer helper methods are used to consume events from a partition.
-     * They are specific to the process of consuming events.
+     * Consumer helper methods.
      */
 
+    /**
+     * Consumes events from the specified partition using a generic consumer.
+     *
+     * @param consumer       the consumer
+     * @param partition      the partition to consume from
+     * @param type           the type of payload
+     * @param numberOfEvents the number of events to consume
+     * @return a JSONObject representing the consumed events mapped by consumer id
+     */
     public <T> JSONObject consumeEventsGeneric(Consumer<?> consumer, Partition<?> partition, Class<T> type,
             int numberOfEvents) {
         @SuppressWarnings("unchecked")
@@ -135,10 +174,8 @@ public class TributaryHelper {
         }
 
         if (count < numberOfEvents) {
-            System.out.println("Not enough messages to consume " + numberOfEvents + " messages.\nConsumed " + count
-                    + " messages.\n");
-        } else {
-            System.out.println("Consumed " + count + " messages.\n");
+            System.out.println("Not enough messages to consume " + numberOfEvents
+                    + " messages. Consumed " + count + " messages.");
         }
 
         JSONObject result = new JSONObject();
@@ -147,46 +184,47 @@ public class TributaryHelper {
         return result;
     }
 
+    /**
+     * Verifies that the given consumer is allowed to consume from the specified
+     * topic.
+     *
+     * @param consumer the consumer
+     * @param topic    the topic
+     * @return true if verified, false otherwise
+     */
     public boolean verifyConsumer(Consumer<?> consumer, Topic<?> topic) {
         ConsumerGroup<?> group = getConsumerGroup(consumer.getGroup());
         String adminToken = cluster.getAdminConsToken();
         if (group.listAssignedTopics().contains(topic)) {
             return true;
-        } else if (adminToken != null && group.getToken() != null) {
-            if (adminToken.equals(group.getToken()))
-                return true;
+        } else if (adminToken != null && group.getToken() != null && adminToken.equals(group.getToken())) {
+            return true;
         }
         return false;
     }
 
     /*
-     * All update helper methods.
-     * These methods are used in assistance to update the state of Tributary
-     * objects.
+     * Update helper methods.
      */
 
-    public <T> void updatePartitionOffsetGeneric(Consumer<?> consumer, Partition<?> partition,
-            int offset) {
+    public <T> void updatePartitionOffsetGeneric(Consumer<?> consumer, Partition<?> partition, int offset) {
         @SuppressWarnings("unchecked")
-        Consumer<T> typedconsumer = (Consumer<T>) consumer;
+        Consumer<T> typedConsumer = (Consumer<T>) consumer;
         @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
-        updateTypedConsumerOffset(typedconsumer, typedPartition, offset);
+        updateTypedConsumerOffset(typedConsumer, typedPartition, offset);
     }
 
     private <T> void updateTypedConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
-        // uses 1 indexing here because zero indexing is used in the consume method
-        if (Math.abs(offset) > partition.getOffset(consumer)) {
-            System.out.println(
-                    "Playback or Backtrack Offset cannot be greater than the number of messages in the partition.\n");
-            return;
-            // if number is 0 return the last message in the partition
+        int currentOffset = partition.getOffset(consumer);
+        // Enforce that the offset must be within bounds.
+        if (Math.abs(offset) > currentOffset) {
+            throw new IllegalArgumentException(
+                    "Playback or Backtrack Offset cannot be greater than the number of messages in the partition.");
         } else if (offset == 0) {
             partition.setOffset(consumer, partition.listMessages().size());
-            // if number negative return the last nth message
         } else if (offset < 0) {
             partition.setOffset(consumer, partition.listMessages().size() + offset + 1);
-            // if number positive return the message at nth position in partition
         } else {
             partition.setOffset(consumer, offset);
         }
@@ -203,21 +241,19 @@ public class TributaryHelper {
     }
 
     /*
-     * All parallel produce and consumer Helper methods.
-     * These methods are specifically used to assist in the parallel production and
-     * consumption of events.
+     * Parallel helper methods.
      */
 
     public <T> int parallelConsumerOffset(Consumer<?> consumer, Partition<?> partition, Class<T> type) {
         @SuppressWarnings("unchecked")
-        Consumer<T> typedconsumer = (Consumer<T>) consumer;
+        Consumer<T> typedConsumer = (Consumer<T>) consumer;
         @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
 
         try {
-            return typedPartition.getOffset(typedconsumer);
+            return typedPartition.getOffset(typedConsumer);
         } catch (NullPointerException e) {
-            typedPartition.setOffset(typedconsumer, 0);
+            typedPartition.setOffset(typedConsumer, 0);
             return 0;
         }
     }

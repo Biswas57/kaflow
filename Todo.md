@@ -8,6 +8,7 @@
 2. Hashmaps of Tributary objects instead of Lists, memory yes higher but efficiency more
 3. Change Error Messages to Exceptions
     - idk how this will affect the system, maybe I have to catch to catch the error in the Springboot application
+    - Substep, I gotta change a few of the UPDATE methods because someof them output a group to demonstrate things like rebalancing and new admins and all that shit but worry abt that after.
 4. Build spring boot App with the same number of endpoints as CLI commands (IN PROGRESS)
 
 
