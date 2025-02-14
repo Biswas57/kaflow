@@ -19,13 +19,16 @@ public class TributaryAPI {
 
     @PostMapping("/topics")
     public JSONObject createTopic(@RequestParam String id, @RequestParam String type) {
+        
         try {
             controller.createTopic(id, type);
             JSONObject response = new JSONObject();
+            response.put("success", true);
             response.put("message", "Topic '" + id + "' created successfully.");
             return response;
         } catch (IllegalArgumentException e) {
             JSONObject error = new JSONObject();
+            error.put("success", true);
             error.put("error", e.getMessage());
             return error;
         }

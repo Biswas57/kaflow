@@ -4,6 +4,8 @@ plugins {
     id 'checkstyle'
     id 'jacoco'
     id("org.barfuin.gradle.jacocolog") version "3.1.0"
+    id 'org.springframework.boot' version '2.7.4'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 }
 
 repositories {
@@ -20,9 +22,16 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:4.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     // To access .env file variables
     implementation 'io.github.cdimascio:dotenv-java:2.2.0'
+
+    // Access to API library
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 }
 
 sourceSets {
