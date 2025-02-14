@@ -1,3 +1,685 @@
+&Created String topic with ID: banana1
+
+BCreated partition with ID: bananaFryingMethod1 for topic: banana1
+
+CCreated partition with ID: bananaBoilingMethod1 for topic: banana1
+
+BCreated partition with ID: bananaBakingMethod1 for topic: banana1
+
+DCreated partition with ID: bananaBlendingMethod1 for topic: banana1
+
+&Created String topic with ID: banana2
+
+BCreated partition with ID: bananaFryingMethod2 for topic: banana2
+
+CCreated partition with ID: bananaBoilingMethod2 for topic: banana2
+
+BCreated partition with ID: bananaBakingMethod2 for topic: banana2
+
+DCreated partition with ID: bananaBlendingMethod2 for topic: banana2
+
+&Created String topic with ID: banana3
+
+BCreated partition with ID: bananaFryingMethod3 for topic: banana3
+
+CCreated partition with ID: bananaBoilingMethod3 for topic: banana3
+
+BCreated partition with ID: bananaBakingMethod3 for topic: banana3
+
+DCreated partition with ID: bananaBlendingMethod3 for topic: banana3
+
+ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+YCreated producer with ID: bananaBaker that produces String events with manual allocation
+
+YCreated producer with ID: bananaAdmin that produces String events with manual allocation
+
+[Created consumer group with ID: boiler for topic: banana1 with range rebalancing strategy.
+
+ZCreated consumer group with ID: frier for topic: banana2 with range rebalancing strategy.
+
+ZCreated consumer group with ID: baker for topic: banana3 with range rebalancing strategy.
+
+ZCreated consumer group with ID: admin for topic: banana1 with range rebalancing strategy.
+
+8Created consumer with ID: boilerChef1 for group: boiler
+
+8Created consumer with ID: boilerChef2 for group: boiler
+
+8Created consumer with ID: boilerChef3 for group: boiler
+
+8Created consumer with ID: boilerChef4 for group: boiler
+
+6Created consumer with ID: frierChef1 for group: frier
+
+6Created consumer with ID: frierChef2 for group: frier
+
+6Created consumer with ID: frierChef3 for group: frier
+
+6Created consumer with ID: frierChef4 for group: frier
+
+6Created consumer with ID: bakerChef1 for group: baker
+
+6Created consumer with ID: bakerChef2 for group: baker
+
+6Created consumer with ID: bakerChef3 for group: baker
+
+6Created consumer with ID: bakerChef4 for group: baker
+
+6Created consumer with ID: adminChef1 for group: admin
+
+6Created consumer with ID: adminChef2 for group: admin
+
+6Created consumer with ID: adminChef3 for group: admin
+
+6Created consumer with ID: adminChef4 for group: admin
+
+(Consumer Group ID: admin - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+)Consumer Group ID: boiler - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+&Created String topic with ID: banana1
+
+BCreated partition with ID: bananaFryingMethod1 for topic: banana1
+
+CCreated partition with ID: bananaBoilingMethod1 for topic: banana1
+
+BCreated partition with ID: bananaBakingMethod1 for topic: banana1
+
+DCreated partition with ID: bananaBlendingMethod1 for topic: banana1
+
+&Created String topic with ID: banana2
+
+BCreated partition with ID: bananaFryingMethod2 for topic: banana2
+
+CCreated partition with ID: bananaBoilingMethod2 for topic: banana2
+
+BCreated partition with ID: bananaBakingMethod2 for topic: banana2
+
+DCreated partition with ID: bananaBlendingMethod2 for topic: banana2
+
+&Created String topic with ID: banana3
+
+BCreated partition with ID: bananaFryingMethod3 for topic: banana3
+
+CCreated partition with ID: bananaBoilingMethod3 for topic: banana3
+
+BCreated partition with ID: bananaBakingMethod3 for topic: banana3
+
+DCreated partition with ID: bananaBlendingMethod3 for topic: banana3
+
+ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+YCreated producer with ID: bananaBaker that produces String events with manual allocation
+
+YCreated producer with ID: bananaAdmin that produces String events with manual allocation
+
+[Created consumer group with ID: boiler for topic: banana1 with range rebalancing strategy.
+
+ZCreated consumer group with ID: frier for topic: banana2 with range rebalancing strategy.
+
+ZCreated consumer group with ID: baker for topic: banana3 with range rebalancing strategy.
+
+ZCreated consumer group with ID: admin for topic: banana1 with range rebalancing strategy.
+
+8Created consumer with ID: boilerChef1 for group: boiler
+
+8Created consumer with ID: boilerChef2 for group: boiler
+
+8Created consumer with ID: boilerChef3 for group: boiler
+
+8Created consumer with ID: boilerChef4 for group: boiler
+
+6Created consumer with ID: frierChef1 for group: frier
+
+6Created consumer with ID: frierChef2 for group: frier
+
+6Created consumer with ID: frierChef3 for group: frier
+
+6Created consumer with ID: frierChef4 for group: frier
+
+6Created consumer with ID: bakerChef1 for group: baker
+
+6Created consumer with ID: bakerChef2 for group: baker
+
+6Created consumer with ID: bakerChef3 for group: baker
+
+6Created consumer with ID: bakerChef4 for group: baker
+
+6Created consumer with ID: adminChef1 for group: admin
+
+6Created consumer with ID: adminChef2 for group: admin
+
+6Created consumer with ID: adminChef3 for group: admin
+
+6Created consumer with ID: adminChef4 for group: admin
+
+(Consumer Group ID: admin - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+Producer null does not exist.
+
+.Consumer Group ID: bananaAdmin - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+&Created String topic with ID: banana1
+
+BCreated partition with ID: bananaFryingMethod1 for topic: banana1
+
+CCreated partition with ID: bananaBoilingMethod1 for topic: banana1
+
+BCreated partition with ID: bananaBakingMethod1 for topic: banana1
+
+DCreated partition with ID: bananaBlendingMethod1 for topic: banana1
+
+&Created String topic with ID: banana2
+
+BCreated partition with ID: bananaFryingMethod2 for topic: banana2
+
+CCreated partition with ID: bananaBoilingMethod2 for topic: banana2
+
+BCreated partition with ID: bananaBakingMethod2 for topic: banana2
+
+DCreated partition with ID: bananaBlendingMethod2 for topic: banana2
+
+&Created String topic with ID: banana3
+
+BCreated partition with ID: bananaFryingMethod3 for topic: banana3
+
+CCreated partition with ID: bananaBoilingMethod3 for topic: banana3
+
+BCreated partition with ID: bananaBakingMethod3 for topic: banana3
+
+DCreated partition with ID: bananaBlendingMethod3 for topic: banana3
+
+ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+YCreated producer with ID: bananaBaker that produces String events with manual allocation
+
+YCreated producer with ID: bananaAdmin that produces String events with manual allocation
+
+[Created consumer group with ID: boiler for topic: banana1 with range rebalancing strategy.
+
+ZCreated consumer group with ID: frier for topic: banana2 with range rebalancing strategy.
+
+ZCreated consumer group with ID: baker for topic: banana3 with range rebalancing strategy.
+
+ZCreated consumer group with ID: admin for topic: banana1 with range rebalancing strategy.
+
+8Created consumer with ID: boilerChef1 for group: boiler
+
+8Created consumer with ID: boilerChef2 for group: boiler
+
+8Created consumer with ID: boilerChef3 for group: boiler
+
+8Created consumer with ID: boilerChef4 for group: boiler
+
+6Created consumer with ID: frierChef1 for group: frier
+
+6Created consumer with ID: frierChef2 for group: frier
+
+6Created consumer with ID: frierChef3 for group: frier
+
+6Created consumer with ID: frierChef4 for group: frier
+
+6Created consumer with ID: bakerChef1 for group: baker
+
+6Created consumer with ID: bakerChef2 for group: baker
+
+6Created consumer with ID: bakerChef3 for group: baker
+
+6Created consumer with ID: bakerChef4 for group: baker
+
+6Created consumer with ID: adminChef1 for group: admin
+
+6Created consumer with ID: adminChef2 for group: admin
+
+6Created consumer with ID: adminChef3 for group: admin
+
+6Created consumer with ID: adminChef4 for group: admin
+
+(Consumer Group ID: admin - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+)Consumer Group ID: boiler - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+&Created String topic with ID: banana1
+
+BCreated partition with ID: bananaFryingMethod1 for topic: banana1
+
+CCreated partition with ID: bananaBoilingMethod1 for topic: banana1
+
+BCreated partition with ID: bananaBakingMethod1 for topic: banana1
+
+DCreated partition with ID: bananaBlendingMethod1 for topic: banana1
+
+&Created String topic with ID: banana2
+
+BCreated partition with ID: bananaFryingMethod2 for topic: banana2
+
+CCreated partition with ID: bananaBoilingMethod2 for topic: banana2
+
+BCreated partition with ID: bananaBakingMethod2 for topic: banana2
+
+DCreated partition with ID: bananaBlendingMethod2 for topic: banana2
+
+&Created String topic with ID: banana3
+
+BCreated partition with ID: bananaFryingMethod3 for topic: banana3
+
+CCreated partition with ID: bananaBoilingMethod3 for topic: banana3
+
+BCreated partition with ID: bananaBakingMethod3 for topic: banana3
+
+DCreated partition with ID: bananaBlendingMethod3 for topic: banana3
+
+ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+YCreated producer with ID: bananaBaker that produces String events with manual allocation
+
+YCreated producer with ID: bananaAdmin that produces String events with manual allocation
+
+[Created consumer group with ID: boiler for topic: banana1 with range rebalancing strategy.
+
+ZCreated consumer group with ID: frier for topic: banana2 with range rebalancing strategy.
+
+ZCreated consumer group with ID: baker for topic: banana3 with range rebalancing strategy.
+
+ZCreated consumer group with ID: admin for topic: banana1 with range rebalancing strategy.
+
+8Created consumer with ID: boilerChef1 for group: boiler
+
+8Created consumer with ID: boilerChef2 for group: boiler
+
+8Created consumer with ID: boilerChef3 for group: boiler
+
+8Created consumer with ID: boilerChef4 for group: boiler
+
+6Created consumer with ID: frierChef1 for group: frier
+
+6Created consumer with ID: frierChef2 for group: frier
+
+6Created consumer with ID: frierChef3 for group: frier
+
+6Created consumer with ID: frierChef4 for group: frier
+
+6Created consumer with ID: bakerChef1 for group: baker
+
+6Created consumer with ID: bakerChef2 for group: baker
+
+6Created consumer with ID: bakerChef3 for group: baker
+
+6Created consumer with ID: bakerChef4 for group: baker
+
+6Created consumer with ID: adminChef1 for group: admin
+
+6Created consumer with ID: adminChef2 for group: admin
+
+6Created consumer with ID: adminChef3 for group: admin
+
+6Created consumer with ID: adminChef4 for group: admin
+
+Producer null does not exist.
+
+.Consumer Group ID: bananaAdmin - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+&Created String topic with ID: banana1
+
+BCreated partition with ID: bananaFryingMethod1 for topic: banana1
+
+CCreated partition with ID: bananaBoilingMethod1 for topic: banana1
+
+BCreated partition with ID: bananaBakingMethod1 for topic: banana1
+
+DCreated partition with ID: bananaBlendingMethod1 for topic: banana1
+
+&Created String topic with ID: banana2
+
+BCreated partition with ID: bananaFryingMethod2 for topic: banana2
+
+CCreated partition with ID: bananaBoilingMethod2 for topic: banana2
+
+BCreated partition with ID: bananaBakingMethod2 for topic: banana2
+
+DCreated partition with ID: bananaBlendingMethod2 for topic: banana2
+
+&Created String topic with ID: banana3
+
+BCreated partition with ID: bananaFryingMethod3 for topic: banana3
+
+CCreated partition with ID: bananaBoilingMethod3 for topic: banana3
+
+BCreated partition with ID: bananaBakingMethod3 for topic: banana3
+
+DCreated partition with ID: bananaBlendingMethod3 for topic: banana3
+
+ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+YCreated producer with ID: bananaBaker that produces String events with manual allocation
+
+YCreated producer with ID: bananaAdmin that produces String events with manual allocation
+
+[Created consumer group with ID: boiler for topic: banana1 with range rebalancing strategy.
+
+ZCreated consumer group with ID: frier for topic: banana2 with range rebalancing strategy.
+
+ZCreated consumer group with ID: baker for topic: banana3 with range rebalancing strategy.
+
+ZCreated consumer group with ID: admin for topic: banana1 with range rebalancing strategy.
+
+8Created consumer with ID: boilerChef1 for group: boiler
+
+8Created consumer with ID: boilerChef2 for group: boiler
+
+8Created consumer with ID: boilerChef3 for group: boiler
+
+8Created consumer with ID: boilerChef4 for group: boiler
+
+6Created consumer with ID: frierChef1 for group: frier
+
+6Created consumer with ID: frierChef2 for group: frier
+
+6Created consumer with ID: frierChef3 for group: frier
+
+6Created consumer with ID: frierChef4 for group: frier
+
+6Created consumer with ID: bakerChef1 for group: baker
+
+6Created consumer with ID: bakerChef2 for group: baker
+
+6Created consumer with ID: bakerChef3 for group: baker
+
+6Created consumer with ID: bakerChef4 for group: baker
+
+6Created consumer with ID: adminChef1 for group: admin
+
+6Created consumer with ID: adminChef2 for group: admin
+
+6Created consumer with ID: adminChef3 for group: admin
+
+6Created consumer with ID: adminChef4 for group: admin
+
+(Consumer Group ID: admin - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+)Consumer Group ID: boiler - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+&Created String topic with ID: banana1
+
+BCreated partition with ID: bananaFryingMethod1 for topic: banana1
+
+CCreated partition with ID: bananaBoilingMethod1 for topic: banana1
+
+BCreated partition with ID: bananaBakingMethod1 for topic: banana1
+
+DCreated partition with ID: bananaBlendingMethod1 for topic: banana1
+
+&Created String topic with ID: banana2
+
+BCreated partition with ID: bananaFryingMethod2 for topic: banana2
+
+CCreated partition with ID: bananaBoilingMethod2 for topic: banana2
+
+BCreated partition with ID: bananaBakingMethod2 for topic: banana2
+
+DCreated partition with ID: bananaBlendingMethod2 for topic: banana2
+
+&Created String topic with ID: banana3
+
+BCreated partition with ID: bananaFryingMethod3 for topic: banana3
+
+CCreated partition with ID: bananaBoilingMethod3 for topic: banana3
+
+BCreated partition with ID: bananaBakingMethod3 for topic: banana3
+
+DCreated partition with ID: bananaBlendingMethod3 for topic: banana3
+
+ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+YCreated producer with ID: bananaBaker that produces String events with manual allocation
+
+YCreated producer with ID: bananaAdmin that produces String events with manual allocation
+
+[Created consumer group with ID: boiler for topic: banana1 with range rebalancing strategy.
+
+ZCreated consumer group with ID: frier for topic: banana2 with range rebalancing strategy.
+
+ZCreated consumer group with ID: baker for topic: banana3 with range rebalancing strategy.
+
+ZCreated consumer group with ID: admin for topic: banana1 with range rebalancing strategy.
+
+8Created consumer with ID: boilerChef1 for group: boiler
+
+8Created consumer with ID: boilerChef2 for group: boiler
+
+8Created consumer with ID: boilerChef3 for group: boiler
+
+8Created consumer with ID: boilerChef4 for group: boiler
+
+6Created consumer with ID: frierChef1 for group: frier
+
+6Created consumer with ID: frierChef2 for group: frier
+
+6Created consumer with ID: frierChef3 for group: frier
+
+6Created consumer with ID: frierChef4 for group: frier
+
+6Created consumer with ID: bakerChef1 for group: baker
+
+6Created consumer with ID: bakerChef2 for group: baker
+
+6Created consumer with ID: bakerChef3 for group: baker
+
+6Created consumer with ID: bakerChef4 for group: baker
+
+6Created consumer with ID: adminChef1 for group: admin
+
+6Created consumer with ID: adminChef2 for group: admin
+
+6Created consumer with ID: adminChef3 for group: admin
+
+6Created consumer with ID: adminChef4 for group: admin
+
+(Consumer Group ID: admin - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+Producer null does not exist.
+
+.Consumer Group ID: bananaAdmin - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+)Consumer Group ID: boiler - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+/Consumer Group ID: bananaBoiler - Type: String
+!Topic ID: banana1 - Partitions: 
+XbananaFryingMethod1, bananaBoilingMethod1, bananaBakingMethod1, bananaBlendingMethod1, 
+!Topic ID: banana2 - Partitions: 
+XbananaFryingMethod2, bananaBoilingMethod2, bananaBakingMethod2, bananaBlendingMethod2, 
+!Topic ID: banana3 - Partitions: 
+XbananaFryingMethod3, bananaBoilingMethod3, bananaBakingMethod3, bananaBlendingMethod3, 
+
+3--------------------------------------------------
+
+&Created String topic with ID: banana1
+
+BCreated partition with ID: bananaFryingMethod1 for topic: banana1
+
+CCreated partition with ID: bananaBoilingMethod1 for topic: banana1
+
+BCreated partition with ID: bananaBakingMethod1 for topic: banana1
+
+DCreated partition with ID: bananaBlendingMethod1 for topic: banana1
+
+&Created String topic with ID: banana2
+
+BCreated partition with ID: bananaFryingMethod2 for topic: banana2
+
+CCreated partition with ID: bananaBoilingMethod2 for topic: banana2
+
+BCreated partition with ID: bananaBakingMethod2 for topic: banana2
+
+DCreated partition with ID: bananaBlendingMethod2 for topic: banana2
+
+&Created String topic with ID: banana3
+
+BCreated partition with ID: bananaFryingMethod3 for topic: banana3
+
+CCreated partition with ID: bananaBoilingMethod3 for topic: banana3
+
+BCreated partition with ID: bananaBakingMethod3 for topic: banana3
+
+DCreated partition with ID: bananaBlendingMethod3 for topic: banana3
+
+ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+YCreated producer with ID: bananaBaker that produces String events with manual allocation
+
+YCreated producer with ID: bananaAdmin that produces String events with manual allocation
+
+[Created consumer group with ID: boiler for topic: banana1 with range rebalancing strategy.
+
+ZCreated consumer group with ID: frier for topic: banana2 with range rebalancing strategy.
+
+ZCreated consumer group with ID: baker for topic: banana3 with range rebalancing strategy.
+
+ZCreated consumer group with ID: admin for topic: banana1 with range rebalancing strategy.
+
+8Created consumer with ID: boilerChef1 for group: boiler
+
+8Created consumer with ID: boilerChef2 for group: boiler
+
+8Created consumer with ID: boilerChef3 for group: boiler
+
+8Created consumer with ID: boilerChef4 for group: boiler
+
+6Created consumer with ID: frierChef1 for group: frier
+
+6Created consumer with ID: frierChef2 for group: frier
+
+6Created consumer with ID: frierChef3 for group: frier
+
+6Created consumer with ID: frierChef4 for group: frier
+
+6Created consumer with ID: bakerChef1 for group: baker
+
+6Created consumer with ID: bakerChef2 for group: baker
+
+6Created consumer with ID: bakerChef3 for group: baker
+
+6Created consumer with ID: bakerChef4 for group: baker
+
+6Created consumer with ID: adminChef1 for group: admin
+
+6Created consumer with ID: adminChef2 for group: admin
+
+6Created consumer with ID: adminChef3 for group: admin
+
+6Created consumer with ID: adminChef4 for group: admin
+
 %Created String topic with ID: banana
 
 BCreated partition with ID: bananaCookingMethods for topic: banana
@@ -7,6 +689,22 @@
 ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 
 _Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
+
+>Created consumer with ID: beginnerChef for group: bananaChefs
+
+DCreated consumer with ID: deleteBeginnerChef for group: bananaChefs
+
+TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
+
+YCreated producer with ID: bananaFrier that produces String events with manual allocation
+
+RThe event: fryBanana has been manually allocated to partition bananaCookingStyles
+
+-Deleted consumer with ID: deleteBeginnerChef
+Consumed 1 messages.
+
+ Not enough messages to consume.
+Consumed 0 messages.
 
 ! &Created Integer topic with ID: banana
 ! 
@@ -26,7 +724,6 @@
 ! 
 ! +Consumer group bananaChefs already exists.
 ! 
-<<<<<<< Updated upstream
 ! ECreated consumer with ID: beginnerChef1 for group: bananaChefs group
 ! 
 ! ECreated consumer with ID: beginnerChef2 for group: bananaChefs group
@@ -37,9 +734,9 @@
 ! class java.lang.Integer
 ! [The event: bananaBoilingNums has been randomly allocated to partition bananaCookingStyle4.
 ! 
-! \The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod3.
+! \The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod2.
 ! 
-! [The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod1.
+! ZThe event: bananaBoilingDur has been randomly allocated to partition bananaCookingStyle4.
 ! 
 ! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
 ! 
@@ -49,40 +746,8 @@
 ! 
 ! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 ! 
-! cThe event: bananaBoilingDur has been consumed by consumer beginnerChef1. It contains the contents:
-! duration = 5
-! Consumed 1 messages.
-! 
-! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-! duration = 3
-! temperature = 180
-! Consumed 1 messages.
-! 
-! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-! duration = 3
-! temperature = 180
-! Consumed 1 messages.
-! 
-!  Not enough messages to consume.
-! Consumed 0 messages.
-! 
 ! WThe event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 ! 
-! VThe event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
-! 
-! `The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-! duration = 3
-! temperature = 180
-! Consumed 1 messages.
-! 
-! +Consumer is not assigned to the partition.
-! 
-! _The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
-! duration = 3
-! Consumed 1 messages.
-! 
-=======
->>>>>>> Stashed changes
 #"%Created String topic with ID: banana
 #"
 #"BCreated partition with ID: bananaCookingMethods for topic: banana
@@ -90,6 +755,16 @@
 #"ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 #"
 #"_Created consumer group with ID: bananaChefs for topic: banana with range rebalancing strategy.
+#"
+#">Created consumer with ID: beginnerChef for group: bananaChefs
+#"
+#"TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
+#"
+#"Consumed 1 messages.
+#"
+#"SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
+#"
+#"Consumed 1 messages.
 #"
 #$Topic banana already exists.
 #$
@@ -99,6 +774,14 @@
 #$
 #$+Consumer group bananaChefs already exists.
 #$
+#$2Consumer beginnerChefalready exists in the group.
+#$
+#$%Created Integer topic with ID: apple
+#$
+#$ZCreated producer with ID: bananaBoiler that produces String events with random allocation
+#$
+#$YCreated producer with ID: bananaFrier that produces String events with manual allocation
+#$
 #%Topic banana already exists.
 #%
 #%8Partition bananaCookingMethods already exists in topic.
@@ -106,6 +789,23 @@
 #%ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 #%
 #%+Consumer group bananaChefs already exists.
+#%
+#%2Consumer beginnerChefalready exists in the group.
+#%
+#%Topic banana already exists.
+#%
+#%BCreated partition with ID: bananaCookingMethod1 for topic: banana
+#%
+#%ZCreated producer with ID: bananaBoiler that produces String events with random allocation
+#%
+#%+Consumer group bananaChefs already exists.
+#%
+#%?Created consumer with ID: beginnerChef1 for group: bananaChefs
+#%
+#%SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
+#%
+#% Not enough messages to consume.
+#%Consumed 0 messages.
 #%
 #&Topic banana already exists.
 #&
@@ -115,6 +815,8 @@
 #&
 #&+Consumer group bananaChefs already exists.
 #&
+#&2Consumer beginnerChefalready exists in the group.
+#&
 #'Topic banana already exists.
 #'
 #'8Partition bananaCookingMethods already exists in topic.
@@ -122,6 +824,14 @@
 #'ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 #'
 #'+Consumer group bananaChefs already exists.
+#'
+#'2Consumer beginnerChefalready exists in the group.
+#'
+#'TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
+#'
+#'SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
+#'
+#'UThe event: grillBanana has been manually allocated to partition bananaCookingMethods
 #'
 #(Topic banana already exists.
 #(
@@ -131,6 +841,10 @@
 #(
 #(+Consumer group bananaChefs already exists.
 #(
+#(2Consumer beginnerChefalready exists in the group.
+#(
+#(]Playback or Backtrack Offset cannot be greater than the number of messages in the partition.
+#(
 #)Topic banana already exists.
 #)
 #)8Partition bananaCookingMethods already exists in topic.
@@ -139,6 +853,9 @@
 #)
 #)+Consumer group bananaChefs already exists.
 #)
+#)2Consumer beginnerChefalready exists in the group.
+#)
+#)'Deleted consumer with ID: beginnerChef
 #*Topic banana already exists.
 #*
 #*8Partition bananaCookingMethods already exists in topic.
@@ -146,6 +863,16 @@
 #*ZCreated producer with ID: bananaBoiler that produces String events with manual allocation
 #*
 #*+Consumer group bananaChefs already exists.
+#*
+#*>Created consumer with ID: beginnerChef for group: bananaChefs
+#*
+#*TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
+#*
+#*SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
+#*
+#*UThe event: grillBanana has been manually allocated to partition bananaCookingMethods
+#*
+#*DPartition bananaCookingMethods not found for consumer beginnerChef.
 #*
 #+Topic banana already exists.
 #+
@@ -155,6 +882,8 @@
 #+
 #++Consumer group bananaChefs already exists.
 #+
+#+2Consumer beginnerChefalready exists in the group.
+#+
 #,Topic banana already exists.
 #,
 #,8Partition bananaCookingMethods already exists in topic.
@@ -163,7 +892,6 @@
 #,
 #,+Consumer group bananaChefs already exists.
 #,
-<<<<<<< Updated upstream
 #,2Consumer beginnerChefalready exists in the group.
 #,
 #,TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
@@ -172,10 +900,8 @@
 #,
 #,SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
 #,
-#,+Consumer is not assigned to the partition.
+#,DPartition bananaCookingMethods not found for consumer beginnerChef.
 #,
-=======
->>>>>>> Stashed changes
 #-Topic banana already exists.
 #-
 #-8Partition bananaCookingMethods already exists in topic.
@@ -184,12 +910,9 @@
 #-
 #-+Consumer group bananaChefs already exists.
 #-
-<<<<<<< Updated upstream
 #-2Consumer beginnerChefalready exists in the group.
-#-
-#-TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
 #-
 #-SThe event: fryBanana has been manually allocated to partition bananaCookingMethods
 #-
-=======
->>>>>>> Stashed changes
+#-TThe event: boilBanana has been manually allocated to partition bananaCookingMethods
+#-

@@ -41,11 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<<<<<<< Updated upstream
-<div class="counter">0.023s</div>
-=======
-<div class="counter">0.006s</div>
->>>>>>> Stashed changes
+<div class="counter">0.012s</div>
 <p>duration</p>
 </div>
 </td>
@@ -80,34 +76,37 @@
 <a name="mainComplexTest()"></a>
 <h3 class="failures">mainComplexTest()</h3>
 <span class="code">
-<pre>java.lang.NoClassDefFoundError: Could not initialize class tributary.core.encryptionManager.EncryptionManager
-	at tributary.core.tributaryObject.Consumer.&lt;init&gt;(Consumer.java:14)
-	at tributary.core.tributaryFactory.IntegerFactory.createConsumer(IntegerFactory.java:54)
-	at tributary.api.TributaryController.createConsumer(TributaryController.java:136)
-	at tributary.TributaryTest2.mainComplexTest(TributaryTest2.java:81)
+<pre>java.lang.IllegalArgumentException: Value is not a Number: 3
+	at tributary.core.typeHandlerFactory.IntegerHandler.handle(IntegerHandler.java:9)
+	at tributary.core.typeHandlerFactory.IntegerHandler.handle(IntegerHandler.java:3)
+	at tributary.core.tributaryObject.Consumer.consume(Consumer.java:43)
+	at tributary.api.TributaryHelper.consumeHelper(TributaryHelper.java:133)
+	at tributary.api.TributaryHelper.consumeEventsGeneric(TributaryHelper.java:121)
+	at tributary.api.TributaryController.consumeEvents(TributaryController.java:280)
+	at tributary.TributaryTest2.mainComplexTest(TributaryTest2.java:138)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
-	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:727)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:725)
 	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
-	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
-	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
 	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
-	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:217)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:214)
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:210)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:135)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:66)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)
 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
@@ -139,12 +138,11 @@
 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:147)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:127)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:90)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:55)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:102)
-	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:107)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:86)
 	at org.junit.platform.launcher.core.DefaultLauncherSession$DelegatingLauncher.execute(DefaultLauncherSession.java:86)
@@ -171,42 +169,6 @@
 	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:65)
 	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
 	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
-Caused by: java.lang.ExceptionInInitializerError: Exception io.github.cdimascio.dotenv.DotenvException: Could not find /.env on the classpath [in thread &quot;Test worker&quot;]
-	at io.github.cdimascio.dotenv.internal.ClasspathHelper.loadFileFromClasspath(ClasspathHelper.java:23)
-	at io.github.cdimascio.dotenv.internal.DotenvReader.read(DotenvReader.java:43)
-	at io.github.cdimascio.dotenv.internal.DotenvParser.lines(DotenvParser.java:52)
-	at io.github.cdimascio.dotenv.internal.DotenvParser.parse(DotenvParser.java:34)
-	at io.github.cdimascio.dotenv.DotenvBuilder.load(DotenvBuilder.java:77)
-	at io.github.cdimascio.dotenv.Dotenv.load(Dotenv.java:33)
-	at tributary.core.encryptionManager.EncryptionManager.&lt;clinit&gt;(EncryptionManager.java:12)
-	at tributary.EncryptionManagerTest.setUp(EncryptionManagerTest.java:17)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
-	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:727)
-	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptLifecycleMethod(TimeoutExtension.java:128)
-	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptBeforeEachMethod(TimeoutExtension.java:78)
-	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
-	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
-	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
-	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeMethodInExtensionContext(ClassBasedTestDescriptor.java:520)
-	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$synthesizeBeforeEachMethodAdapter$23(ClassBasedTestDescriptor.java:505)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeBeforeEachMethods$3(TestMethodTestDescriptor.java:174)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeBeforeMethodsOrCallbacksUntilExceptionOccurs$6(TestMethodTestDescriptor.java:202)
-	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeBeforeMethodsOrCallbacksUntilExceptionOccurs(TestMethodTestDescriptor.java:202)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeBeforeEachMethods(TestMethodTestDescriptor.java:171)
-	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:134)
-	... 64 more
 </pre>
 </span>
 </div>
@@ -222,15 +184,9 @@ Caused by: java.lang.ExceptionInInitializerError: Exception io.github.cdimascio.
 </tr>
 </thead>
 <tr>
-<<<<<<< Updated upstream
-<td class="success">mainComplexTest()</td>
-<td class="success">0.023s</td>
-<td class="success">passed</td>
-=======
 <td class="failures">mainComplexTest()</td>
-<td class="failures">0.006s</td>
+<td class="failures">0.012s</td>
 <td class="failures">failed</td>
->>>>>>> Stashed changes
 </tr>
 </table>
 </div>
@@ -255,7 +211,6 @@ Created consumer group with ID: bananaChefs for topic: banana with range rebalan
 
 Consumer group bananaChefs already exists.
 
-<<<<<<< Updated upstream
 Created consumer with ID: beginnerChef1 for group: bananaChefs group
 
 Created consumer with ID: beginnerChef2 for group: bananaChefs group
@@ -266,9 +221,9 @@ class java.lang.Integer
 class java.lang.Integer
 The event: bananaBoilingNums has been randomly allocated to partition bananaCookingStyle4.
 
-The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod3.
+The event: bananaBoilingTemp has been randomly allocated to partition bananaCookingMethod2.
 
-The event: bananaBoilingDur has been randomly allocated to partition bananaCookingMethod1.
+The event: bananaBoilingDur has been randomly allocated to partition bananaCookingStyle4.
 
 The event: bananaFryNums has been manually allocated to partition bananaCookingMethod2
 
@@ -278,40 +233,8 @@ The event: bananaFryNums has been manually allocated to partition bananaCookingM
 
 The event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 
-The event: bananaBoilingDur has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 5
-Consumed 1 messages.
-
-The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 3
-temperature = 180
-Consumed 1 messages.
-
-The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 3
-temperature = 180
-Consumed 1 messages.
-
-Not enough messages to consume.
-Consumed 0 messages.
-
 The event: bananaFryNums has been manually allocated to partition bananaCookingMethod1
 
-The event: bananaFryDur has been manually allocated to partition bananaCookingMethod1
-
-The event: bananaFryNums has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 3
-temperature = 180
-Consumed 1 messages.
-
-Consumer is not assigned to the partition.
-
-The event: bananaFryDur has been consumed by consumer beginnerChef1. It contains the contents:
-duration = 3
-Consumed 1 messages.
-
-=======
->>>>>>> Stashed changes
 </pre>
 </span>
 </div>
@@ -323,11 +246,7 @@ Consumed 1 messages.
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<<<<<<< Updated upstream
-<a href="http://www.gradle.org">Gradle 8.12.1</a> at 13 Feb 2025, 6:11:24 pm</p>
-=======
-<a href="http://www.gradle.org">Gradle 7.6.4</a> at 12 Feb 2025, 8:00:34 pm</p>
->>>>>>> Stashed changes
+<a href="http://www.gradle.org">Gradle 7.6.4</a> at 14 Feb 2025, 7:28:31 pm</p>
 </div>
 </div>
 </body>

@@ -135,13 +135,14 @@ public class TributaryHelper {
         }
 
         if (count < numberOfEvents) {
-            System.out.println("Not enough messages to consume.\nConsumed " + count + " messages.\n");
+            System.out.println("Not enough messages to consume " + numberOfEvents + " messages.\nConsumed " + count
+                    + " messages.\n");
         } else {
             System.out.println("Consumed " + count + " messages.\n");
         }
 
         JSONObject result = new JSONObject();
-        result.put("events", eventsArray);
+        result.put(consumer.getId(), eventsArray);
 
         return result;
     }

@@ -1,12 +1,17 @@
 package tributary.api;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import tributary.core.tributaryObject.producers.*;
@@ -283,7 +288,7 @@ public class TributaryController {
         } else {
             System.out.println("Unsupported type: " + topic.getType().getSimpleName() + "\n");
             return null;
-        } 
+        }
 
         return data;
     }
@@ -430,8 +435,11 @@ public class TributaryController {
      * @param parts An array of parameters for the producers events topics and
      *              partitions.
      */
-    public void parallelProduce(String[] parts) {
+    public void parallelProduce(String[] parts) throws IOException, InterruptedException {
         ExecutorService executorService = Executors.newCachedThreadPool();
+        // Create a list to hold Future<?> objects if you want to process exceptions
+        // later
+        List<Future<?>> futures = new ArrayList<>();
 
         for (int i = 0; i < parts.length;) {
             String producerId = parts[i];
@@ -441,11 +449,10 @@ public class TributaryController {
             Producer<?> producer = helper.getProducer(producerId);
             Topic<?> topic = helper.getTopic(topicId);
             if (producer == null || topic == null) {
-                System.out.println("Producer " + producerId + " or topic " + topicId + " not found.\n");
-                break;
+                throw new IllegalArgumentException("Producer " + producerId + " or topic " + topicId + " not found.");
             } else if (!topic.getType().equals(producer.getType())) {
-                System.out.println("Producer " + producerId + " type does not match Topic " + topicId + " type.\n");
-                break;
+                throw new IllegalArgumentException(
+                        "Producer " + producerId + " type does not match Topic " + topicId + " type.");
             }
 
             String partitionId = null;
@@ -453,44 +460,61 @@ public class TributaryController {
                 if (i + 3 < parts.length) {
                     partitionId = parts[i + 3];
                     if (helper.findPartition(partitionId) == null) {
-                        System.out.println("Partition " + partitionId + " not found.\n");
-                        break;
+                        throw new IllegalArgumentException("Partition " + partitionId + " not found.");
                     }
                     i += 4;
                 } else {
-                    System.out.println("Insufficient parameters for manual producer " + producerId + "\n");
-                    break;
+                    throw new IllegalArgumentException("Insufficient parameters for manual producer " + producerId);
                 }
             } else {
                 i += 3;
             }
 
             final String finalPartitionId = partitionId;
-            executorService.submit(() -> {
+            // Submit a Callable that can throw IOException
+            Future<?> future = executorService.submit(() -> {
                 try {
                     createEvent(producerId, topicId, eventFile, finalPartitionId);
                 } catch (IOException e) {
-                    System.out.println("Error producing event: " + e.getMessage());
+                    throw new RuntimeException(e);
                 }
             });
+            futures.add(future);
         }
 
         executorService.shutdown();
-        try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            System.err.println("Parallel produce interrupted: " + e.getMessage());
+        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
+        // Process futures to rethrow IOException if present
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (ExecutionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof IOException) {
+                    throw (IOException) cause;
+                } else {
+                    throw new RuntimeException(cause);
+                }
+            }
         }
     }
 
     /**
-     * Consume a series of events in parallel.
+     * Consumes events in parallel from multiple partitions as specified by the
+     * command parts.
+     * Returns a JSON object with an "events" key that maps to a JSON array
+     * containing the
+     * consumption result for each consumer (with the consumer's id as the key).
      *
      * @param parts An array of parameters for the consumer events and the number of
      *              events to consume.
+     * @return A JSONObject structured as: { "events": [ { "consumerId1": [ ... ] },
+     *         { "consumerId2": [ ... ] } ] }
      */
-    public void parallelConsume(String[] parts) {
+    public JSONObject parallelConsume(String[] parts) {
         ExecutorService executorService = Executors.newFixedThreadPool(parts.length / 2);
+        List<Future<JSONObject>> futures = new ArrayList<>();
 
         for (int i = 0; i < parts.length;) {
             String consumerId = parts[i];
@@ -500,13 +524,12 @@ public class TributaryController {
             Consumer<?> consumer = helper.findConsumer(consumerId);
             if (consumer == null || partition == null) {
                 System.out.println("Consumer " + consumerId + " or partition " + partitionId + " not found.\n");
-                return;
+                return null;
             }
 
             Topic<?> topic = helper.getTopic(partition.getAllocatedTopicId());
             int currentOffset = helper.parallelConsumerOffset(consumer, partition, topic.getType());
             int partitionSize = partition.listMessages().size();
-
             int numberOfEvents = partitionSize - currentOffset - 1;
 
             if (parts.length > i + 2 && helper.isInteger(parts[i + 2])) {
@@ -517,7 +540,12 @@ public class TributaryController {
             }
 
             final int finalNumberOfEvents = numberOfEvents;
-            executorService.submit(() -> consumeEvents(consumerId, partitionId, finalNumberOfEvents));
+            Future<JSONObject> future = executorService.submit(() -> {
+                // Call the consumeEvents method which now returns a JSONObject for the
+                // consumer's events.
+                return consumeEvents(consumer.getId(), partition.getId(), finalNumberOfEvents);
+            });
+            futures.add(future);
         }
 
         executorService.shutdown();
@@ -526,6 +554,20 @@ public class TributaryController {
         } catch (InterruptedException e) {
             System.err.println("Parallel consume interrupted: " + e.getMessage());
         }
+
+        JSONArray eventsArray = new JSONArray();
+        for (Future<JSONObject> future : futures) {
+            try {
+                JSONObject consumerEvents = future.get();
+                eventsArray.put(consumerEvents);
+            } catch (Exception e) {
+                System.err.println("Error retrieving future result: " + e.getMessage());
+            }
+        }
+
+        JSONObject result = new JSONObject();
+        result.put("events", eventsArray);
+        return result;
     }
 
     public static void main(String[] args) {
