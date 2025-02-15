@@ -5,6 +5,7 @@ This Java library is based on an extremely simplified version of the event strea
 Kaflow is a form of Event-Driven Architecture (EDA) that uses Stream Processing. The fundamental premise on which EDA rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, which is why this project is named 'Kaflow'. Therefore, stream processing allows data to move through a data pipeline to be analysed and processed asynchronously and efficiently in real-time. This is opposed to batch processing where data is collected and stored to be operated upon later. 
 
 **Why should I use a Message Broker**
+
 Fault tolerance. Say microservice A has a code path that updates some local data and sends commands to micro services B,C, and D. If microservice C goes down during that request, you now have inconsistent state between your micro services. You COULD make this work with web requests, but it involves a lot of compensating transaction code that quickly become intractable. With a message broker sitting between your micro services, you get a lot more consistency guarantees. Your typical pattern is
 - Do work in local transaction
 - send message to broker
