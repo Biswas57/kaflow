@@ -4,19 +4,19 @@ This Java library is based on an extremely simplified version of the event strea
 
 Kaflow is a form of Event-Driven Architecture (EDA) that uses Stream Processing. The fundamental premise on which EDA rests is the ability of producer and consumer entities in the system to share data asynchronously via a stream-like channel, which is why this project is named 'Kaflow'. Therefore, stream processing allows data to move through a data pipeline to be analysed and processed asynchronously and efficiently in real-time. This is opposed to batch processing where data is collected and stored to be operated upon later. 
 
-**Why should I use a Message Broker**
+This library enhances the traditional in-memory stream EDA, which often relies on a single message queue shared by multiple consumers causing bottlenecks and delays, by incorporating elements of batch processing in certain scenarios such as replayability in event logs and delayed and parallel event consumption. By adopting a log-based approach, we overcome the limitations of message playback and memory storage seen in single message queue brokers. This improvement enhances data storage, replayability, and adds greater functionality to message processing, enabling more efficient and flexible handling of events across multiple channels.
+
+**Why should I use a Message Broker?**
 
 Fault tolerance. Say microservice A has a code path that updates some local data and sends commands to micro services B,C, and D. If microservice C goes down during that request, you now have inconsistent state between your micro services. You COULD make this work with web requests, but it involves a lot of compensating transaction code that quickly become intractable. With a message broker sitting between your micro services, you get a lot more consistency guarantees. Your typical pattern is
 - Do work in local transaction
 - send message to broker
 - commit local transaction
 
-Also With a message broker, tasks are evenly distributed across available service instances. Instead of A manually deciding which service to send a request to, it publishes messages to the broker, and the broker assigns them to the least busy instance. This prevents bottlenecks and ensures that each instance handles a fair share of the load. Workflow:
+Also with a message broker, tasks are evenly distributed across available service instances. Instead of A manually deciding which service to send a request to, it publishes messages to the broker, and the broker assigns them to the least busy instance. This prevents bottlenecks and ensures that each instance handles a fair share of the load. Workflow:
 - Service A sends a message to the broker
 - The broker assigns it to an available instance of service B, C, or D
-- The selected service processes the task without being overloaded
-
-This library enhances the traditional in-memory stream EDA, which often relies on a single message queue shared by multiple consumers causing bottlenecks and delays, by incorporating elements of batch processing in certain scenarios such as replayability in event logs and delayed and parallel event consumption. By adopting a log-based approach, we overcome the limitations of message playback and memory storage seen in single message queue brokers. This improvement enhances data storage, replayability, and adds greater functionality to message processing, enabling more efficient and flexible handling of events across multiple channels.
+- The selected service processes the task without being overloaded.
 
 ### Breakdown of Engineering Requirements
 A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the required capabilities, constrains and functionality of the system, that had been created in the beginnging of this project (so it is a little outdated) can be found in the [**Engineering Requirements**](Engineering_Requirements.md). Furthermore, a full recount of the engineering process can be found in the following links:
