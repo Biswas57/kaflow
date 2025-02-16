@@ -1,6 +1,8 @@
 package tributary.api;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import tributary.core.tributaryObject.producers.*;
+import tributary.core.parameterDataStructures.ParallelEventRequest;
 import tributary.core.rebalancingStrategy.RebalancingStrategy;
 import tributary.core.tokenManager.TokenManager;
 import tributary.core.tributaryFactory.*;
@@ -161,8 +164,8 @@ public class TributaryController {
      * @param partitionId The partition identifier (optional).
      * @throws IOException if event creation fails.
      */
-    public synchronized void createEvent(String producerId, String topicId, String eventId, String partitionId)
-            throws IOException {
+    public synchronized void createEvent(String producerId, String topicId, JSONObject event, String partitionId)
+            throws IllegalArgumentException {
         Producer<?> producer = helper.getProducer(producerId);
         Topic<?> topic = helper.getTopic(topicId);
         if (producer == null || topic == null) {
@@ -176,7 +179,7 @@ public class TributaryController {
         synchronized (topic) {
             String topicType = topic.getType().getSimpleName().toLowerCase();
             setObjectFactoryType(topicType);
-            objectFactory.createEvent(producerId, topicId, eventId, partitionId);
+            objectFactory.createEvent(producerId, topicId, event, partitionId);
         }
     }
 
@@ -314,7 +317,8 @@ public class TributaryController {
      * @param oldGroupId The identifier of the old admin consumer group (optional).
      * @param password   The password for verification (optional).
      */
-    public void updateConsumerGroupAdmin(String newGroupId, String oldGroupId, String password) {
+    public void updateConsumerGroupAdmin(String newGroupId, String oldGroupId, String password)
+            throws IllegalArgumentException {
         ConsumerGroup<?> oldGroup = helper.getConsumerGroup(oldGroupId);
         if (oldGroup == null && cluster.getAdminConsToken() != null) {
             throw new IllegalArgumentException("Admin token exists but old Admin could not be identified.");
@@ -383,19 +387,33 @@ public class TributaryController {
     /**
      * Produces a series of events in parallel.
      *
-     * @param parts An array of parameters for the producer's events, topics, and
-     *              partitions.
-     * @throws IOException          if event creation fails.
-     * @throws InterruptedException if the thread is interrupted.
+     * @param producers  An array of producer IDs.
+     * @param topics     An array of topic IDs.
+     * @param events     A JSONArray where each element is an event represented as a
+     *                   JSONObject.
+     * @param partitions An array of partition IDs.
+     * @throws IllegalArgumentException if input array lengths do not match or if
+     *                                  validation fails.
      */
-    public void parallelProduce(String[] parts) throws IOException, InterruptedException {
+    public void parallelProduce(ParallelEventRequest dto) throws IllegalArgumentException, RuntimeException {
+        List<String> producers = dto.getProducers();
+        List<String> topics = dto.getTopics();
+        JSONArray events = dto.getEvents();
+        List<String> partitions = dto.getPartitions();
+
+        if (producers.size() != topics.size() || producers.size() != events.length()
+                || producers.size() != partitions.size()) {
+            throw new IllegalArgumentException("All input arrays must have the same length.");
+        }
+
         ExecutorService executorService = Executors.newCachedThreadPool();
         List<Future<?>> futures = new ArrayList<>();
 
-        for (int i = 0; i < parts.length;) {
-            String producerId = parts[i];
-            String topicId = parts[i + 1];
-            String eventFile = parts[i + 2];
+        for (int i = 0; i < producers.size(); i++) {
+            final String producerId = producers.get(i);
+            final String topicId = topics.get(i);
+            final JSONObject eventObj = events.getJSONObject(i);
+            final String partitionId = partitions.get(i);
 
             Producer<?> producer = helper.getProducer(producerId);
             Topic<?> topic = helper.getTopic(topicId);
@@ -406,68 +424,79 @@ public class TributaryController {
                         "Producer " + producerId + " type does not match Topic " + topicId + " type.");
             }
 
-            String partitionId = null;
+            // For manual producers, ensure a valid partition is provided.
             if (producer instanceof ManualProducer) {
-                if (i + 3 < parts.length) {
-                    partitionId = parts[i + 3];
-                    if (helper.findPartition(partitionId) == null) {
-                        throw new IllegalArgumentException("Partition " + partitionId + " not found.");
-                    }
-                    i += 4;
-                } else {
-                    throw new IllegalArgumentException("Insufficient parameters for manual producer " + producerId);
+                if (partitionId == null || partitionId.isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "Manual producer " + producerId + " requires a valid partition id.");
                 }
-            } else {
-                i += 3;
+                if (helper.findPartition(partitionId) == null) {
+                    throw new IllegalArgumentException("Partition " + partitionId + " not found.");
+                }
             }
 
-            final String finalPartitionId = partitionId;
+            // Submit a task to produce the event.
             Future<?> future = executorService.submit(() -> {
-                try {
-                    createEvent(producerId, topicId, eventFile, finalPartitionId);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                // Directly use the event object's string representation.
+                createEvent(producerId, topicId, eventObj, partitionId);
             });
             futures.add(future);
         }
 
         executorService.shutdown();
-        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Parallel produce interrupted", e);
+        }
 
         for (Future<?> future : futures) {
             try {
                 future.get();
             } catch (ExecutionException e) {
-                Throwable cause = e.getCause();
-                if (cause instanceof IOException) {
-                    throw (IOException) cause;
-                } else {
-                    throw new RuntimeException(cause);
-                }
+                throw new RuntimeException(e.getCause());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Future execution interrupted", e);
             }
         }
     }
 
     /**
      * Consumes events in parallel from multiple partitions as specified by the
-     * command parts.
-     * Returns a JSON object with an "events" key mapping to a JSON array containing
-     * the
-     * consumption results for each consumer (with the consumer's id as the key).
+     * input arrays.
+     * Returns a JSONObject with an "events" key mapping to a JSONArray containing
+     * the consumption results for each consumer (using the consumer's id as the
+     * key).
      *
-     * @param parts An array of parameters for the consumer events and the number of
-     *              events to consume.
-     * @return A JSONObject structured as: { "events": [ { "consumerId1": [ ... ] },
-     *         { "consumerId2": [ ... ] } ] }
+     * @param consumerIds  An array of consumer IDs.
+     * @param partitionIds An array of partition IDs.
+     * @param numEvents    An array of numbers specifying how many events to consume
+     *                     for each consumer.
+     * @return A JSONObject structured as:
+     *         { "events": [ { "consumerId1": [ ... ] }, { "consumerId2": [ ... ] },
+     *         ... ] }
+     * @throws IllegalArgumentException if the input arrays do not have the same
+     *                                  length or if any required entity is not
+     *                                  found.
      */
-    public JSONObject parallelConsume(String[] parts) {
-        ExecutorService executorService = Executors.newFixedThreadPool(parts.length / 2);
+    public JSONObject parallelConsume(ParallelEventRequest dto) {
+        List<String> consumerIds = dto.getConsumers();
+        List<String> partitionIds = dto.getPartitions();
+        List<Integer> numEvents = dto.getNumEvents();
+
+        if (consumerIds.size() != partitionIds.size() || consumerIds.size() != numEvents.size()) {
+            throw new IllegalArgumentException("All input arrays must have the same length.");
+        }
+
+        ExecutorService executorService = Executors.newFixedThreadPool(consumerIds.size());
         List<Future<JSONObject>> futures = new ArrayList<>();
 
-        for (int i = 0; i < parts.length;) {
-            String consumerId = parts[i];
-            String partitionId = parts[i + 1];
+        for (int i = 0; i < consumerIds.size(); i++) {
+            final String consumerId = consumerIds.get(i);
+            final String partitionId = partitionIds.get(i);
+            final int numberOfEvents = numEvents.get(i);
 
             Partition<?> partition = helper.findPartition(partitionId);
             Consumer<?> consumer = helper.findConsumer(consumerId);
@@ -475,22 +504,14 @@ public class TributaryController {
                 throw new IllegalArgumentException(
                         "Consumer " + consumerId + " or partition " + partitionId + " not found.");
             }
-
             Topic<?> topic = helper.getTopic(partition.getAllocatedTopicId());
-            int currentOffset = helper.parallelConsumerOffset(consumer, partition, topic.getType());
-            int partitionSize = partition.listMessages().size();
-            int numberOfEvents = partitionSize - currentOffset - 1;
-
-            if (parts.length > i + 2 && helper.isInteger(parts[i + 2])) {
-                numberOfEvents = Integer.parseInt(parts[i + 2]);
-                i += 3;
-            } else {
-                i += 2;
+            if (!helper.verifyConsumer(consumer, topic)) {
+                throw new IllegalArgumentException("Consumer group of consumer " + consumerId
+                        + " does not have permission to consume from topic " + topic.getId() + ".");
             }
 
-            final int finalNumberOfEvents = numberOfEvents;
             Future<JSONObject> future = executorService.submit(() -> {
-                return consumeEvents(consumer.getId(), partition.getId(), finalNumberOfEvents);
+                return consumeEvents(consumer.getId(), partition.getId(), numberOfEvents);
             });
             futures.add(future);
         }
@@ -542,15 +563,30 @@ public class TributaryController {
         controller.createProducer("bananaBoiler", "banana", "manual");
         controller.createProducer("bananaFrier", "banana", "random");
 
-        // Create events using the JSON file names provided
         try {
-            controller.createEvent("bananaBoiler", "banana", "blendBanana", "bananaCookingMethod1");
-            controller.createEvent("bananaBoiler", "banana", "boilBanana", "bananaCookingStyle1");
-            controller.createEvent("bananaBoiler", "banana", "freezeBanana", "bananaCookingMethod1");
-            controller.createEvent("bananaFrier", "banana", "fryBanana", null);
-            controller.createEvent("bananaFrier", "banana", "grillBanana", null);
-            controller.createEvent("bananaFrier", "banana", "roastBanana", null);
-            controller.createEvent("bananaBoiler", "banana", "steamBanana", "bananaCookingMethod1");
+            JSONObject blendBanana = new JSONObject(
+                    Files.readString(Paths.get("messageConfigs/blendBanana.json")));
+            JSONObject boilBanana = new JSONObject(
+                    Files.readString(Paths.get("messageConfigs/boilBanana.json")));
+            JSONObject freezeBanana = new JSONObject(
+                    Files.readString(Paths.get("messageConfigs/freezeBanana.json")));
+            JSONObject fryBanana = new JSONObject(
+                    Files.readString(Paths.get("messageConfigs/fryBanana.json")));
+            JSONObject grillBanana = new JSONObject(
+                    Files.readString(Paths.get("messageConfigs/grillBanana.json")));
+            JSONObject roastBanana = new JSONObject(
+                    Files.readString(Paths.get("messageConfigs/roastBanana.json")));
+            JSONObject steamBanana = new JSONObject(
+                    Files.readString(Paths.get("messageConfigs/steamBanana.json")));
+
+            // Create events using the JSON file names provided
+            controller.createEvent("bananaBoiler", "banana", blendBanana, "bananaCookingMethod1");
+            controller.createEvent("bananaBoiler", "banana", boilBanana, "bananaCookingStyle1");
+            controller.createEvent("bananaBoiler", "banana", freezeBanana, "bananaCookingMethod1");
+            controller.createEvent("bananaFrier", "banana", fryBanana, null);
+            controller.createEvent("bananaFrier", "banana", grillBanana, null);
+            controller.createEvent("bananaFrier", "banana", roastBanana, null);
+            controller.createEvent("bananaBoiler", "banana", steamBanana, "bananaCookingMethod1");
         } catch (IOException e) {
             System.out.println(e);
             e.printStackTrace();

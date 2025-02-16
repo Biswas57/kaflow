@@ -1,6 +1,6 @@
 package tributary.core.tributaryFactory;
 
-import java.io.IOException;
+import org.json.JSONObject;
 
 import tributary.core.tributaryObject.TributaryCluster;
 
@@ -26,5 +26,5 @@ public abstract class ObjectFactory {
     public abstract void createProducer(String producerId, String topicId, String allocation);
 
     public abstract void createEvent(String producerId, String topicId,
-            String eventId, String partitionId) throws IOException;
+            JSONObject event, String partitionId);
 }

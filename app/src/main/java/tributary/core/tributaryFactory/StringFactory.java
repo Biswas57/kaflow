@@ -1,8 +1,6 @@
 package tributary.core.tributaryFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.List;
 
 import org.json.JSONObject;
 
@@ -29,7 +27,15 @@ public class StringFactory extends ObjectFactory {
     public void createPartition(String topicId, String partitionId) {
         @SuppressWarnings("unchecked")
         Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+        List<ConsumerGroup<?>> groups = getCluster().listConsumerGroups();
         topic.addPartition(new Partition<String>(topicId, partitionId));
+        for (ConsumerGroup<?> group : groups) {
+            for (Topic<?> t : group.getAssignedTopics()) {
+                if (t.getId() == topicId) {
+                    group.rebalance();
+                }
+            }
+        }
         System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId + "\n");
     }
 
@@ -79,13 +85,12 @@ public class StringFactory extends ObjectFactory {
     }
 
     @Override
-    public void createEvent(String producerId, String topicId, String eventId, String partitionId) throws IOException {
-        JSONObject messageJsonObject = new JSONObject(
-                Files.readString(Paths.get("messageConfigs/" + eventId + ".json")));
+    public void createEvent(String producerId, String topicId, JSONObject event, String partitionId) {
+        JSONObject message = event;
         @SuppressWarnings("unchecked")
         Producer<String> producer = (Producer<String>) getCluster().getProducer(producerId);
         @SuppressWarnings("unchecked")
         Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
-        producer.produceMessage(topic.listPartitions(), partitionId, messageJsonObject);
+        producer.produceMessage(topic.listPartitions(), partitionId, message);
     }
 }

@@ -1,5 +1,6 @@
 package tributary.api;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+import tributary.core.parameterDataStructures.ParallelEventRequest;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 @RestController
@@ -153,14 +158,17 @@ public class TributaryAPI {
     @PostMapping("/events")
     public ResponseEntity<JSONObject> createEvent(@RequestParam String producerId,
             @RequestParam String topicId,
-            @RequestParam String eventId,
+            @RequestParam JSONObject event,
             @RequestParam(required = false) String partitionId) {
         JSONObject response = new JSONObject();
         try {
-            controller.createEvent(producerId, topicId, eventId, partitionId);
-            response.put("message", "Event '" + eventId + "' created for topic '" + topicId + "'.");
+            controller.createEvent(producerId, topicId, event, partitionId);
+            response.put("message", "Event '" + event.getString("eventId") + "' created for topic '" + topicId + "'.");
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (IOException e) {
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
             response.put("error", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -306,14 +314,22 @@ public class TributaryAPI {
      * @return A ResponseEntity containing a JSON object with a success message.
      */
     @PostMapping("/parallel/produce")
-    public ResponseEntity<JSONObject> parallelProduce(@RequestBody String commands) {
+    public ResponseEntity<JSONObject> parallelProduce(@RequestBody String[] producerIds,
+            @RequestBody String[] topicIds,
+            @RequestBody JSONArray events,
+            @RequestBody String[] partitionIds) {
         JSONObject response = new JSONObject();
+        ParallelEventRequest requestParams = new ParallelEventRequest(Arrays.asList(producerIds),
+                Arrays.asList(topicIds),
+                events, Arrays.asList(partitionIds));
         try {
-            String[] parts = commands.split("\\s+");
-            controller.parallelProduce(parts);
+            controller.parallelProduce(requestParams);
             response.put("message", "Parallel production executed.");
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
             response.put("error", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -327,9 +343,24 @@ public class TributaryAPI {
      * @return A ResponseEntity containing a JSON object with a success message.
      */
     @PostMapping("/parallel/consume")
-    public ResponseEntity<JSONObject> parallelConsume(@RequestBody String commands) {
-        String[] parts = commands.split("\\s+");
-        JSONObject result = controller.parallelConsume(parts);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+    public ResponseEntity<JSONObject> parallelConsume(@RequestBody String[] consumerIds,
+            @RequestParam String[] partitionIds,
+            @RequestParam int[] numEvents) {
+        JSONObject response = new JSONObject();
+
+        List<Integer> numEventslist = new ArrayList<>();
+        for (int num : numEvents) {
+            numEventslist.add(num);
+        }
+        ParallelEventRequest requestParams = new ParallelEventRequest(Arrays.asList(consumerIds),
+                Arrays.asList(partitionIds), numEventslist);
+        try {
+            controller.parallelConsume(requestParams);
+            response.put("message", "Parallel production executed.");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
     }
 }

@@ -2,6 +2,11 @@
 
 // import java.util.Scanner;
 
+// /**
+// * @deprecated This CLI interactor is deprecated. Please use the new API-based
+// * CLI interactor.
+// */
+// @Deprecated
 // public class TributaryCLI {
 // private MessageHandler handler;
 // private Scanner scanner;

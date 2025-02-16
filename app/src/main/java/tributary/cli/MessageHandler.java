@@ -5,6 +5,8 @@
 
 // import tributary.api.TributaryController;
 
+// @Deprecated
+// @SuppressWarnings("deprecation")
 // public class MessageHandler {
 // private TributaryController controller;
 
