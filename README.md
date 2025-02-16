@@ -6,13 +6,12 @@ Kaflow is a form of Event-Driven Architecture (EDA) that uses Stream Processing.
 
 This library enhances the traditional in-memory stream EDA, which often relies on a single message queue shared by multiple consumers causing bottlenecks and delays, by incorporating elements of batch processing in certain scenarios such as replayability in event logs and delayed and parallel event consumption. By adopting a log-based approach, we overcome the limitations of message playback and memory storage seen in single message queue brokers. This improvement enhances data storage, replayability, and adds greater functionality to message processing, enabling more efficient and flexible handling of events across multiple channels.
 
-[**Why should I use a Message Broker?**](Blogging&Design/article.md)
-
 ### Breakdown of Engineering Requirements
 A complete visual overview of the entire system exist, showcasing the system in the [**final UML Diagram**](Blogging&Design/UML_final_design.pdf) and a more extensive overview of the required capabilities, constrains and functionality of the system, that had been created in the beginnging of this project (so it is a little outdated) can be found in the [**Engineering Requirements**](Engineering_Requirements.md). Furthermore, a full recount of the engineering process can be found in the following links:
 1. [Security Analysis Report](Blogging&Design/security_analysis_report.pdf)
 2. [Design Focused Implementation Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#tributary-cluster-design-focused-blog)
 3. [Reflection Blog](https://github.com/Biswas57/Tributary-Cluster/blob/main/Blogging%26Design/tributary_cluster_blog.md#reflection)
+4. [**Why should I use a Message Broker?**](Blogging&Design/article.md)
 
 ## Initialisation and Developer Use
 To help other developers interact with the Kaflow library, the main entry point is the `TributaryCLI` class. This class provides a command-line interface to create, modify, and interact with the Kaflow system.
