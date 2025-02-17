@@ -12,3 +12,4 @@ app/build/
 # IDE-specific files (adjust these as needed)
 .idea/
 *.iml
+.DS_Store
