@@ -1,1 +1,14 @@
+# Gradle build directories
+/build/
+/app/build/
+
+# Gradle cache
+/.gradle/
+
+# Environment configuration files
 .env
+.env.local
+
+# IDE-specific files (adjust these as needed)
+.idea/
+*.iml
