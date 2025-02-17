@@ -3,6 +3,7 @@ package tributary.core.tributaryObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import tributary.core.tokenManager.TokenManager;
 import tributary.core.tributaryObject.producers.Producer;
 
 public class TributaryCluster {
@@ -10,8 +11,7 @@ public class TributaryCluster {
     private List<Topic<?>> topics;
     private List<ConsumerGroup<?>> consumerGroups;
     private List<Producer<?>> producers;
-    private String adminProdToken;
-    private String adminConsToken;
+    private TokenManager tokenManager;
 
     private TributaryCluster() {
         this.topics = new ArrayList<>();
@@ -85,19 +85,11 @@ public class TributaryCluster {
         instance = mockInstance;
     }
 
-    public void setAdminProdToken(String token) {
-        this.adminProdToken = token;
+    public TokenManager getTokenManager() {
+        return this.tokenManager;
     }
 
-    public void setAdminConsToken(String token) {
-        this.adminConsToken = token;
-    }
-
-    public String getAdminProdToken() {
-        return adminProdToken;
-    }
-
-    public String getAdminConsToken() {
-        return adminConsToken;
+    public void setTokenManager(TokenManager tm) {
+        this.tokenManager = tm;
     }
 }

@@ -128,7 +128,7 @@ public class TributaryHelper {
      * @return true if verified, false otherwise
      */
     public boolean verifyProducer(Producer<?> prod, Topic<?> topic) {
-        String adminToken = cluster.getAdminProdToken();
+        String adminToken = cluster.getTokenManager().getAdminProdToken();
         if (prod.listAssignedTopics().contains(topic)) {
             return true;
         } else if (adminToken != null && prod.getToken() != null && adminToken.equals(prod.getToken())) {
@@ -194,7 +194,7 @@ public class TributaryHelper {
      */
     public boolean verifyConsumer(Consumer<?> consumer, Topic<?> topic) {
         ConsumerGroup<?> group = getConsumerGroup(consumer.getGroup());
-        String adminToken = cluster.getAdminConsToken();
+        String adminToken = cluster.getTokenManager().getAdminConsToken();
         if (group.listAssignedTopics().contains(topic)) {
             return true;
         } else if (adminToken != null && group.getToken() != null && adminToken.equals(group.getToken())) {

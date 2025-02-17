@@ -318,17 +318,22 @@ public class TributaryController {
      */
     public void updateConsumerGroupAdmin(String newGroupId, String oldGroupId, String password)
             throws IllegalArgumentException {
+        if (cluster.getTokenManager() == null) {
+            cluster.setTokenManager(new TokenManager(password));
+        }
+        TokenManager tm = cluster.getTokenManager();
         ConsumerGroup<?> oldGroup = helper.getConsumerGroup(oldGroupId);
-        if (oldGroup == null && cluster.getAdminConsToken() != null) {
+
+        if (oldGroup == null && tm.getAdminConsToken() != null) {
             throw new IllegalArgumentException("Admin token exists but old Admin could not be identified.");
-        } else if (oldGroup != null && cluster.getAdminConsToken() == null) {
+        } else if (oldGroup != null && tm.getAdminConsToken() == null) {
             throw new IllegalArgumentException("Old admin token not found.");
-        } else if (oldGroup != null && cluster.getAdminConsToken() != null) {
+        } else if (oldGroup != null && tm.getAdminConsToken() != null) {
             oldGroup.clearAssignments();
             oldGroup.setToken(null);
             oldGroup.rebalance();
 
-            String token = cluster.getAdminConsToken();
+            String token = tm.getAdminConsToken();
             if (!TokenManager.validateToken(token, oldGroup.getId(), oldGroup.getCreatedTime(), password)) {
                 throw new IllegalArgumentException("Incorrect token for old Consumer Group Admin.");
             }
@@ -340,7 +345,7 @@ public class TributaryController {
         }
 
         String token = TokenManager.generateToken(newGroup.getId(), newGroup.getCreatedTime());
-        cluster.setAdminConsToken(token);
+        tm.setAdminConsToken(token);
         newGroup.setToken(token);
         helper.assignTopicGeneric(newGroup);
         newGroup.rebalance();
@@ -356,16 +361,21 @@ public class TributaryController {
      * @param password  The password for verification (optional).
      */
     public void updateProducerAdmin(String newProdId, String oldProdId, String password) {
+        if (cluster.getTokenManager() == null) {
+            cluster.setTokenManager(new TokenManager(password));
+        }
+        TokenManager tm = cluster.getTokenManager();
         Producer<?> oldProd = helper.getProducer(oldProdId);
-        if (oldProd == null && cluster.getAdminProdToken() != null) {
+
+        if (oldProd == null && tm.getAdminProdToken() != null) {
             throw new IllegalArgumentException("Admin token exists but old Admin could not be identified.");
-        } else if (oldProd != null && cluster.getAdminProdToken() == null) {
+        } else if (oldProd != null && tm.getAdminProdToken() == null) {
             throw new IllegalArgumentException("Old admin token not found.");
-        } else if (oldProd != null && cluster.getAdminProdToken() != null) {
+        } else if (oldProd != null && tm.getAdminProdToken() != null) {
             oldProd.clearAssignments();
             oldProd.setToken(null);
 
-            String token = cluster.getAdminProdToken();
+            String token = tm.getAdminProdToken();
             if (!TokenManager.validateToken(token, oldProd.getId(), oldProd.getCreatedTime(), password)) {
                 throw new IllegalArgumentException("Invalid token for old Producer Admin.");
             }
@@ -377,7 +387,7 @@ public class TributaryController {
         }
 
         String token = TokenManager.generateToken(newProd.getId(), newProd.getCreatedTime());
-        cluster.setAdminProdToken(token);
+        tm.setAdminProdToken(token);
         newProd.setToken(token);
         helper.assignTopicGeneric(newProd);
         newProd.showTopics();
