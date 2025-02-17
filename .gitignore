@@ -1,9 +1,9 @@
 # Gradle build directories
-/build/
-/app/build/
+build/
+app/build/
 
 # Gradle cache
-/.gradle/
+.gradle/
 
 # Environment configuration files
 .env
