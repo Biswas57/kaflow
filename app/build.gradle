@@ -6,6 +6,7 @@ plugins {
     id("org.barfuin.gradle.jacocolog") version "3.1.0"
     id 'org.springframework.boot' version '2.7.4'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'org.openjfx.javafxplugin' version '0.0.14'
 }
 
 repositories {
@@ -26,6 +27,9 @@ dependencies {
 
     // To access .env file variables
     implementation 'io.github.cdimascio:dotenv-java:2.2.0'
+
+    // Access to Tuple (Pair<>) library
+    implementation 'org.openjfx:javafx-base:17'
 
     // Access to API library
     implementation 'org.springframework.boot:spring-boot-starter'
@@ -71,6 +75,12 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+    modularity.inferModulePath = true
+}
+
+javafx {
+    version = "17"
+    modules = [ 'javafx.base' ]
 }
 
 checkstyle {

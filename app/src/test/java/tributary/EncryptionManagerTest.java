@@ -3,6 +3,7 @@ package tributary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javafx.util.Pair;
 import tributary.core.encryptionManager.EncryptionManager;
 import tributary.core.encryptionManager.PrimeNumGenerator;
 import tributary.core.typeHandlerFactory.*;
@@ -217,27 +218,30 @@ class EncryptionManagerTest {
     }
 
     /*
-     * This is to check that even when decrypting the 
+     * This is to check that even when decrypting the
      */
     @Test
-    void testDecryptOnly() {
+    void testFullEncryptionAndDecryption() {
         IntegerHandler handler = new IntegerHandler();
-        String payload5 = "831";
-        publicKey = 39599;
+        String payload5 = "5";
 
-        String decrypted = encryptionManager.decrypt(payload5, publicKey);
+        // 2 Encryption managers linked by prime pair em2 dependent on em1
+        EncryptionManager em1 = new EncryptionManager();
+        Pair<Long, Long> pair = em1.getPrimePair();
+        EncryptionManager em2 = new EncryptionManager(pair);
+
+        String encrypted = em1.encrypt(payload5);
+        String decrypted = em2.decrypt(encrypted, em1.getPublicKey());
         assertEquals("5", decrypted);
 
         int number = handler.stringToValue(decrypted);
         assertEquals(5, number);
 
-        String payload100 = "615 990 990";
-        publicKey = 39599;
+        String monkeyPayload = "this is monkey man";
+        encrypted = em1.encrypt(monkeyPayload);
+        decrypted = em2.decrypt(encrypted, em1.getPublicKey());
 
-        decrypted = encryptionManager.decrypt(payload100, publicKey);
-        assertEquals("100", decrypted);
-
-        number = handler.stringToValue(decrypted);
-        assertEquals(100, number);
+        assertNotEquals(encrypted, monkeyPayload);
+        assertEquals("this is monkey man", decrypted);
     }
 }

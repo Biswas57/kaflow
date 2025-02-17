@@ -249,11 +249,10 @@ public class TributaryController {
                     "Partition " + partitionId + " not found for consumer " + consumerId + ".");
         }
 
-        String topicId = partition.getAllocatedTopicId();
-        Topic<?> topic = helper.getTopic(topicId);
+        Topic<?> topic = partition.getAllocatedTopic();
         if (!helper.verifyConsumer(consumer, topic)) {
             throw new IllegalArgumentException("Consumer Group of consumer " + consumerId
-                    + " does not have permission to consume from topic " + topicId + ".");
+                    + " does not have permission to consume from topic " + topic.getId() + ".");
         }
 
         JSONObject data;
@@ -302,7 +301,7 @@ public class TributaryController {
     public void updatePartitionOffset(String consumerId, String partitionId, int offset) {
         Consumer<?> consumer = helper.findConsumer(consumerId);
         Partition<?> partition = helper.findPartition(partitionId);
-        Topic<?> topic = helper.getTopic(partition.getAllocatedTopicId());
+        Topic<?> topic = partition.getAllocatedTopic();
 
         if (consumer == null || partition == null || topic == null) {
             throw new IllegalArgumentException("Consumer, partition, or topic not found.");
@@ -504,7 +503,7 @@ public class TributaryController {
                 throw new IllegalArgumentException(
                         "Consumer " + consumerId + " or partition " + partitionId + " not found.");
             }
-            Topic<?> topic = helper.getTopic(partition.getAllocatedTopicId());
+            Topic<?> topic = partition.getAllocatedTopic();
             if (!helper.verifyConsumer(consumer, topic)) {
                 throw new IllegalArgumentException("Consumer group of consumer " + consumerId
                         + " does not have permission to consume from topic " + topic.getId() + ".");
@@ -581,12 +580,15 @@ public class TributaryController {
 
             // Create events using the JSON file names provided
             controller.createEvent("bananaBoiler", "banana", blendBanana, "bananaCookingMethod1");
-            controller.createEvent("bananaBoiler", "banana", boilBanana, "bananaCookingStyle1");
-            controller.createEvent("bananaBoiler", "banana", freezeBanana, "bananaCookingMethod1");
+            controller.createEvent("bananaBoiler", "banana", boilBanana,
+                    "bananaCookingStyle1");
+            controller.createEvent("bananaBoiler", "banana", freezeBanana,
+                    "bananaCookingMethod1");
             controller.createEvent("bananaFrier", "banana", fryBanana, null);
             controller.createEvent("bananaFrier", "banana", grillBanana, null);
             controller.createEvent("bananaFrier", "banana", roastBanana, null);
-            controller.createEvent("bananaBoiler", "banana", steamBanana, "bananaCookingMethod1");
+            controller.createEvent("bananaBoiler", "banana", steamBanana,
+                    "bananaCookingMethod1");
         } catch (IOException e) {
             System.out.println(e);
             e.printStackTrace();

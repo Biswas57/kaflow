@@ -28,7 +28,7 @@ public class StringFactory extends ObjectFactory {
         @SuppressWarnings("unchecked")
         Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
         List<ConsumerGroup<?>> groups = getCluster().listConsumerGroups();
-        topic.addPartition(new Partition<String>(topicId, partitionId));
+        topic.addPartition(new Partition<String>(topic, partitionId));
         for (ConsumerGroup<?> group : groups) {
             for (Topic<?> t : group.getAssignedTopics()) {
                 if (t.getId() == topicId) {

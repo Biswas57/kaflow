@@ -28,7 +28,7 @@ public class IntegerFactory extends ObjectFactory {
         @SuppressWarnings("unchecked")
         Topic<Integer> topic = (Topic<Integer>) getCluster().getTopic(topicId);
         List<ConsumerGroup<?>> groups = getCluster().listConsumerGroups();
-        topic.addPartition(new Partition<Integer>(topicId, partitionId));
+        topic.addPartition(new Partition<Integer>(topic, partitionId));
         for (ConsumerGroup<?> group : groups) {
             for (Topic<?> t : group.getAssignedTopics()) {
                 if (t.getId() == topicId) {

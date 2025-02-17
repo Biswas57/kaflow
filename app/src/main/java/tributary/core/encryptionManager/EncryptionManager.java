@@ -5,28 +5,43 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import javafx.util.Pair;
 
 public class EncryptionManager {
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String PRIME1 = dotenv.get("PRIME1");
-    private static final String PRIME2 = dotenv.get("PRIME2");
-
     private final long n; // Modulus for public and private keys
     private final long totient; // Euler's totient phi(N)
     private final long e; // Public key exponent
+    private long p1;
+    private long p2;
 
+    // Excryption manager for producers (create private keys for partitions)
     public EncryptionManager() {
-        // Instead of these, I am going to parse the stored prime nums in the Consumer
-        long p1 = Long.parseLong(PRIME1);
-        long p2 = Long.parseLong(PRIME2);
+        p1 = PrimeNumGenerator.generatePrime();
+        p2 = PrimeNumGenerator.generatePrime();
 
-        // Calculate modulus N
+        // Calculate modulus N (private key)
         // int p1 = PrimeNumGenerator.generatePrime();
         // int p2 = PrimeNumGenerator.generatePrime();
         n = p1 * p2;
 
-        // Calculate Euler's totient φ(N)
+        // Calculate Euler's totient φ(N) (private key)
+        totient = getEulersTotient(p1, p2);
+
+        // Choose e (public key) coprime with totient
+        e = PrimeNumGenerator.generateCoprime(totient);
+    }
+
+    // Excryption manager for consumer (ensure decryption with the same keyx)
+    public EncryptionManager(Pair<Long, Long> primePair) {
+        p1 = primePair.getKey();
+        p2 = primePair.getValue();
+
+        // Calculate modulus N (private key)
+        // int p1 = PrimeNumGenerator.generatePrime();
+        // int p2 = PrimeNumGenerator.generatePrime();
+        n = p1 * p2;
+
+        // Calculate Euler's totient φ(N) (private key)
         totient = getEulersTotient(p1, p2);
 
         // Choose e (public key) coprime with totient
@@ -120,6 +135,10 @@ public class EncryptionManager {
 
     public long getPublicKey() {
         return e;
+    }
+
+    public Pair<Long, Long> getPrimePair() {
+        return new Pair<>(p1, p2);
     }
 
     public static long[] stringToLongArray(String input) {

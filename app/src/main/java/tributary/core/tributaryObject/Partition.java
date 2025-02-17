@@ -7,10 +7,10 @@ import java.util.HashMap;
 
 public class Partition<T> extends TributaryObject {
     private List<Message<T>> messages;
-    private String allocatedTopic;
+    private Topic<T> allocatedTopic;
     private Map<Consumer<T>, Integer> offset;
 
-    public Partition(String topicId, String partitionId) {
+    public Partition(Topic<T> topicId, String partitionId) {
         super(partitionId);
         this.allocatedTopic = topicId;
         this.messages = new ArrayList<>();
@@ -21,7 +21,7 @@ public class Partition<T> extends TributaryObject {
         messages.add(message);
     }
 
-    public String getAllocatedTopicId() {
+    public Topic<T> getAllocatedTopic() {
         return allocatedTopic;
     }
 

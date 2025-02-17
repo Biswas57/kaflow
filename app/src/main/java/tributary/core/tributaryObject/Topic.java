@@ -1,14 +1,18 @@
 package tributary.core.tributaryObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import javafx.util.Pair;
 
 public class Topic<T> extends TributaryObject {
     private Class<T> type;
     private List<Partition<T>> partitions;
+    Map<String, Pair<Long, Long>> keyMap = new HashMap<>();
 
     public Topic(String topicId, Class<T> type) {
         super(topicId);
@@ -38,6 +42,18 @@ public class Topic<T> extends TributaryObject {
 
     public boolean containsPartition(String partitionId) {
         return partitions.stream().anyMatch(p -> p.getId().equals(partitionId));
+    }
+
+    public Pair<Long, Long> getPrivateKey(String partitionId) {
+        return keyMap.get(partitionId);
+    }
+
+    public void setPrivateKey(String partitionId, Pair<Long, Long> pair) {
+        keyMap.put(partitionId, pair);
+    }
+
+    public Map<String, Pair<Long, Long>> getKeyMap() {
+        return keyMap;
     }
 
     public JSONObject showTopic() {
