@@ -6,17 +6,18 @@
     - Create processing helpers for these API calls in `TributaryHelper`
 2. Move create event method from message to producer classes, 100% makes sense (DONE)
     - Fixed the way the security Keys are stored -> They are stored in the Topic which a hashmap of keys for each partition
-3. Create API-connected CLI App acting kind of as a front end just to test API calls
-3. Fix UML before starting to implement Vector Topic creation automation and load balanced partition creation automation
-5. Going to leave unit testing for this wayyy later after term start but just want this working for now
+3. Create API-connected CLI App acting kind of as a front end just to test API calls 
+4. Fix UML before starting to implement Vector Topic creation automation and load balanced partition creation automation
+5. Add Byte-Payload Handling
+
 
 
 
 
 Low Priority Changes:
-- Add Byte-Payload Handling
 - Make API testing suits and API - CLI interaction Class that calls the API urls and curl them or sum shit
 - Hashmaps of Tributary objects instead of Lists, memory yes higher but efficiency more
     - Lower in priority incase I want vectorise and automate topic creation
     - Possibly better to iterate through Arraylist of Topics rather than Hashmaps
+- API unit testing
 
