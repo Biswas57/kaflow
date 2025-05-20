@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.util.Pair;
+import tributary.core.util.Pair;
 
 public class EncryptionManager {
     private final long n; // Modulus for public and private keys
@@ -33,8 +33,8 @@ public class EncryptionManager {
 
     // Excryption manager for consumer (ensure decryption with the same keyx)
     public EncryptionManager(Pair<Long, Long> primePair) {
-        p1 = primePair.getKey();
-        p2 = primePair.getValue();
+        p1 = primePair.left();
+        p2 = primePair.right();
 
         // Calculate modulus N (private key)
         // int p1 = PrimeNumGenerator.generatePrime();

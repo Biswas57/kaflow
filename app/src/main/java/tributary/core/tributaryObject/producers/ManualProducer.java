@@ -3,7 +3,7 @@ package tributary.core.tributaryObject.producers;
 import java.util.List;
 import java.util.Map;
 
-import javafx.util.Pair;
+import tributary.core.util.Pair;
 import tributary.core.encryptionManager.EncryptionManager;
 import tributary.core.tributaryObject.Message;
 import tributary.core.tributaryObject.Partition;
@@ -47,7 +47,7 @@ public class ManualProducer<T> extends Producer<T> {
                 }
 
                 p.addMessage(message);
-                System.out.println("The event: " + message.getId() + " has been manually allocated to partition "
+                System.out.println("The event " + message.getId() + " has been manually allocated to partition "
                         + partitionId + "\n");
                 return;
             }

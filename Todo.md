@@ -1,15 +1,27 @@
 
-1. Build spring boot App with the same number of endpoints as CLI commands (IN PROGRESS)
-    - Fix how Parameter are Parsed because currently parsing the JSON object from something like A curl command and an attached JSON object is not working, so I should just change all API params to a JSON object
-        - like what we did w Flask -> `@app.route("/api/url-generate", methods=["POST"])`
-        - Also label what each API method is -> `POST, GET or PUT`
-    - Create processing helpers for these API calls in `TributaryHelper`
-2. Move create event method from message to producer classes, 100% makes sense (DONE)
-    - Fixed the way the security Keys are stored -> They are stored in the Topic which a hashmap of keys for each partition
-3. Create API-connected CLI App acting kind of as a front end just to test API calls 
-4. Fix UML before starting to implement Vector Topic creation automation and load balanced partition creation automation
+1. API interfaces
+    - Implementing a HTTP Springboot interface for admin requestions from consumer and producer clients
+    - Complete all Exceptions so that Spring can handle them as they bubble up.
 
-6. the concurrency changes I need to make
+    - Implementing a stream-like gRPC connection for message productions and consumption
+
+                    ┌─────────────────────────────────────────────────┐
+                    │              Spring-Boot Application            │
+                    └─────────────────────────────────────────────────┘
+        ┌──────────────┐  HTTP/JSON  ┌────────────────┐  in-proc  ┌─────────────┐
+        │ Admin REST   │────────────▶│  AdminService  │──────────▶│             │
+        │              │             │  (Controller)  │           │             │   
+        │ Controller   │             └────────────────┘           │             │
+        └──────────────┘                                          │   Core      │
+                                                                  │ Tributary   │
+        ┌──────────────┐  gRPC stream  ┌────────────────┐         │   Broker    │
+        │  gRPC        │──────────────▶│ StreamService  │────────▶│             │
+        │ Endpoints    │  (Produce /   │ (Produce /     │ in-proc │             │
+        │ (grpc-java)  │   Subscribe)  │  Subscribe)    │         └─────────────┘
+        └──────────────┘               └────────────────┘
+
+
+2. the concurrency changes I need to make
   - Worker thread per topic/connection (up to you)
   - using synchronized write/read functions and thread safe list handling
   - eliminate parallel produce and parallel consume, because if we're gonna get a request in parallel we should do that and not just handle batch requests, batch requests are unlikely to happen in the microservice architecture we're aiming to be a part of
@@ -18,17 +30,31 @@
   - Use either Runnable interface or thread class for the worker thread running in the tributary controller
   - Not sure whether to have 1 thread per action or 1 thread per topic or IDK the relationship right now
 
-7. API interfaces
-    - Implementing a HTTP Springboot interface for admin requestions from consumer and producer clients
-    - Implementing a stream-like gRPC connection for message productions and consumption
-  
+3. Purge all implementations of RBAC
+    - RBAC implementation is poorly implemented.
+    - Replace it later on for actual RBAC implementation using Spring Security - Use Spring AuthService
+    - RBAC is a good idea for this project, but should be implemented properly with Java's actual security features
 
+4. When deleting components of the Tributary system, make sure to delete all relationships
+    - SO that objects are not left dangling
+    
 
 
 Low Priority Changes:
+1. Vectorized Topic creation future implementation -> Parse topicid in create event to existing topic and if not found use vectors to compare and make new one
+    - Working on Functionality
+    - Hashmap usage could be justified by iterating through keys (topicIDs) but what if its just a name and doesn't provide enough info for a vector comparison between the event being created and the topic
+    - Point of this is to automate setup through the automation of creation methods
+
+2. How do I deal with OOM issues when the parition is full
+    - 1 way is Partition load balancing feature that auto detects excessive load on a topic/consumer group or redundate consumers in a consumer group and this can lead to autocreation of extra partitions in the topic and thus rebalancing the topic for consumer groups depending on their rebalancing strategy
+    
+
 - Make API testing suits and API - CLI interaction Class that calls the API urls and curl them or sum shit
-- create domains for both the stream and HTTP JSON connection
-- Create UI using admin HTTP connections
-- Set up docker container and host on my linux PC
-- Make API testing suits and API - CLI interaction Class that calls the API urls and curl them or sum shit
+    - Create API-connected CLI App acting kind of as a front end just to test API calls
+    - Create UI using admin HTTP connections
+    - create domains for both the stream and HTTP JSON connection
+    - Set up docker container and host on my linux PC
+
 - Update UML
+

@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+#
+# Quick smoke-test for Tributary REST endpoints
+# ─────────────────────────────────────────────
+# Usage:  chmod +x test.sh && ./test.sh
+# Requires: curl, jq (pretty-print responses)
+
+BASE_URL="http://localhost:8080/api"
+
+# ─────────────────────────────────────────────
+# 1  VARIABLES (edit once – all commands reuse)
+# ─────────────────────────────────────────────
+TOPIC="banana"
+TYPE="string"
+
+PARTITIONS=( "bananaCookingMethod1" "bananaCookingMethod2" )
+GROUP="bananaChefs"
+REBALANCE1="roundrobin"
+REBALANCE2="range"
+
+CONSUMERS=( "chef1" "chef2" )
+PRODUCER="bananaBoiler"
+ALLOC="manual"
+
+PARTITION_FOR_OFFSET="${PARTITIONS[0]}"
+OFFSET_VAL=2
+
+# Helper for pretty printing
+pp() { jq . <<<"${1}"; }
+
+echo "──────────────────────── Create Topic ────────────────────────"
+curl -i -X POST "$BASE_URL/topics" \
+     -H "Content-Type: application/json" \
+     -d "{\"id\":\"$TOPIC\",\"type\":\"$TYPE\"}"
+echo -e "\n"
+
+echo "────────────────────── Duplicate Topic (400) ────────────────"
+curl -i -X POST "$BASE_URL/topics" \
+     -H "Content-Type: application/json" \
+     -d "{\"id\":\"$TOPIC\",\"type\":\"$TYPE\"}"
+echo -e "\n"
+
+echo "──────────────────────── Create Partitions ──────────────────"
+for P in "${PARTITIONS[@]}"; do
+  curl -i -X POST "$BASE_URL/topics/$TOPIC/partitions" \
+       -H "Content-Type: application/json" \
+       -d "{\"partitionId\":\"$P\"}"
+done
+echo -e "\n"
+
+echo "─────────────────── Create Consumer Group ───────────────────"
+curl -i -X POST "$BASE_URL/consumerGroups" \
+     -H "Content-Type: application/json" \
+     -d "{\"id\":\"$GROUP\",\"topicId\":\"$TOPIC\",\"rebalancing\":\"$REBALANCE1\"}"
+echo -e "\n"
+
+echo "──────────────────────── Create Consumers ───────────────────"
+for C in "${CONSUMERS[@]}"; do
+  curl -i -X POST "$BASE_URL/consumerGroups/$GROUP/consumers" \
+       -H "Content-Type: application/json" \
+       -d "{\"id\":\"$C\"}"
+done
+echo -e "\n"
+
+echo "─────────────────────── Create Producer ─────────────────────"
+curl -i -X POST "$BASE_URL/producers" \
+     -H "Content-Type: application/json" \
+     -d "{\"id\":\"$PRODUCER\",\"topicId\":\"$TOPIC\",\"allocation\":\"$ALLOC\"}"
+echo -e "\n"
+
+echo "──────────────────── Get Topic (verify) ─────────────────────"
+RESPONSE=$(curl -s "$BASE_URL/topics/$TOPIC")
+pp "$RESPONSE"
+echo -e "\n"
+
+echo "──────────────────── Get Consumer Group ─────────────────────"
+RESPONSE=$(curl -s "$BASE_URL/consumerGroups/$GROUP")
+pp "$RESPONSE"
+echo -e "\n"
+
+echo "──────────────── Update Rebalance Strategy ──────────────────"
+curl -i -X PUT "$BASE_URL/consumerGroups/$GROUP/rebalance" \
+     -H "Content-Type: application/json" \
+     -d "{\"strategy\":\"$REBALANCE2\"}"
+echo -e "\n"
+
+echo "────────────── Update Consumer Offset (Replay) ──────────────"
+curl -i -X PUT "$BASE_URL/consumerGroups/$GROUP/consumers/${CONSUMERS[0]}/offset" \
+     -H "Content-Type: application/json" \
+     -d "{\"partitionId\":\"$PARTITION_FOR_OFFSET\",\"offset\":$OFFSET_VAL}"
+echo -e "\n"
+
+echo "──────────────────────── Delete Consumer ────────────────────"
+curl -i -X DELETE "$BASE_URL/consumerGroups/$GROUP/consumers/${CONSUMERS[1]}"
+echo -e "\n"
+
+echo "──────────────────────── Delete Producer ────────────────────"
+curl -i -X DELETE "$BASE_URL/producers/$PRODUCER"
+echo -e "\n"
+
+echo "────────────────── Delete Partition & Topic ─────────────────"
+curl -i -X DELETE "$BASE_URL/topics/$TOPIC/partitions/${PARTITIONS[1]}"
+curl -i -X DELETE "$BASE_URL/topics/$TOPIC"
+echo -e "\n"
+
+echo "✅  Smoke-test finished"

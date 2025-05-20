@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import javafx.util.Pair;
+import tributary.core.util.Pair;
 
 public class Topic<T> extends TributaryObject {
     private Class<T> type;

@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
-import javafx.util.Pair;
+import tributary.core.util.Pair;
 import tributary.core.encryptionManager.EncryptionManager;
 import tributary.core.typeHandlerFactory.TypeHandler;
 import tributary.core.typeHandlerFactory.TypeHandlerFactory;

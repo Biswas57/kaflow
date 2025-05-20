@@ -4,13 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.*;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import tributary.core.tributaryObject.producers.*;
-import tributary.core.parameterDataStructures.ParallelEventRequest;
 import tributary.core.rebalancingStrategy.RebalancingStrategy;
 import tributary.core.tokenManager.TokenManager;
 import tributary.core.tributaryFactory.*;
@@ -171,46 +168,104 @@ public class TributaryController {
         }
     }
 
-    /**
-     * Deletes a consumer from the Tributary Cluster and triggers a rebalance in its
-     * group.
-     *
-     * @param consumerId The identifier of the consumer to delete.
+    /*
+     * Deletion methods for objects in the Tributary Cluster.
      */
-    public void deleteConsumer(String consumerId) {
-        cluster.deleteConsumer(consumerId);
+
+    /**
+     * Deletes a topic from the Tributary Cluster.
+     * 
+     * @param consumerId topicId The identifier of the topic to delete.
+     */
+    public void deleteTopic(String topicId) {
+        cluster.removeTopic(topicId);
     }
 
     /**
-     * Returns a JSON representation of a specified topic, including its partitions
-     * and messages.
+     * Deletes a partition from a specified topic.
      *
-     * @param topicId The identifier of the topic to display.
-     * @return A JSONObject representing the topic.
-     * @throws IllegalArgumentException if the topic is not found.
+     * @param topicId     The identifier of the topic.
+     * @param partitionId The identifier of the partition to delete.
      */
-    public JSONObject showTopic(String topicId) {
+    public void deletePartition(String topicId, String partitionId) {
         Topic<?> topic = cluster.getTopic(topicId);
         if (topic == null) {
             throw new IllegalArgumentException("Topic " + topicId + " not found.");
         }
-        return topic.showTopic();
+        topic.removePartition(partitionId);
     }
 
     /**
-     * Returns a JSON representation of a specified consumer group, including its
-     * consumers and their assigned partitions.
+     * Deletes a producer from the Tributary Cluster.
      *
-     * @param groupId The identifier of the consumer group to display.
-     * @return A JSONObject representing the consumer group.
-     * @throws IllegalArgumentException if the group is not found.
+     * @param producerId The identifier of the producer to delete.
      */
-    public JSONObject showGroup(String groupId) {
+    public void deleteProducer(String producerId) {
+        Producer<?> producer = cluster.getProducer(producerId);
+        if (producer == null) {
+            throw new IllegalArgumentException("Producer " + producerId + " not found.");
+        }
+        producer.clearAssignments();
+        cluster.removeProducer(producerId);
+    }
+
+    /**
+     * Deletes a consumer group from the Tributary Cluster.
+     *
+     * @param groupId The identifier of the consumer group to delete.
+     */
+    public void deleteConsumerGroup(String groupId) {
         ConsumerGroup<?> group = cluster.getConsumerGroup(groupId);
+        if (group == null) {
+            throw new IllegalArgumentException("Consumer group " + groupId + " not found.");
+        }
+        group.clearAssignments();
+        cluster.removeGroup(groupId);
+    }
+
+    /**
+     * Deletes a consumer from a specified consumer group and triggers a rebalance
+     * in
+     * the group.
+     *
+     * @param consumerId The identifier of the consumer to delete.
+     * @param groupId    The identifier of the consumer group.
+     */
+    public void deleteConsumer(String groupId, String consumerId) {
+        ConsumerGroup<?> group = helper.getConsumerGroup(groupId);
         if (group == null) {
             throw new IllegalArgumentException("Group " + groupId + " not found.");
         }
-        return group.showGroup();
+        group.removeConsumer(consumerId);
+    }
+
+    /*
+     * Show methods for displaying information about topics, consumer groups,
+     * producers, and events.
+     */
+
+    /**
+     * Displays the details of a specified topic.
+     * 
+     * @param topicId The identifier of the topic to display.
+     * @return A Topic object representing the specified topic.
+     * @throws IllegalArgumentException if the topic is not found.
+     */
+    public Topic<?> showTopic(String topicId) {
+        return Optional.ofNullable(helper.getTopic(topicId))
+                .orElseThrow(() -> new IllegalArgumentException("Topic" + topicId + " not found."));
+    }
+
+    /**
+     * Displays the details of a specified consumer group.
+     * 
+     * @param groupId The identifier of the consumer group to display.
+     * @return A ConsumerGroup object representing the specified consumer group.
+     * @throws IllegalArgumentException if the consumer group is not found.
+     */
+    public ConsumerGroup<?> showGroup(String groupId) {
+        return Optional.ofNullable(helper.getConsumerGroup(groupId))
+                .orElseThrow(() -> new IllegalArgumentException("Consumer group " + groupId + " not found."));
     }
 
     /**
@@ -282,12 +337,13 @@ public class TributaryController {
      * Updates the partition offset for a consumer to allow message replay or
      * backtracking.
      *
+     * @param groupId     The identifier of the consumer group.
      * @param consumerId  The identifier of the consumer.
      * @param partitionId The identifier of the partition.
      * @param offset      The offset to set for the consumer.
      */
-    public void updatePartitionOffset(String consumerId, String partitionId, int offset) {
-        Consumer<?> consumer = helper.findConsumer(consumerId);
+    public void updatePartitionOffset(String groupId, String consumerId, String partitionId, int offset) {
+        Consumer<?> consumer = helper.getConsumerGroup(groupId).getConsumer(consumerId);
         Partition<?> partition = helper.findPartition(partitionId);
         Topic<?> topic = partition.getAllocatedTopic();
 
@@ -381,161 +437,6 @@ public class TributaryController {
         newProd.showTopics();
     }
 
-    /**
-     * Produces a series of events in parallel.
-     *
-     * @param producers  An array of producer IDs.
-     * @param topics     An array of topic IDs.
-     * @param events     A JSONArray where each element is an event represented as a
-     *                   JSONObject.
-     * @param partitions An array of partition IDs.
-     * @throws IllegalArgumentException if input array lengths do not match or if
-     *                                  validation fails.
-     */
-    public void parallelProduce(ParallelEventRequest dto) throws IllegalArgumentException, RuntimeException {
-        List<String> producers = dto.getProducers();
-        List<String> topics = dto.getTopics();
-        JSONArray events = dto.getEvents();
-        List<String> partitions = dto.getPartitions();
-
-        if (producers.size() != topics.size() || producers.size() != events.length()
-                || producers.size() != partitions.size()) {
-            throw new IllegalArgumentException("All input arrays must have the same length.");
-        }
-
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        List<Future<?>> futures = new ArrayList<>();
-
-        for (int i = 0; i < producers.size(); i++) {
-            final String producerId = producers.get(i);
-            final String topicId = topics.get(i);
-            final JSONObject eventObj = events.getJSONObject(i);
-            final String partitionId = partitions.get(i);
-
-            Producer<?> producer = helper.getProducer(producerId);
-            Topic<?> topic = helper.getTopic(topicId);
-            if (producer == null || topic == null) {
-                throw new IllegalArgumentException("Producer " + producerId + " or topic " + topicId + " not found.");
-            } else if (!topic.getType().equals(producer.getType())) {
-                throw new IllegalArgumentException(
-                        "Producer " + producerId + " type does not match Topic " + topicId + " type.");
-            }
-
-            // For manual producers, ensure a valid partition is provided.
-            if (producer instanceof ManualProducer) {
-                if (partitionId == null || partitionId.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            "Manual producer " + producerId + " requires a valid partition id.");
-                }
-                if (helper.findPartition(partitionId) == null) {
-                    throw new IllegalArgumentException("Partition " + partitionId + " not found.");
-                }
-            }
-
-            // Submit a task to produce the event.
-            Future<?> future = executorService.submit(() -> {
-                // Directly use the event object's string representation.
-                createEvent(producerId, topicId, eventObj, partitionId);
-            });
-            futures.add(future);
-        }
-
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(600, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Parallel produce interrupted", e);
-        }
-
-        for (Future<?> future : futures) {
-            try {
-                future.get();
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e.getCause());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Future execution interrupted", e);
-            }
-        }
-    }
-
-    /**
-     * Consumes events in parallel from multiple partitions as specified by the
-     * input arrays.
-     * Returns a JSONObject with an "events" key mapping to a JSONArray containing
-     * the consumption results for each consumer (using the consumer's id as the
-     * key).
-     *
-     * @param consumerIds  An array of consumer IDs.
-     * @param partitionIds An array of partition IDs.
-     * @param numEvents    An array of numbers specifying how many events to consume
-     *                     for each consumer.
-     * @return A JSONObject structured as:
-     *         { "events": [ { "consumerId1": [ ... ] }, { "consumerId2": [ ... ] },
-     *         ... ] }
-     * @throws IllegalArgumentException if the input arrays do not have the same
-     *                                  length or if any required entity is not
-     *                                  found.
-     */
-    public JSONObject parallelConsume(ParallelEventRequest dto) {
-        List<String> consumerIds = dto.getConsumers();
-        List<String> partitionIds = dto.getPartitions();
-        List<Integer> numEvents = dto.getNumEvents();
-
-        if (consumerIds.size() != partitionIds.size() || consumerIds.size() != numEvents.size()) {
-            throw new IllegalArgumentException("All input arrays must have the same length.");
-        }
-
-        ExecutorService executorService = Executors.newFixedThreadPool(consumerIds.size());
-        List<Future<JSONObject>> futures = new ArrayList<>();
-
-        for (int i = 0; i < consumerIds.size(); i++) {
-            final String consumerId = consumerIds.get(i);
-            final String partitionId = partitionIds.get(i);
-            final int numberOfEvents = numEvents.get(i);
-
-            Partition<?> partition = helper.findPartition(partitionId);
-            Consumer<?> consumer = helper.findConsumer(consumerId);
-            if (consumer == null || partition == null) {
-                throw new IllegalArgumentException(
-                        "Consumer " + consumerId + " or partition " + partitionId + " not found.");
-            }
-            Topic<?> topic = partition.getAllocatedTopic();
-            if (!helper.verifyConsumer(consumer, topic)) {
-                throw new IllegalArgumentException("Consumer group of consumer " + consumerId
-                        + " does not have permission to consume from topic " + topic.getId() + ".");
-            }
-
-            Future<JSONObject> future = executorService.submit(() -> {
-                return consumeEvents(consumer.getId(), partition.getId(), numberOfEvents);
-            });
-            futures.add(future);
-        }
-
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Parallel consume interrupted: " + e.getMessage(), e);
-        }
-
-        JSONArray eventsArray = new JSONArray();
-        for (Future<JSONObject> future : futures) {
-            try {
-                JSONObject consumerEvents = future.get();
-                eventsArray.put(consumerEvents);
-            } catch (Exception e) {
-                throw new RuntimeException("Error retrieving future result: " + e.getMessage(), e);
-            }
-        }
-
-        JSONObject result = new JSONObject();
-        result.put("events", eventsArray);
-        return result;
-    }
-
     public static void main(String[] args) {
         TributaryController controller = new TributaryController();
 
@@ -589,7 +490,7 @@ public class TributaryController {
             controller.createEvent("bananaBoiler", "banana", steamBanana,
                     "bananaCookingMethod1");
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("This the exception: " + e);
             e.printStackTrace();
         }
 

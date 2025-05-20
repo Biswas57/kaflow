@@ -1,12 +1,10 @@
 plugins {
     id 'java'
-    id 'application'
     id 'checkstyle'
     id 'jacoco'
     id("org.barfuin.gradle.jacocolog") version "3.1.0"
-    id 'org.springframework.boot' version '2.7.4'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id 'org.openjfx.javafxplugin' version '0.0.14'
+    id 'org.springframework.boot' version '2.7.17'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
 repositories {
@@ -15,7 +13,6 @@ repositories {
 }
 
 dependencies {
-    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.9'
     implementation group: 'org.json', name: 'json', version: '20230618'
 
     // Use JUnit Jupiter & Mockito for testing.
@@ -25,17 +22,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-    // To access .env file variables
-    implementation 'io.github.cdimascio:dotenv-java:2.2.0'
-
-    // Access to Tuple (Pair<>) library
-    implementation 'org.openjfx:javafx-base:17'
-
     // Access to API library
-    implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 }
 
 sourceSets {
@@ -61,10 +50,6 @@ processResources {
     duplicatesStrategy = 'INCLUDE'
 }
 
-processTestResources {
-    duplicatesStrategy = 'INCLUDE'
-}
-
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
@@ -73,14 +58,9 @@ tasks.named('test') {
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
+        languageVersion = JavaLanguageVersion.of(17)
     }
     modularity.inferModulePath = true
-}
-
-javafx {
-    version = "17"
-    modules = [ 'javafx.base' ]
 }
 
 checkstyle {
@@ -112,14 +92,14 @@ jacocoTestReport {
 }
 
 jacocoTestCoverageVerification {
-    // violationRules {
-    //     rule {
-    //         limit {
-    //             counter = "BRANCH"
-    //             minimum = 0.80
-    //         }
-    //     }
-    // }
+    violationRules {
+        rule {
+            limit {
+                counter = "BRANCH"
+                minimum = 0.80
+            }
+        }
+    }
 
     afterEvaluate {
         classDirectories.from = files(classDirectories.files.collect {
@@ -146,8 +126,4 @@ jacocoLogTestCoverage {
         showInstructionCoverage = false
         showComplexityCoverage = false
     }
-}
-
-application {
-    mainClass = 'tributary.cli.TributaryCLI'
 }

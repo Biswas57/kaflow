@@ -8,10 +8,10 @@ import tributary.core.tributaryObject.producers.Producer;
 
 public class TributaryCluster {
     private static TributaryCluster instance;
-    private List<Topic<Object>> topics;
+    private List<Topic<?>> topics;
     private List<ConsumerGroup<?>> consumerGroups;
     private List<Producer<?>> producers;
-    private TokenManager tokenManager;
+    private TokenManager tm = new TokenManager("password");
 
     private TributaryCluster() {
         this.topics = new ArrayList<>();
@@ -37,6 +37,14 @@ public class TributaryCluster {
 
     public void addGroup(ConsumerGroup<?> group) {
         consumerGroups.add(group);
+    }
+
+    public void removeProducer(String producerId) {
+        producers.removeIf(p -> p.getId().equals(producerId));
+    }
+
+    public void removeGroup(String groupId) {
+        consumerGroups.removeIf(g -> g.getId().equals(groupId));
     }
 
     public void removeTopic(String topicId) {
@@ -86,10 +94,10 @@ public class TributaryCluster {
     }
 
     public TokenManager getTokenManager() {
-        return this.tokenManager;
+        return this.tm;
     }
 
     public void setTokenManager(TokenManager tm) {
-        this.tokenManager = tm;
+        this.tm = tm;
     }
 }

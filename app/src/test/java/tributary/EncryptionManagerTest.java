@@ -3,7 +3,7 @@ package tributary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javafx.util.Pair;
+import tributary.core.util.Pair;
 import tributary.core.encryptionManager.EncryptionManager;
 import tributary.core.encryptionManager.PrimeNumGenerator;
 import tributary.core.typeHandlerFactory.*;
