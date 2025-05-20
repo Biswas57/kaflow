@@ -131,10 +131,10 @@ To run usability tests on this library I needed to develop a way to interact wit
     <td>A message confirming the consumer’s creation.</td>
   </tr>
   <tr>
-    <td><code>delete consumer &lt;consumer&gt;</code></td>
+    <td><code>delete consumer &lt;group&gt; &lt;consumer&gt;</code></td>
     <td>
       <ul>
-        <li>Deletes the consumer with the given id.</li>
+        <li>Deletes the consumer with the given id from a specified consumer group.</li>
       </ul>
     </td>
     <td>
