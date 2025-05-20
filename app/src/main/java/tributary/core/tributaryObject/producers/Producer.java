@@ -1,24 +1,16 @@
 package tributary.core.tributaryObject.producers;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.json.JSONObject;
 
 import tributary.core.encryptionManager.EncryptionManager;
-import tributary.core.tributaryObject.AdminObject;
-import tributary.core.tributaryObject.Message;
-import tributary.core.tributaryObject.Partition;
-import tributary.core.tributaryObject.Topic;
+import tributary.core.tributaryObject.*;
 import tributary.core.typeHandlerFactory.TypeHandler;
 import tributary.core.typeHandlerFactory.TypeHandlerFactory;
 
 public abstract class Producer<T> extends AdminObject<T> {
-    public long publicKey;
     private static final Map<String, Class<?>> typeMap = new HashMap<>();
     private static final EncryptionManager encryptionManager = new EncryptionManager();
 
@@ -78,7 +70,7 @@ public abstract class Producer<T> extends AdminObject<T> {
         }
 
         // Create the Message object and allocate it.
-        Message<T> msg = new Message<>(messageId, createdDate, getType(), content, encryptionManager.getPublicKey());
+        Message<T> msg = new Message<T>(messageId, createdDate, content, encryptionManager.getPublicKey());
         allocateMessage(partitions, partitionId, msg);
     }
 

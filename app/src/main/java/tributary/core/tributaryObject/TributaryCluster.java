@@ -8,7 +8,7 @@ import tributary.core.tributaryObject.producers.Producer;
 
 public class TributaryCluster {
     private static TributaryCluster instance;
-    private List<Topic<?>> topics;
+    private List<Topic<Object>> topics;
     private List<ConsumerGroup<?>> consumerGroups;
     private List<Producer<?>> producers;
     private TokenManager tokenManager;

@@ -2,19 +2,7 @@ package tributary.core.tributaryFactory;
 
 import org.json.JSONObject;
 
-import tributary.core.tributaryObject.TributaryCluster;
-
-public abstract class ObjectFactory {
-    private TributaryCluster cluster = TributaryCluster.getInstance();
-
-    public TributaryCluster getCluster() {
-        return cluster;
-    }
-
-    public void setCluster(TributaryCluster cluster) {
-        this.cluster = cluster;
-    }
-
+public interface ObjectFactory<T> {
     public abstract void createTopic(String topicId);
 
     public abstract void createPartition(String topicId, String partitionId);

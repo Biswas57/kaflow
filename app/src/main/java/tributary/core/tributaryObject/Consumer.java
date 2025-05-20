@@ -40,7 +40,7 @@ public class Consumer<T> extends TributaryObject {
 
         // Create a JSON object to hold decrypted content
         JSONObject contentJson = new JSONObject();
-        Class<T> type = message.getPayloadType();
+        Class<T> type = partition.getAllocatedTopic().getType();
         TypeHandler<T> handler = TypeHandlerFactory.getHandler(type);
 
         // For each entry in the message content, decrypt the value and add it to the
@@ -48,7 +48,7 @@ public class Consumer<T> extends TributaryObject {
         for (Map.Entry<String, String> entry : message.getContent().entrySet()) {
             String encrypted = entry.getValue();
             String decrypted = em.decrypt(encrypted, message.getPublicKey());
-            Object value = handler.handle(decrypted);
+            T value = handler.handle(decrypted);
             contentJson.put(entry.getKey(), value);
         }
 
@@ -59,7 +59,6 @@ public class Consumer<T> extends TributaryObject {
         JSONObject headerJson = new JSONObject();
         headerJson.put("messageId", message.getId());
         headerJson.put("createdDate", message.getCreatedDate().toString());
-        headerJson.put("payloadType", type.getSimpleName());
 
         // Create the result JSON object
         JSONObject result = new JSONObject();

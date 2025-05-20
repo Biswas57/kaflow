@@ -1,0 +1,1380 @@
+package tributary.core.encryptionManager;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import javafx.util.Pair;
+
+public class EncryptionManager {
+    private final long n; // Modulus for public and private keys
+    private final long totient; // Euler's totient phi(N)
+    private final long e; // Public key exponent
+    private long p1;
+    private long p2;
+
+    // Excryption manager for producers (create private keys for partitions)
+    public EncryptionManager() {
+        p1 = PrimeNumGenerator.generatePrime();
+        p2 = PrimeNumGenerator.generatePrime();
+
+        // Calculate modulus N (private key)
+        // int p1 = PrimeNumGenerator.generatePrime();
+        // int p2 = PrimeNumGenerator.generatePrime();
+        n = p1 * p2;
+
+        // Calculate Euler's totient φ(N) (private key)
+        totient = getEulersTotient(p1, p2);
+
+        // Choose e (public key) coprime with totient
+        e = PrimeNumGenerator.generateCoprime(totient);
+    }
+
+    // Excryption manager for consumer (ensure decryption with the same keyx)
+    public EncryptionManager(Pair<Long, Long> primePair) {
+        p1 = primePair.getKey();
+        p2 = primePair.getValue();
+
+        // Calculate modulus N (private key)
+        // int p1 = PrimeNumGenerator.generatePrime();
+        // int p2 = PrimeNumGenerator.generatePrime();
+        n = p1 * p2;
+
+        // Calculate Euler's totient φ(N) (private key)
+        totient = getEulersTotient(p1, p2);
+
+        // Choose e (public key) coprime with totient
+        e = PrimeNumGenerator.generateCoprime(totient);
+    }
+
+    // RSA encryption with refined encoding
+    public String encrypt(String message) {
+        byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
+        long[] encryptedArray = new long[messageBytes.length];
+        StringBuilder encryptedMessage = new StringBuilder();
+
+        for (int i = 0; i < messageBytes.length; i++) {
+            // ciphertext = byte^e mod n
+            encryptedArray[i] = modularExponentiation(messageBytes[i], e, n);
+            encryptedMessage.append(encryptedArray[i]).append(" ");
+        }
+
+        return encryptedMessage.toString().trim();
+    }
+
+    // RSA decryption with refined decoding
+    public String decrypt(String ciphertext, long e) {
+        String[] ciphertextArray = ciphertext.split(" ");
+        byte[] decryptedBytes = new byte[ciphertextArray.length];
+        long d = modularInverse(e, totient);
+
+        for (int i = 0; i < ciphertextArray.length; i++) {
+            // plaintext = ciphertext^d mod n
+            long decryptedLong = modularExponentiation(Long.parseLong(ciphertextArray[i]), d, n);
+            decryptedBytes[i] = (byte) decryptedLong;
+        }
+
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
+    }
+
+    // Modular exponentiation: (base^exp) % mod.
+    // You encrypt a message x using the encryption key (e,N) by simply calculating
+    // x^e mod N.
+    public static long modularExponentiation(long base, long exp, long mod) {
+        long result = 1;
+        base = base % mod;
+
+        while (exp > 0) {
+            if ((exp & 1) == 1) { // If exp is odd
+                result = (result * base) % mod;
+            }
+            exp >>= 1; // exp = exp / 2
+            base = (base * base) % mod;
+        }
+
+        return result;
+    }
+
+    // Extended Euclidean Algorithm to find modular
+    // inverse of e mod phi(N)
+    public static long modularInverse(long a, long m) {
+        long m0 = m, x0 = 0, x1 = 1;
+
+        if (m == 1)
+            return 0;
+
+        while (a > 1) {
+            long q = a / m;
+            long t = m;
+
+            // m is remainder now, process
+            // same as Euclid's algo
+            m = a % m;
+            a = t;
+            t = x0;
+
+            x0 = x1 - q * x0;
+            x1 = t;
+        }
+
+        // Make x1 positive
+        if (x1 < 0)
+            x1 += m0;
+
+        return x1;
+    }
+
+    public long getModulus() {
+        return n;
+    }
+
+    public long getEulersTotient(long prime1, long prime2) {
+        return (prime1 - 1) * (prime2 - 1);
+    }
+
+    public long getPublicKey() {
+        return e;
+    }
+
+    public Pair<Long, Long> getPrimePair() {
+        return new Pair<>(p1, p2);
+    }
+
+    public static long[] stringToLongArray(String input) {
+        String[] words = input.split(" ");
+        List<Long> longList = new ArrayList<>();
+
+        for (String word : words) {
+            byte[] wordBytes = word.getBytes(StandardCharsets.UTF_8);
+
+            // Ensure the word can be represented within a single long (max 8 bytes)
+            if (wordBytes.length > 8) {
+                throw new IllegalArgumentException("Word is too long to convert to a single long value.");
+            }
+
+            // Pad the byte array to 8 bytes if it's shorter
+            byte[] paddedBytes = new byte[8];
+            System.arraycopy(wordBytes, 0, paddedBytes, 8 - wordBytes.length, wordBytes.length);
+
+            // Convert the padded byte array to a long and add to list
+            longList.add(ByteBuffer.wrap(paddedBytes).getLong());
+        }
+
+        return longList.stream().mapToLong(Long::longValue).toArray();
+    }
+
+    public static String longArrayToString(long[] longArray) {
+        StringBuilder result = new StringBuilder();
+
+        for (long l : longArray) {
+            // Convert the long to a byte array
+            byte[] bytes = ByteBuffer.allocate(8).putLong(l).array();
+
+            // Trim leading zero bytes and convert remaining bytes back to a String
+            String word = new String(bytes, StandardCharsets.UTF_8).trim();
+            result.append(word).append(" ");
+        }
+
+        return result.toString().trim();
+    }
+
+    public static void main(String[] args) {
+        EncryptionManager encryptionManager = new EncryptionManager();
+
+        String originalMessage = "100";
+        System.out.println("Original Message: " + originalMessage);
+
+        // Encrypt the message
+        String encryptedMessage = encryptionManager.encrypt(originalMessage);
+        System.out.println("Encrypted Message: " + encryptedMessage);
+
+        // Decrypt the message
+        String decryptedMessage = encryptionManager.decrypt(encryptedMessage, encryptionManager.getPublicKey());
+        System.out.println("Decrypted Message: " + decryptedMessage);
+
+        if (originalMessage.equals(decryptedMessage)) {
+            System.out.println("Success: The decrypted message matches the original.");
+        } else {
+            System.out.println("Error: The decrypted message does not match the original.");
+        }
+    }
+}
+package tributary.core.encryptionManager;
+
+import java.util.Random;
+
+public class PrimeNumGenerator {
+    public static long generatePrime() {
+        int prime;
+            while (true)
+            {
+                int count = 0;
+                double x  = Math.random();
+                double y  = 10000 * x;
+                double z  = Math.ceil(y);
+                prime     = (int)z;
+                for (int i = 1; i <= prime; i++)
+                {
+                    int modfactor = prime % i;
+                    if (modfactor == 0)
+                    {
+                        count++;
+                    }
+                }
+                if (count == 2)
+                {
+                    break;
+                }
+            }
+        return prime;
+    }
+
+    // Helper function to generate a coprime of n
+    public static long generateCoprime(long n) {
+        Random rand = new Random();
+        long coprime;
+
+        do {
+            coprime = rand.nextInt((int) (n - 1)) + 1;
+        } while (gcd(n, coprime) != 1);
+
+        return coprime;
+    }
+
+    public static long gcd(long a, long b) {
+        while (b != 0) {
+            long temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+}package tributary.core.parameterDataStructures;
+
+import java.util.List;
+
+import org.json.JSONArray;
+
+/**
+ * A data transfer object (DTO) that encapsulates all necessary information
+ * for producing events in parallel. This class groups together arrays (or
+ * lists)
+ * of producer IDs, topic IDs, event data, and partition IDs.
+ *
+ * This improves maintainability by replacing multiple separate arrays with a
+ * single
+ * cohesive object.
+ */
+public class ParallelEventRequest {
+
+    /**
+     * The events field is a list of maps representing each event's data.
+     * Each map corresponds to an event and contains key-value pairs that represent
+     * the event content.
+     */
+    private List<String> partitions;
+
+    // Parallel Produce Params
+    private List<String> producers;
+    private List<String> topics;
+    private JSONArray events;
+
+    // Parallel Consume Params
+    private List<String> consumers;
+    private List<Integer> numEvents;
+
+    /**
+     * Default constructor.
+     */
+    public ParallelEventRequest() {
+        // Default constructor needed for JSON deserialization
+    }
+
+    /**
+     * @param producers  List of producer IDs.
+     * @param topics     List of topic IDs.
+     * @param events     List of event objects represented as maps.
+     * @param partitions List of partition IDs.
+     */
+    public ParallelEventRequest(List<String> producerIds, List<String> topicIds,
+            JSONArray events, List<String> partitionIds) {
+        this.producers = producerIds;
+        this.topics = topicIds;
+        this.events = events;
+        this.partitions = partitionIds;
+    }
+
+    /**
+     * @param consumerIds  List of consumer IDs.
+     * @param partitionIds List of partition IDs.
+     * @param numEvents    List of numbers specifying how many events to consume for
+     *                     each consumer.
+     */
+    public ParallelEventRequest(List<String> consumerIds, List<String> partitionIds, List<Integer> numEvents) {
+        this.consumers = consumerIds;
+        this.partitions = partitionIds;
+        this.numEvents = numEvents;
+    }
+
+    public List<String> getProducers() {
+        return producers;
+    }
+
+    public void setProducers(List<String> producers) {
+        this.producers = producers;
+    }
+
+    public List<String> getTopics() {
+        return topics;
+    }
+
+    public void setTopics(List<String> topics) {
+        this.topics = topics;
+    }
+
+    public JSONArray getEvents() {
+        return events;
+    }
+
+    public void setEvents(JSONArray events) {
+        this.events = events;
+    }
+
+    public List<String> getPartitions() {
+        return partitions;
+    }
+
+    public void setPartitions(List<String> partitions) {
+        this.partitions = partitions;
+    }
+
+    public List<String> getConsumers() {
+        return consumers;
+    }
+
+    public List<Integer> getNumEvents() {
+        return numEvents;
+    }
+
+    @Override
+    public String toString() {
+        return "EventProductionRequest{" +
+                "producers=" + producers +
+                ", topics=" + topics +
+                ", events=" + events +
+                ", partitions=" + partitions +
+                '}';
+    }
+}
+package tributary.core.rebalancingStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.Topic;
+
+public class RangeStrategy<T> implements RebalancingStrategy<T> {
+    @Override
+    public void rebalance(List<Topic<T>> topics, List<Consumer<T>> consumers) {
+        if (topics.isEmpty() || consumers.isEmpty()) {
+            return;
+        }
+        for (Consumer<T> consumer : consumers) {
+            consumer.clearAssignments();
+        }
+
+        List<Partition<T>> partitions = new ArrayList<>();
+        for (Topic<T> topic : topics) {
+            partitions.addAll(topic.listPartitions());
+        }
+        int minPartitionsPerConsumer = partitions.size() / consumers.size();
+        int extraPartitions = partitions.size() % consumers.size();
+
+        int partitionIndex = 0;
+        for (Consumer<T> consumer : consumers) {
+            for (int j = 0; j < minPartitionsPerConsumer; j++, partitionIndex++) {
+                consumer.assignPartition(partitions.get(partitionIndex));
+            }
+            if (extraPartitions > 0) {
+                consumer.assignPartition(partitions.get(partitionIndex++));
+                extraPartitions--;
+            }
+        }
+    }
+}
+package tributary.core.rebalancingStrategy;
+
+import java.util.List;
+
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.Topic;
+
+public interface RebalancingStrategy<T> {
+    public void rebalance(List<Topic<T>> topics, List<Consumer<T>> consumers);
+}
+package tributary.core.rebalancingStrategy;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.Topic;
+
+public class RoundRobinStrategy<T> implements RebalancingStrategy<T> {
+    @Override
+    public void rebalance(List<Topic<T>> topics, List<Consumer<T>> consumers) {
+        if (topics.isEmpty() || consumers.isEmpty()) {
+            return;
+        }
+        for (Consumer<T> consumer : consumers) {
+            consumer.clearAssignments();
+        }
+
+        List<Partition<T>> partitions = new ArrayList<>();
+        for (Topic<T> topic : topics) {
+            partitions.addAll(topic.listPartitions());
+        }
+
+        for (int i = 0; i < partitions.size(); i++) {
+            Consumer<T> consumer = consumers.get(i % consumers.size());
+            consumer.assignPartition(partitions.get(i));
+        }
+    }
+}
+package tributary.core.tokenManager;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+public class TokenManager {
+    private static String ADMIN_KEY;
+    private String adminProdToken;
+    private String adminConsToken;
+
+    public TokenManager(String password) {
+        // Set the ADMIN_KEY only if it hasn't been set before.
+        if (ADMIN_KEY == null) {
+            ADMIN_KEY = password;
+        } else {
+            throw new IllegalStateException("Admin key has already been initialized.");
+        }
+    }
+
+    public static String generateToken(String id, long timestamp) {
+        if (ADMIN_KEY == null) {
+            throw new IllegalStateException("Admin key is not initialized.");
+        }
+        String data = id + ":" + timestamp + ":" + ADMIN_KEY;
+        return algorithm(data);
+    }
+
+    private static String algorithm(String data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(data.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                hexString.append(String.format("%02x", b));
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean validateToken(String token, String adminId, long adminBirthTime, String password) {
+        String data = adminId + ":" + adminBirthTime + ":" + password;
+        return algorithm(data).equals(token);
+    }
+
+    public String getAdminConsToken() {
+        return adminConsToken;
+    }
+
+    public void setAdminConsToken(String newConsToken) {
+        this.adminConsToken = newConsToken;
+    }
+
+    public String getAdminProdToken() {
+        return adminProdToken;
+    }
+
+    public void setAdminProdToken(String newProdToken) {
+        this.adminProdToken = newProdToken;
+    }
+}
+package tributary.core.tributaryFactory;
+
+import java.util.List;
+
+import org.json.JSONObject;
+
+import tributary.core.tributaryObject.producers.*;
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.ConsumerGroup;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.Topic;
+import tributary.core.tributaryObject.TributaryCluster;
+
+public class IntegerFactory extends ObjectFactory {
+    public IntegerFactory() {
+        setCluster(TributaryCluster.getInstance());
+    }
+
+    @Override
+    public void createTopic(String topicId) {
+        Topic<Integer> topic = new Topic<>(topicId, Integer.class);
+        getCluster().addTopic(topic);
+        System.out.println("Created Integer topic with ID: " + topicId + "\n");
+    }
+
+    @Override
+    public void createPartition(String topicId, String partitionId) {
+        @SuppressWarnings("unchecked")
+        Topic<Integer> topic = (Topic<Integer>) getCluster().getTopic(topicId);
+        List<ConsumerGroup<?>> groups = getCluster().listConsumerGroups();
+        topic.addPartition(new Partition<Integer>(topic, partitionId));
+        for (ConsumerGroup<?> group : groups) {
+            for (Topic<?> t : group.getAssignedTopics()) {
+                if (t.getId() == topicId) {
+                    group.rebalance();
+                }
+            }
+        }
+        System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId + "\n");
+    }
+
+    public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
+        @SuppressWarnings("unchecked")
+        Topic<Integer> topic = (Topic<Integer>) getCluster().getTopic(topicId);
+        if (topic == null) {
+            System.out.println("Topic " + topicId + " does not exist.\n");
+            return;
+        }
+        ConsumerGroup<Integer> group = new ConsumerGroup<>(groupId, topic, rebalancing);
+        getCluster().addGroup(group);
+
+        System.out.println("Created consumer group with ID: " + groupId + " for topic: " + topic.getId()
+                + " with " + rebalancing + " rebalancing strategy.\n");
+    }
+
+    @Override
+    public void createConsumer(String groupId, String consumerId) {
+        @SuppressWarnings("unchecked")
+        ConsumerGroup<Integer> group = (ConsumerGroup<Integer>) getCluster().getConsumerGroup(groupId);
+        Consumer<Integer> consumer = new Consumer<>(groupId, consumerId);
+        group.addConsumer(consumer);
+        group.rebalance();
+        System.out.println("Created consumer with ID: " + consumerId + " for group: " + groupId + " group\n");
+    }
+
+    @Override
+    public void createProducer(String producerId, String topicId, String allocation) {
+        @SuppressWarnings("unchecked")
+        Topic<Integer> topic = (Topic<Integer>) getCluster().getTopic(topicId);
+        Producer<Integer> producer;
+        switch (allocation) {
+            case "manual":
+                producer = new ManualProducer<>(producerId, Integer.class, topic);
+                break;
+            case "random":
+                producer = new RandomProducer<>(producerId, Integer.class, topic);
+                break;
+            default:
+                System.out.println("Unsupported allocation type: " + allocation);
+                return;
+        }
+        getCluster().addProducer(producer);
+        System.out.println("Created producer with ID: " + producerId
+                + " that produces Integer events with " + allocation + " allocation\n");
+    }
+
+    @Override
+    public void createEvent(String producerId, String topicId, JSONObject event, String partitionId) {
+        JSONObject message = event;
+        @SuppressWarnings("unchecked")
+        Producer<Integer> producer = (Producer<Integer>) getCluster().getProducer(producerId);
+        @SuppressWarnings("unchecked")
+        Topic<Integer> topic = (Topic<Integer>) getCluster().getTopic(topicId);
+        producer.produceMessage(topic.listPartitions(), partitionId, message);
+    }
+}
+package tributary.core.tributaryFactory;
+
+import org.json.JSONObject;
+
+import tributary.core.tributaryObject.TributaryCluster;
+
+public abstract class ObjectFactory {
+    private TributaryCluster cluster = TributaryCluster.getInstance();
+
+    public TributaryCluster getCluster() {
+        return cluster;
+    }
+
+    public void setCluster(TributaryCluster cluster) {
+        this.cluster = cluster;
+    }
+
+    public abstract void createTopic(String topicId);
+
+    public abstract void createPartition(String topicId, String partitionId);
+
+    public abstract void createConsumerGroup(String groupId, String topicId, String rebalancing);
+
+    public abstract void createConsumer(String groupId, String consumerId);
+
+    public abstract void createProducer(String producerId, String topicId, String allocation);
+
+    public abstract void createEvent(String producerId, String topicId,
+            JSONObject event, String partitionId);
+}
+package tributary.core.tributaryFactory;
+
+import java.util.List;
+
+import org.json.JSONObject;
+
+import tributary.core.tributaryObject.producers.*;
+import tributary.core.tributaryObject.Consumer;
+import tributary.core.tributaryObject.ConsumerGroup;
+import tributary.core.tributaryObject.Partition;
+import tributary.core.tributaryObject.Topic;
+import tributary.core.tributaryObject.TributaryCluster;
+
+public class StringFactory extends ObjectFactory {
+    public StringFactory() {
+        setCluster(TributaryCluster.getInstance());
+    }
+
+    @Override
+    public void createTopic(String topicId) {
+        Topic<String> topic = new Topic<>(topicId, String.class);
+        getCluster().addTopic(topic);
+        System.out.println("Created String topic with ID: " + topicId + "\n");
+    }
+
+    @Override
+    public void createPartition(String topicId, String partitionId) {
+        @SuppressWarnings("unchecked")
+        Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+        List<ConsumerGroup<?>> groups = getCluster().listConsumerGroups();
+        topic.addPartition(new Partition<String>(topic, partitionId));
+        for (ConsumerGroup<?> group : groups) {
+            for (Topic<?> t : group.getAssignedTopics()) {
+                if (t.getId() == topicId) {
+                    group.rebalance();
+                }
+            }
+        }
+        System.out.println("Created partition with ID: " + partitionId + " for topic: " + topicId + "\n");
+    }
+
+    @Override
+    public void createConsumer(String groupId, String consumerId) {
+        @SuppressWarnings("unchecked")
+        ConsumerGroup<String> group = (ConsumerGroup<String>) getCluster().getConsumerGroup(groupId);
+        Consumer<String> consumer = new Consumer<>(groupId, consumerId);
+        group.addConsumer(consumer);
+        group.rebalance();
+        System.out.println("Created consumer with ID: " + consumerId + " for group: " + groupId + "\n");
+    }
+
+    public void createConsumerGroup(String groupId, String topicId, String rebalancing) {
+        @SuppressWarnings("unchecked")
+        Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+        if (topic == null) {
+            System.out.println("Topic " + topicId + " does not exist.\n");
+            return;
+        }
+        ConsumerGroup<String> group = new ConsumerGroup<>(groupId, topic, rebalancing);
+        getCluster().addGroup(group);
+
+        System.out.println("Created consumer group with ID: " + groupId + " for topic: " + topic.getId()
+                + " with " + rebalancing + " rebalancing strategy.\n");
+    }
+
+    @Override
+    public void createProducer(String producerId, String topicId, String allocation) {
+        @SuppressWarnings("unchecked")
+        Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+        Producer<String> producer;
+        switch (allocation) {
+            case "manual":
+                producer = new ManualProducer<>(producerId, String.class, topic);
+                break;
+            case "random":
+                producer = new RandomProducer<>(producerId, String.class, topic);
+                break;
+            default:
+                System.out.println("Unsupported allocation type: " + allocation + "\n");
+                return;
+        }
+        getCluster().addProducer(producer);
+        System.out.println("Created producer with ID: " + producerId
+                + " that produces String events with " + allocation + " allocation\n");
+    }
+
+    @Override
+    public void createEvent(String producerId, String topicId, JSONObject event, String partitionId) {
+        JSONObject message = event;
+        @SuppressWarnings("unchecked")
+        Producer<String> producer = (Producer<String>) getCluster().getProducer(producerId);
+        @SuppressWarnings("unchecked")
+        Topic<String> topic = (Topic<String>) getCluster().getTopic(topicId);
+        producer.produceMessage(topic.listPartitions(), partitionId, message);
+    }
+}
+package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class AdminObject<T> extends TributaryObject {
+    private long createdTime;
+    private List<Topic<T>> assignedTopics;
+    private Class<T> type;
+    private String token;
+
+    public AdminObject(String id, Class<T> type) {
+        super(id);
+        this.createdTime = System.currentTimeMillis();
+        this.assignedTopics = new ArrayList<>();
+        this.type = type;
+    }
+
+    public long getCreatedTime() {
+        return createdTime;
+    }
+
+    public void clearAssignments() {
+        Topic<T> topic = assignedTopics.get(0);
+        assignedTopics.clear();
+        assignTopic(topic);
+    }
+
+    public List<Topic<T>> getAssignedTopics() {
+        return assignedTopics;
+    }
+
+    public void assignTopic(Topic<T> topic) {
+        assignedTopics.add(topic);
+    }
+
+    public void unassignTopic(String topicId) {
+        assignedTopics.removeIf(t -> t.getId().equals(topicId));
+    }
+
+    public List<Topic<T>> listAssignedTopics() {
+        return assignedTopics;
+    }
+
+    public Class<T> getType() {
+        return this.type;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public void showTopics() {
+        System.out.println("Consumer Group ID: " + getId() + " - Type: " + getType().getSimpleName());
+        for (Topic<T> topic : assignedTopics) {
+            System.out.println("Topic ID: " + topic.getId() + " - Partitions: ");
+            topic.listPartitions().forEach(p -> System.out.print(p.getId() + ", "));
+            System.out.println();
+        }
+        System.out.println("\n--------------------------------------------------\n");
+    }
+}
+package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONObject;
+
+import javafx.util.Pair;
+import tributary.core.encryptionManager.EncryptionManager;
+import tributary.core.typeHandlerFactory.TypeHandler;
+import tributary.core.typeHandlerFactory.TypeHandlerFactory;
+
+public class Consumer<T> extends TributaryObject {
+    private String groupId;
+    private List<Partition<T>> assignedPartitions;
+
+    public Consumer(String groupId, String consumerId) {
+        super(consumerId);
+        this.groupId = groupId;
+        this.assignedPartitions = new ArrayList<>();
+    }
+
+    /**
+     * Consumes a message from the specified partition, decrypts its content, and
+     * returns the
+     * result as a JSONObject.
+     *
+     * @param message   The message to be consumed.
+     * @param partition The partition from which the message is consumed.
+     * @return A JSONObject containing the message id, creation date, decrypted
+     *         content,
+     *         and the id of the consuming consumer.
+     */
+    public JSONObject consume(Message<T> message, Partition<T> partition) {
+        // Create an Encryption manager with the same keys as this partition to ensure
+        // correct decryption
+        Pair<Long, Long> keyPair = partition.getAllocatedTopic().getPrivateKey(partition.getId());
+        EncryptionManager em = new EncryptionManager(keyPair);
+
+        // Create a JSON object to hold decrypted content
+        JSONObject contentJson = new JSONObject();
+        Class<T> type = message.getPayloadType();
+        TypeHandler<T> handler = TypeHandlerFactory.getHandler(type);
+
+        // For each entry in the message content, decrypt the value and add it to the
+        // JSON object
+        for (Map.Entry<String, String> entry : message.getContent().entrySet()) {
+            String encrypted = entry.getValue();
+            String decrypted = em.decrypt(encrypted, message.getPublicKey());
+            Object value = handler.handle(decrypted);
+            contentJson.put(entry.getKey(), value);
+        }
+
+        // Update partition offset for this consumer
+        partition.setOffset(this, partition.getOffset(this) + 1);
+
+        // Include header as part of return data
+        JSONObject headerJson = new JSONObject();
+        headerJson.put("messageId", message.getId());
+        headerJson.put("createdDate", message.getCreatedDate().toString());
+        headerJson.put("payloadType", type.getSimpleName());
+
+        // Create the result JSON object
+        JSONObject result = new JSONObject();
+        result.put("header", headerJson);
+        result.put("content", contentJson);
+
+        return result;
+    }
+
+    public String getGroup() {
+        return groupId;
+    }
+
+    public void assignPartition(Partition<T> partition) {
+        assignedPartitions.add(partition);
+        partition.setOffset(this, 0);
+    }
+
+    public void unassignPartition(String partitionId) {
+        Partition<T> partition = getPartition(partitionId);
+        assignedPartitions.remove(partition);
+        partition.removeOffset(this);
+        return;
+    }
+
+    public List<Partition<T>> listAssignedPartitions() {
+        return assignedPartitions;
+    }
+
+    public void clearAssignments() {
+        this.assignedPartitions.clear();
+    }
+
+    public Partition<T> getPartition(String partitionId) {
+        for (Partition<T> partition : assignedPartitions) {
+            if (partition.getId().equals(partitionId)) {
+                return partition;
+            }
+        }
+        return null;
+    }
+}
+package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import tributary.core.rebalancingStrategy.RangeStrategy;
+import tributary.core.rebalancingStrategy.RebalancingStrategy;
+import tributary.core.rebalancingStrategy.RoundRobinStrategy;
+
+public class ConsumerGroup<T> extends AdminObject<T> {
+    private List<Consumer<T>> consumers;
+    private RebalancingStrategy<T> rebalanceMethod;
+
+    public ConsumerGroup(String groupId, Topic<T> assignedTopic, String rebalanceMethod) {
+        super(groupId, assignedTopic.getType());
+        this.consumers = new ArrayList<>();
+        assignTopic(assignedTopic);
+        setRebalancingMethod(rebalanceMethod);
+    }
+
+    public void setRebalancingMethod(String rebalanceMethod) {
+        switch (rebalanceMethod) {
+            case "roundrobin":
+                this.rebalanceMethod = new RoundRobinStrategy<>();
+                break;
+            case "range":
+                this.rebalanceMethod = new RangeStrategy<>();
+                break;
+            default:
+                System.out.println("Unknown rebalancing strategy: " + rebalanceMethod);
+                break;
+        }
+    }
+
+    public RebalancingStrategy<T> getRebalanceMethod() {
+        return rebalanceMethod;
+    }
+
+    public String getRebalanceMethodName() {
+        return rebalanceMethod.getClass().getSimpleName();
+    }
+
+    public void addConsumer(Consumer<T> consumer) {
+        if (!consumers.contains(consumer)) {
+            consumers.add(consumer);
+        } else {
+            System.out.println("Consumer already exists in the group");
+        }
+    }
+
+    public boolean containsConsumer(String consumerId) {
+        return getConsumer(consumerId) != null;
+    }
+
+    public List<Consumer<T>> listConsumers() {
+        return new ArrayList<>(consumers);
+    }
+
+    public Consumer<T> getConsumer(String consumerId) {
+        return consumers.stream().filter(c -> c.getId().equals(consumerId)).findFirst().orElse(null);
+    }
+
+    public void removeConsumer(String consumerId) {
+        consumers.removeIf(c -> c.getId().equals(consumerId));
+        System.out.println("Deleted consumer with ID: " + consumerId);
+        rebalance();
+        showGroup();
+    }
+
+    public JSONObject showGroup() {
+        // Create a JSON object to hold the consumer group details.
+        JSONObject groupJson = new JSONObject();
+
+        // Create an array to hold each consumer's details.
+        JSONArray consumersArray = new JSONArray();
+        for (Consumer<T> consumer : listConsumers()) {
+            JSONObject consumerJson = new JSONObject();
+
+            // For each consumer, add an array of assigned partition IDs.
+            JSONArray partitionsArray = new JSONArray();
+            for (Partition<T> partition : consumer.listAssignedPartitions()) {
+                partitionsArray.put(partition.getId());
+            }
+            consumerJson.put("partitions", partitionsArray);
+            consumersArray.put(consumerJson);
+            consumerJson.put("id", consumer.getId());
+        }
+        groupJson.put("consumers", consumersArray);
+        groupJson.put("id", this.getId());
+
+        return groupJson;
+    }
+
+    public void rebalance() {
+        rebalanceMethod.rebalance(getAssignedTopics(), listConsumers());
+    }
+}
+package tributary.core.tributaryObject;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+public class Message<T> extends TributaryObject {
+    private LocalDateTime createdDate;
+    private Class<T> payloadType;
+    public long publicKey;
+    private Map<String, String> content;
+
+    public Message(String messageId, LocalDateTime createdDate, Class<T> payloadType, Map<String, String> content,
+            Long publicKey) {
+        super(messageId);
+        this.createdDate = createdDate;
+        this.payloadType = payloadType;
+        this.content = content;
+        this.publicKey = publicKey;
+    }
+
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public Class<T> getPayloadType() { // Return type is now Class<T>
+        return payloadType;
+    }
+
+    public Map<String, String> getContent() {
+        return content;
+    }
+
+    public long getPublicKey() {
+        return publicKey;
+    }
+}
+package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+public class Partition<T> extends TributaryObject {
+    private List<Message<T>> messages;
+    private Topic<T> allocatedTopic;
+    private Map<Consumer<T>, Integer> offset;
+
+    public Partition(Topic<T> topicId, String partitionId) {
+        super(partitionId);
+        this.allocatedTopic = topicId;
+        this.messages = new ArrayList<>();
+        this.offset = new HashMap<>();
+    }
+
+    public void addMessage(Message<T> message) {
+        messages.add(message);
+    }
+
+    public Topic<T> getAllocatedTopic() {
+        return allocatedTopic;
+    }
+
+    public List<Message<T>> listMessages() {
+        return messages;
+    }
+
+    public Message<T> getMessage(String messageId) {
+        return messages.stream().filter(m -> m.getId().equals(messageId)).findFirst().orElse(null);
+    }
+
+    public void setOffset(Consumer<T> consumer, int offset) {
+        this.offset.put(consumer, offset);
+    }
+
+    public void removeOffset(Consumer<T> consumer) {
+        offset.remove(consumer);
+    }
+
+    public int getOffset(Consumer<T> consumer) {
+        return offset.get(consumer);
+    }
+
+    public void listOffsets() {
+        for (Map.Entry<Consumer<T>, Integer> entry : offset.entrySet()) {
+            System.out.println("Consumer " + entry.getKey().getId() + " offset: " + entry.getValue());
+        }
+    }
+}
+package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import javafx.util.Pair;
+
+public class Topic<T> extends TributaryObject {
+    private Class<T> type;
+    private List<Partition<T>> partitions;
+    Map<String, Pair<Long, Long>> keyMap = new HashMap<>();
+
+    public Topic(String topicId, Class<T> type) {
+        super(topicId);
+        this.type = type;
+        this.partitions = new ArrayList<>();
+    }
+
+    public Class<T> getType() {
+        return type;
+    }
+
+    public void addPartition(Partition<T> partition) {
+        partitions.add(partition);
+    }
+
+    public void removePartition(String partitionId) {
+        partitions.removeIf(p -> p.getId().equals(partitionId));
+    }
+
+    public Partition<T> getPartition(String partitionId) {
+        return partitions.stream().filter(p -> p.getId().equals(partitionId)).findFirst().orElse(null);
+    }
+
+    public List<Partition<T>> listPartitions() {
+        return partitions;
+    }
+
+    public boolean containsPartition(String partitionId) {
+        return partitions.stream().anyMatch(p -> p.getId().equals(partitionId));
+    }
+
+    public Pair<Long, Long> getPrivateKey(String partitionId) {
+        return keyMap.get(partitionId);
+    }
+
+    public void setPrivateKey(String partitionId, Pair<Long, Long> pair) {
+        keyMap.put(partitionId, pair);
+    }
+
+    public Map<String, Pair<Long, Long>> getKeyMap() {
+        return keyMap;
+    }
+
+    public JSONObject showTopic() {
+        JSONObject topicJson = new JSONObject();
+
+        JSONArray partitionsArray = new JSONArray();
+        for (Partition<T> partition : partitions) {
+            JSONObject partitionJson = new JSONObject();
+
+            JSONArray messagesArray = new JSONArray();
+            for (Message<T> message : partition.listMessages()) {
+                messagesArray.put(message.getId());
+            }
+            partitionJson.put("messages", messagesArray);
+            partitionsArray.put(partitionJson);
+            partitionJson.put("id", partition.getId());
+        }
+        topicJson.put("partitions", partitionsArray);
+        topicJson.put("id", this.getId());
+
+        return topicJson;
+    }
+}
+package tributary.core.tributaryObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import tributary.core.tokenManager.TokenManager;
+import tributary.core.tributaryObject.producers.Producer;
+
+public class TributaryCluster {
+    private static TributaryCluster instance;
+    private List<Topic<?>> topics;
+    private List<ConsumerGroup<?>> consumerGroups;
+    private List<Producer<?>> producers;
+    private TokenManager tokenManager;
+
+    private TributaryCluster() {
+        this.topics = new ArrayList<>();
+        this.consumerGroups = new ArrayList<>();
+        this.producers = new ArrayList<>();
+    }
+
+    public static synchronized TributaryCluster getInstance() {
+        if (instance == null) {
+            instance = new TributaryCluster();
+        }
+
+        return instance;
+    }
+
+    public void addTopic(Topic<?> topic) {
+        topics.add(topic);
+    }
+
+    public void addProducer(Producer<?> producer) {
+        producers.add(producer);
+    }
+
+    public void addGroup(ConsumerGroup<?> group) {
+        consumerGroups.add(group);
+    }
+
+    public void removeTopic(String topicId) {
+        topics.removeIf(t -> t.getId().equals(topicId));
+    }
+
+    public Topic<?> getTopic(String topicId) {
+        return topics.stream().filter(t -> t.getId().equals(topicId)).findFirst().orElse(null);
+    }
+
+    public ConsumerGroup<?> getConsumerGroup(String groupId) {
+        return consumerGroups.stream().filter(g -> g.getId().equals(groupId)).findFirst().orElse(null);
+    }
+
+    public Producer<?> getProducer(String producerId) {
+        return producers.stream().filter(p -> p.getId().equals(producerId)).findFirst().orElse(null);
+    }
+
+    public List<Topic<?>> listTopics() {
+        return new ArrayList<>(topics);
+    }
+
+    public List<ConsumerGroup<?>> listConsumerGroups() {
+        return new ArrayList<>(consumerGroups);
+    }
+
+    public List<Producer<?>> listProducers() {
+        return new ArrayList<>(producers);
+    }
+
+    public void deleteConsumer(String consumerId) {
+        for (ConsumerGroup<?> group : listConsumerGroups()) {
+            for (Consumer<?> consumer : group.listConsumers()) {
+                if (consumer.getId().equals(consumerId)) {
+                    group.removeConsumer(consumerId);
+                    group.rebalance();
+                    return;
+                }
+            }
+        }
+        System.out.println("Consumer not found with ID: " + consumerId);
+    }
+
+    // Test-friendly method to set the instance
+    public static void setInstance(TributaryCluster mockInstance) {
+        instance = mockInstance;
+    }
+
+    public TokenManager getTokenManager() {
+        return this.tokenManager;
+    }
+
+    public void setTokenManager(TokenManager tm) {
+        this.tokenManager = tm;
+    }
+}
+package tributary.core.tributaryObject;
+
+public abstract class TributaryObject {
+    private String id;
+
+    public TributaryObject(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+}
+package tributary.core.typeHandlerFactory;
+
+import java.nio.charset.StandardCharsets;
+
+public class ByteHandler implements TypeHandler<byte[]> {
+
+    @Override
+    public byte[] handle(Object value) {
+        if (value instanceof String) {
+            // Convert the string to a UTF-8 encoded byte array
+            return ((String) value).getBytes(StandardCharsets.UTF_8);
+        } else if (value instanceof byte[]) {
+            // Directly return byte array if already in byte[] format
+            return (byte[]) value;
+        } else {
+            throw new IllegalArgumentException("Payload value must be a String or byte[]: " + value);
+        }
+    }
+
+    @Override
+    public String valueToString(Object value) {
+        if (value instanceof byte[]) {
+            return new String((byte[]) value, StandardCharsets.UTF_8);
+        }
+        return value.toString();
+    }
+
+    @Override
+    public byte[] stringToValue(String value) {
+        return value.getBytes(StandardCharsets.UTF_8);
+    }
+}package tributary.core.typeHandlerFactory;
+
+public class IntegerHandler implements TypeHandler<Integer> {
+    @Override
+    public Integer handle(Object value) {
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        } else {
+            throw new IllegalArgumentException("Value is not a Number: " + value);
+        }
+    }
+
+    @Override
+    public String valueToString(Object value) {
+        return Integer.toString(handle(value));
+    }
+
+    @Override
+    public Integer stringToValue(String value) {
+        return Integer.parseInt(value);
+    }
+}
+package tributary.core.typeHandlerFactory;
+
+public class StringHandler implements TypeHandler<String> {
+    @Override
+    public String handle(Object value) {
+        return value.toString();
+    }
+
+    @Override
+    public String valueToString(Object value) {
+        return value.toString();
+    }
+
+    @Override
+    public String stringToValue(String value) {
+        return value;
+    }
+}
+package tributary.core.typeHandlerFactory;
+
+public interface TypeHandler<T> {
+    T handle(Object value);
+
+    public String valueToString(Object value);
+
+    T stringToValue(String value);
+}
+package tributary.core.typeHandlerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class TypeHandlerFactory {
+    private static Map<Class<?>, TypeHandler<?>> handlers = new HashMap<>();
+
+    static {
+        handlers.put(Integer.class, new IntegerHandler());
+        handlers.put(String.class, new StringHandler());
+        handlers.put(byte[].class, new ByteHandler());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> TypeHandler<T> getHandler(Class<T> type) {
+        return (TypeHandler<T>) handlers.get(type);
+    }
+}

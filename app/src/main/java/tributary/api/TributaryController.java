@@ -3,15 +3,8 @@ package tributary.api;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,9 +24,12 @@ import tributary.core.tributaryObject.*;
  */
 public class TributaryController {
     private TributaryCluster cluster;
-    private ObjectFactory objectFactory;
-    private Map<String, Class<?>> typeMap;
     private TributaryHelper helper;
+
+    private static final Map<String, Class<?>> keyToClass = Map.of(
+            "integer", Integer.class,
+            "string", String.class,
+            "bytes", byte[].class);
 
     /**
      * Constructor to initialize the TributaryController with default settings.
@@ -41,24 +37,22 @@ public class TributaryController {
      */
     public TributaryController() {
         this.cluster = TributaryCluster.getInstance();
-        this.objectFactory = new StringFactory();
         this.helper = new TributaryHelper();
-        this.typeMap = new HashMap<>();
-        typeMap.put("integer", Integer.class);
-        typeMap.put("string", String.class);
-        typeMap.put("bytes", byte[].class);
-    }
-
-    public void setObjectFactoryType(String type) throws IllegalArgumentException {
-        Class<?> typeClass = typeMap.get(type);
-        if (typeClass == null) {
-            throw new IllegalArgumentException("Unsupported type: " + type);
-        }
-        this.objectFactory = (typeClass.equals(Integer.class)) ? new IntegerFactory() : new StringFactory();
     }
 
     public TributaryHelper getHelper() {
         return helper;
+    }
+
+    private static Class<?> castKeyType(String key) {
+        Class<?> c = keyToClass.get(key.toLowerCase());
+        if (c == null)
+            throw new IllegalArgumentException("Unsupported type: " + key);
+        return c;
+    }
+
+    private static <T> ObjectFactory<T> getFactory(Class<T> t) {
+        return FactoryRegistry.get(t);
     }
 
     /*
@@ -77,8 +71,7 @@ public class TributaryController {
         if (helper.getTopic(topicId) != null) {
             throw new IllegalArgumentException("Topic " + topicId + " already exists.");
         }
-        setObjectFactoryType(type);
-        objectFactory.createTopic(topicId);
+        getFactory(castKeyType(type)).createTopic(topicId);
     }
 
     /**
@@ -98,8 +91,7 @@ public class TributaryController {
                     "Partition " + partitionId + " already exists in topic " + topicId + ".");
         }
         String topicType = helper.getTopicType(topicId);
-        setObjectFactoryType(topicType);
-        objectFactory.createPartition(topicId, partitionId);
+        getFactory(castKeyType(topicType)).createPartition(topicId, partitionId);
     }
 
     /**
@@ -118,8 +110,7 @@ public class TributaryController {
             throw new IllegalArgumentException("Consumer group " + groupId + " already exists.");
         }
         String type = helper.getTopicType(topicId);
-        setObjectFactoryType(type);
-        objectFactory.createConsumerGroup(groupId, topicId, rebalancing);
+        getFactory(castKeyType(type)).createConsumerGroup(groupId, topicId, rebalancing);
     }
 
     /**
@@ -135,8 +126,7 @@ public class TributaryController {
             throw new IllegalArgumentException("Consumer " + consumerId + " already exists in group " + groupId + ".");
         }
         String topicType = helper.getTopicType(group.getAssignedTopics().get(0).getId());
-        setObjectFactoryType(topicType);
-        objectFactory.createConsumer(groupId, consumerId);
+        getFactory(castKeyType(topicType)).createConsumer(groupId, consumerId);
     }
 
     /**
@@ -151,8 +141,7 @@ public class TributaryController {
      */
     public void createProducer(String producerId, String topicId, String allocation) throws IllegalArgumentException {
         String topicType = helper.getTopic(topicId).getType().getSimpleName().toLowerCase();
-        setObjectFactoryType(topicType);
-        objectFactory.createProducer(producerId, topicId, allocation);
+        getFactory(castKeyType(topicType)).createProducer(producerId, topicId, allocation);
     }
 
     /**
@@ -164,7 +153,7 @@ public class TributaryController {
      * @param partitionId The partition identifier (optional).
      * @throws IOException if event creation fails.
      */
-    public synchronized void createEvent(String producerId, String topicId, JSONObject event, String partitionId)
+    public void createEvent(String producerId, String topicId, JSONObject event, String partitionId)
             throws IllegalArgumentException {
         Producer<?> producer = helper.getProducer(producerId);
         Topic<?> topic = helper.getTopic(topicId);
@@ -178,8 +167,7 @@ public class TributaryController {
 
         synchronized (topic) {
             String topicType = topic.getType().getSimpleName().toLowerCase();
-            setObjectFactoryType(topicType);
-            objectFactory.createEvent(producerId, topicId, event, partitionId);
+            getFactory(castKeyType(topicType)).createEvent(producerId, topicId, event, partitionId);
         }
     }
 
@@ -367,11 +355,7 @@ public class TributaryController {
         TokenManager tm = cluster.getTokenManager();
         Producer<?> oldProd = helper.getProducer(oldProdId);
 
-        if (oldProd == null && tm.getAdminProdToken() != null) {
-            throw new IllegalArgumentException("Admin token exists but old Admin could not be identified.");
-        } else if (oldProd != null && tm.getAdminProdToken() == null) {
-            throw new IllegalArgumentException("Old admin token not found.");
-        } else if (oldProd != null && tm.getAdminProdToken() != null) {
+        if (oldProd != null && tm.getAdminProdToken() != null) {
             oldProd.clearAssignments();
             oldProd.setToken(null);
 
@@ -379,6 +363,10 @@ public class TributaryController {
             if (!TokenManager.validateToken(token, oldProd.getId(), oldProd.getCreatedTime(), password)) {
                 throw new IllegalArgumentException("Invalid token for old Producer Admin.");
             }
+        } else if (oldProd != null) {
+            throw new IllegalArgumentException("Old admin token not found.");
+        } else if (tm.getAdminProdToken() != null) {
+            throw new IllegalArgumentException("Admin token exists but old Admin could not be identified.");
         }
 
         Producer<?> newProd = helper.getProducer(newProdId);
@@ -454,7 +442,7 @@ public class TributaryController {
 
         executorService.shutdown();
         try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            executorService.awaitTermination(600, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Parallel produce interrupted", e);
@@ -527,8 +515,9 @@ public class TributaryController {
 
         executorService.shutdown();
         try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            executorService.awaitTermination(60, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException("Parallel consume interrupted: " + e.getMessage(), e);
         }
 

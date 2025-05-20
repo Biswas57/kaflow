@@ -6,7 +6,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import tributary.core.tributaryObject.producers.*;
-import tributary.core.tributaryFactory.*;
 import tributary.core.tributaryObject.*;
 
 /**
@@ -16,11 +15,9 @@ import tributary.core.tributaryObject.*;
  */
 public class TributaryHelper {
     private TributaryCluster cluster;
-    private ObjectFactory objectFactory;
 
     public TributaryHelper() {
         this.cluster = TributaryCluster.getInstance();
-        this.objectFactory = new StringFactory();
     }
 
     /**
@@ -105,10 +102,6 @@ public class TributaryHelper {
             }
         }
         throw new IllegalArgumentException("Partition " + partitionId + " not found.");
-    }
-
-    public ObjectFactory getFactory() {
-        return objectFactory;
     }
 
     public TributaryCluster getCluster() {
