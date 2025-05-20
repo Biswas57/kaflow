@@ -14,14 +14,14 @@ A complete visual overview of the entire system exist, showcasing the system in 
 4. [**Why should I use a Message Broker?**](Blogging&Design/article.md)
 
 ## Initialisation and Developer Use
-To help other developers interact with the Kaflow library, the main entry point is the `TributaryCLI` class. This class provides a command-line interface to create, modify, and interact with the Kaflow system.
+To help other developers interact with the Kaflow library without having to implement the library entirely, the main entry point is the `ControllerCLI` class. This class provides a command-line interface to create, modify, and interact with the Kaflow system.
 
 ### Path to Main Function:
 ```
-app/src/main/java/tributary/cli/TributaryCLI.java
+app/src/main/java/tributary/cli/ControllerCLI.java
 ```
 
-### Steps to Run the TributaryCLI:
+### Steps to Run the ControllerCLI:
 
 1. **Clone the Repository**:
 
@@ -47,25 +47,19 @@ app/src/main/java/tributary/cli/TributaryCLI.java
     gradlew.bat build
     ```
 
-4. **Run the CLI**: After building, you can run the `TributaryCLI` using Gradle's run task:
+4. **Run the CLI**: After building, you can run the `ControllerCLI` using the Java command
 
     ```bash
-    ./gradlew run
-    ```
-
-    Alternatively, you can run the main class directly using the Java command:
-
-    ```bash
-    java -cp build/classes/java/main tributary.cli.TributaryCLI
+    java -cp build/classes/java/main tributary.cli.ControllerCLI
     ```
 
     Ensure the classpath points to the directory where your compiled classes are located.
 
-5. **Interact with the CLI**: Once the `TributaryCLI` is running, you can enter commands described in the follwoing section to interact with the Kaflow.
+5. **Interact with the CLI**: Once the `ControllerCLI` is running, you can enter commands described in the follwoing section to interact with the Kaflow.
 
 
 ### CLI Commands and Usability Testing
-To run usability tests on this library I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `TributaryCLI` that allows the user to input commands that create, modify, and interact with a Kaflow system.
+To run usability tests on this library I needed to develop a way to interact with tributaries, producers, and consumers via a command line interface. To do so, I coded a wrapper class called `ControllerCLI` that allows the user to input commands that create, modify, and interact with a Kaflow system.
 
 <table>
   <tr>
