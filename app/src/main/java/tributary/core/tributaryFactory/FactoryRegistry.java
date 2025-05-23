@@ -1,7 +1,7 @@
 package tributary.core.tributaryFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /*
  * This class is resposible for updating all types of possible factories
@@ -9,23 +9,17 @@ import java.util.Map;
  */
 public final class FactoryRegistry {
 
-    private static final Map<Class<?>, ObjectFactory<?>> byClass = new HashMap<>();
+    private static final ConcurrentMap<Class<?>, ObjectFactory<?>> byClass = new ConcurrentHashMap<>();
 
-    static {
-        register(Integer.class);
-        register(String.class);
-        register(byte[].class);
-    }
-
-    public static <T> ObjectFactory<T> get(Class<T> c) {
+    public static <T> ObjectFactory<T> get(Class<T> factoryClass) {
         @SuppressWarnings("unchecked")
-        ObjectFactory<T> f = (ObjectFactory<T>) byClass.get(c);
-        if (f == null)
-            throw new IllegalArgumentException("No factory for " + c);
-        return f;
+        ObjectFactory<T> factory = (ObjectFactory<T>) byClass.get(factoryClass);
+        if (factory == null)
+            register(factoryClass);
+        return factory;
     }
 
-    private static <T> void register(Class<T> c) {
-        byClass.put(c, new GenericFactory<>(c));
+    private static <T> void register(Class<T> factoryClass) {
+        byClass.put(factoryClass, new GenericFactory<>(factoryClass));
     }
 }

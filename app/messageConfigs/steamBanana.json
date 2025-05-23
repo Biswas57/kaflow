@@ -1,9 +1,0 @@
-{
-    "eventId": "steamBanana",
-    "PayloadType": "String",
-    "messageContents": {
-        "temperature": "100C",
-        "duration": "8 mins",
-        "description": "Steam the banana at 100C for 8 mins to make a soft and nutritious snack."
-    }
-}

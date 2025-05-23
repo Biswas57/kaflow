@@ -3,78 +3,52 @@ package tributary.core.tributaryObject.producers;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import org.json.JSONObject;
-
-import tributary.core.encryptionManager.EncryptionManager;
 import tributary.core.tributaryObject.*;
-import tributary.core.typeHandlerFactory.TypeHandler;
-import tributary.core.typeHandlerFactory.TypeHandlerFactory;
+import tributary.core.util.Hash;
 
-public abstract class Producer<T> extends AdminObject<T> {
-    private static final Map<String, Class<?>> typeMap = new HashMap<>();
-    private static final EncryptionManager encryptionManager = new EncryptionManager();
-
-    static {
-        typeMap.put("integer", Integer.class);
-        typeMap.put("string", String.class);
-        typeMap.put("bytes", byte[].class);
-    }
+public abstract class Producer<T> extends TributaryObject {
+    private Topic<T> topic;
+    private Class<T> type;
 
     public Producer(String producerId, Class<T> type, Topic<T> topic) {
-        super(producerId, type);
-        assignTopic(topic);
+        super(producerId);
+        this.topic = topic;
+        this.type = type;
     }
 
     public abstract void allocateMessage(List<Partition<T>> partitions, String partitionId, Message<T> message);
 
     /**
-     * Creates an event from the provided JSON object.
-     * This method extracts the event details, encrypts the message contents,
-     * creates a Message object, and delegates allocation to the abstract
-     * allocateMessage method.
-     *
-     * @param partitions  The list of partitions available in the topic.
-     * @param partitionId The target partition identifier (if applicable).
-     * @param messageJson The JSON object representing the event.
+     * Produces a message to the specified partition and allocates it to the
+     * appropriate partition.
+     * 
+     * @param partitions  The list of partitions to which the message can be
+     *                    allocated.
+     * @param partitionId The ID of the partition to which the message is allocated.
+     * @param key         The key associated with the message.
+     * @param payload     The payload of the message.
+     * @param createdAt   The creation date of the message.
+     * @return The allocated message's Id.
      */
-    public void produceMessage(List<Partition<T>> partitions, String partitionId, JSONObject messageJson) {
-        // Extract event details from JSON.
-        String messageId = messageJson.getString("eventId");
-        LocalDateTime createdDate = LocalDateTime.now();
-        String type = messageJson.optString("PayloadType").toLowerCase();
-
-        @SuppressWarnings("unchecked")
-        Class<T> jsonType = (Class<T>) typeMap.get(type);
-        if (jsonType == null) {
-            throw new IllegalArgumentException("Invalid payload type: " + type);
-        } else if (!jsonType.equals(getType())) {
-            throw new IllegalArgumentException("Unsupported type: " + type);
-        }
-
-        JSONObject rawContents = messageJson.getJSONObject("messageContents");
-        Map<String, String> content = new LinkedHashMap<>();
-
-        // Get the handler for type conversion and encryption.
-        TypeHandler<T> handler = TypeHandlerFactory.getHandler(getType());
-        if (handler == null) {
-            throw new IllegalArgumentException("Unsupported type: " + type);
-        }
-
-        // Process each key in the message content.
-        List<String> sortedKeys = new ArrayList<>(rawContents.keySet());
-        for (String key : sortedKeys) {
-            T rawValue = handler.handle(rawContents.get(key));
-            String valueString = handler.valueToString(rawValue);
-            String encrypted = encryptionManager.encrypt(valueString);
-            content.put(key, encrypted);
-        }
+    public String produceMessage(List<Partition<T>> partitions, String partitionId, Class<T> type, byte[] key,
+            T payload,
+            LocalDateTime createdAt) {
+        // Extract event details.
+        String messageId = Hash.hash(key);
+        LocalDateTime createdDate = createdAt;
 
         // Create the Message object and allocate it.
-        Message<T> msg = new Message<T>(messageId, createdDate, content, encryptionManager.getPublicKey());
+        Message<T> msg = new Message<T>(messageId, createdDate, type, key, payload);
         allocateMessage(partitions, partitionId, msg);
+
+        return messageId;
     }
 
-    public EncryptionManager getEncryptionmanager() {
-        return encryptionManager;
+    public Topic<T> getTopic() {
+        return topic;
+    }
+
+    public Class<T> getType() {
+        return type;
     }
 }

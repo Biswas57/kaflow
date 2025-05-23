@@ -12,7 +12,7 @@ class TributaryAPI {
 
     private final TributaryController controller = new TributaryController();
 
-    /* ---------- TOPICS ---------- */
+    // Topic endpoints
 
     @PostMapping("/topics")
     public ResponseEntity<Void> createTopic(@RequestBody NewTopic req,
@@ -33,8 +33,7 @@ class TributaryAPI {
         return TopicView.from(controller.showTopic(id));
     }
 
-    /* ---------- PARTITIONS ---------- */
-
+    // Topic partition endpoints
     @PostMapping("/topics/{topicId}/partitions")
     public ResponseEntity<Void> createPartition(@PathVariable String topicId,
             @RequestBody NewPartition req,
@@ -52,8 +51,7 @@ class TributaryAPI {
         return ResponseEntity.noContent().build();
     }
 
-    /* ---------- CONSUMER-GROUPS ---------- */
-
+    // Consumer group endpoints
     @PostMapping("/consumerGroups")
     public ResponseEntity<Void> createConsumerGroup(@RequestBody NewConsumerGroup req,
             UriComponentsBuilder uri) {
@@ -73,8 +71,7 @@ class TributaryAPI {
         return ConsumerGroupView.from(controller.showGroup(id));
     }
 
-    /* ---------- CONSUMERS ---------- */
-
+    // Consumer endpoints
     @PostMapping("/consumerGroups/{groupId}/consumers")
     public ResponseEntity<Void> createConsumer(@PathVariable String groupId,
             @RequestBody NewConsumer req,
@@ -107,8 +104,7 @@ class TributaryAPI {
         return ResponseEntity.noContent().build();
     }
 
-    /* ---------- PRODUCERS ---------- */
-
+    // Producer endpoints
     @PostMapping("/producers")
     public ResponseEntity<Void> createProducer(@RequestBody NewProducer req,
             UriComponentsBuilder uri) {
@@ -120,20 +116,6 @@ class TributaryAPI {
     @DeleteMapping("/producers/{id}")
     public ResponseEntity<Void> deleteProducer(@PathVariable String id) {
         controller.deleteProducer(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    /* ---------- ADMIN TRANSFER ---------- */
-
-    @PutMapping("/consumerGroups/admin")
-    public ResponseEntity<Void> transferGroupAdmin(@RequestBody TransferAdmin req) {
-        controller.updateConsumerGroupAdmin(req.newId(), req.oldId(), req.password());
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/producers/admin")
-    public ResponseEntity<Void> transferProducerAdmin(@RequestBody TransferAdmin req) {
-        controller.updateProducerAdmin(req.newId(), req.oldId(), req.password());
         return ResponseEntity.noContent().build();
     }
 }

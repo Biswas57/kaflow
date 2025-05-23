@@ -1,9 +1,0 @@
-{
-    "eventId": "grillBanana",
-    "PayloadType": "String",
-    "messageContents": {
-        "temperature": "220C",
-        "duration": "5 mins",
-        "description": "Grill the banana at 220C for 5 mins to achieve a charred, caramelized exterior."
-    }
-}

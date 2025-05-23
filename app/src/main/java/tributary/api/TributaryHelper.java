@@ -2,9 +2,6 @@ package tributary.api;
 
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import tributary.core.tributaryObject.producers.*;
 import tributary.core.tributaryObject.*;
 
@@ -109,7 +106,7 @@ public class TributaryHelper {
     }
 
     /*
-     * Creation method helper.
+     * Event create helper methods.
      */
 
     /**
@@ -121,13 +118,7 @@ public class TributaryHelper {
      * @return true if verified, false otherwise
      */
     public boolean verifyProducer(Producer<?> prod, Topic<?> topic) {
-        String adminToken = cluster.getTokenManager().getAdminProdToken();
-        if (prod.listAssignedTopics().contains(topic)) {
-            return true;
-        } else if (adminToken != null && prod.getToken() != null && adminToken.equals(prod.getToken())) {
-            return true;
-        }
-        return false;
+        return prod.getTopic() == topic;
     }
 
     /*
@@ -143,38 +134,27 @@ public class TributaryHelper {
      * @param numberOfEvents the number of events to consume
      * @return a JSONObject representing the consumed events mapped by consumer id
      */
-    public <T> JSONObject consumeEventsGeneric(Consumer<?> consumer, Partition<?> partition, Class<T> type,
-            int numberOfEvents) {
+    public <T> T consumeEventsGeneric(Consumer<?> consumer, Partition<?> partition) {
         @SuppressWarnings("unchecked")
         Consumer<T> typedConsumer = (Consumer<T>) consumer;
         @SuppressWarnings("unchecked")
         Partition<T> typedPartition = (Partition<T>) partition;
         synchronized (typedPartition) {
-            return consumeHelper(typedConsumer, typedPartition, numberOfEvents);
+            return consumeHelper(typedConsumer, typedPartition);
         }
     }
 
-    private <T> JSONObject consumeHelper(Consumer<T> consumer, Partition<T> partition, int numberOfEvents) {
+    private <T> T consumeHelper(Consumer<T> consumer, Partition<T> partition) {
         List<Message<T>> messages = partition.listMessages();
         int currentOffset = partition.getOffset(consumer);
-        int count = 0;
+        int numberOfEvents = messages.size();
 
-        JSONArray eventsArray = new JSONArray();
-
-        for (int i = currentOffset; i < messages.size() && count < numberOfEvents; i++, count++) {
-            JSONObject eventJson = consumer.consume(messages.get(i), partition);
-            eventsArray.put(eventJson);
+        if (currentOffset == numberOfEvents) {
+            throw new IllegalArgumentException(
+                    "Not enough messages to consume " + numberOfEvents + " messages.");
         }
 
-        if (count < numberOfEvents) {
-            System.out.println("Not enough messages to consume " + numberOfEvents
-                    + " messages. Consumed " + count + " messages.");
-        }
-
-        JSONObject result = new JSONObject();
-        result.put(consumer.getId(), eventsArray);
-
-        return result;
+        return consumer.consume(messages.get(currentOffset), partition);
     }
 
     /**
@@ -187,13 +167,7 @@ public class TributaryHelper {
      */
     public boolean verifyConsumer(Consumer<?> consumer, Topic<?> topic) {
         ConsumerGroup<?> group = getConsumerGroup(consumer.getGroup());
-        String adminToken = cluster.getTokenManager().getAdminConsToken();
-        if (group.listAssignedTopics().contains(topic)) {
-            return true;
-        } else if (adminToken != null && group.getToken() != null && adminToken.equals(group.getToken())) {
-            return true;
-        }
-        return false;
+        return group.getAssignedTopic() == topic;
     }
 
     /*
@@ -220,16 +194,6 @@ public class TributaryHelper {
             partition.setOffset(consumer, partition.listMessages().size() + offset + 1);
         } else {
             partition.setOffset(consumer, offset);
-        }
-    }
-
-    public <T> void assignTopicGeneric(AdminObject<T> admin) {
-        for (Topic<?> topic : cluster.listTopics()) {
-            if (topic.getType() == admin.getType() && !admin.getAssignedTopics().contains(topic)) {
-                @SuppressWarnings("unchecked")
-                Topic<T> typedTopic = (Topic<T>) topic;
-                admin.assignTopic(typedTopic);
-            }
         }
     }
 

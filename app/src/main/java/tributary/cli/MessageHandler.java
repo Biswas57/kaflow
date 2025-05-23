@@ -1,8 +1,11 @@
 package tributary.cli;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.Random;
 
 import org.json.JSONObject;
 
@@ -15,7 +18,7 @@ public class MessageHandler {
         this.controller = new TributaryController();
     }
 
-    public void handleCreateCommand(String[] parts) {
+    public <T> void handleCreateCommand(String[] parts) {
         String subCommand = parts[1].toLowerCase();
         switch (subCommand) {
             case "topic":
@@ -36,9 +39,13 @@ public class MessageHandler {
                 break;
             case "event":
                 try {
-                    JSONObject messageJSON = new JSONObject(
+                    Random random = new Random();
+                    byte[] key = ByteBuffer.allocate(4).putInt(random.nextInt()).array();
+                    JSONObject payload = new JSONObject(
                             Files.readString(Paths.get("messageConfigs/" + parts[4] + ".json")));
-                    controller.createEvent(parts[2], parts[3], messageJSON, parts.length > 5 ? parts[5] : null);
+                    String messageId = controller.produceMessage(parts[2], parts[3], parts[4], key, payload,
+                            LocalDateTime.now(), parts.length > 6 ? parts[6] : null);
+                    System.out.println("Produced message " + messageId);
                 } catch (IOException e) {
                     System.out.println(e.getMessage());
                 }
@@ -95,10 +102,7 @@ public class MessageHandler {
         String subcommand = parts[1].toLowerCase();
         switch (subcommand) {
             case "event":
-                controller.consumeEvents(parts[2], parts[3], 1);
-                break;
-            case "events":
-                controller.consumeEvents(parts[2], parts[3], Integer.parseInt(parts[4]));
+                controller.consumeEvent(parts[2], parts[3]);
                 break;
             default:
                 System.out.println("Unknown consume command: " + subcommand);
@@ -115,15 +119,6 @@ public class MessageHandler {
             case "offset":
                 controller.updatePartitionOffset(parts[3], parts[4], parts[5],
                         parts.length > 6 ? Integer.parseInt(parts[6]) : -1);
-                break;
-            case "admin":
-                if (parts[2].equals("producer")) {
-                    controller.updateProducerAdmin(parts[3], parts.length > 4 ? parts[4] : null,
-                            parts.length > 4 ? parts[5] : null);
-                } else if (parts[2].equals("consumer")) {
-                    controller.updateConsumerGroupAdmin(parts[3], parts.length > 4 ? parts[4] : null,
-                            parts.length > 4 ? parts[5] : null);
-                }
                 break;
             default:
                 System.out.println("Unknown update command: " + subcommand);

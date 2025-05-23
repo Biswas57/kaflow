@@ -1,7 +1,5 @@
 package tributary.core.tributaryFactory;
 
-import org.json.JSONObject;
-
 import tributary.core.tributaryObject.*;
 import tributary.core.tributaryObject.producers.*;
 
@@ -55,18 +53,6 @@ public class GenericFactory<T> implements ObjectFactory<T> {
         cluster.addProducer(p);
     }
 
-    @Override
-    public void createEvent(String producerId,
-            String topicId,
-            JSONObject event,
-            String partitionId) {
-        Producer<T> producer = typedProducer(producerId);
-        Topic<T> topic = typedTopic(topicId);
-        producer.produceMessage(topic.listPartitions(),
-                partitionId,
-                event);
-    }
-
     /* ---------- typed helpers ---------- */
     private Topic<T> typedTopic(String id) {
         return cast(cluster.getTopic(id));
@@ -74,10 +60,6 @@ public class GenericFactory<T> implements ObjectFactory<T> {
 
     private ConsumerGroup<T> typedGroup(String id) {
         return cast(cluster.getConsumerGroup(id));
-    }
-
-    private Producer<T> typedProducer(String id) {
-        return cast(cluster.getProducer(id));
     }
 
     @SuppressWarnings("unchecked")

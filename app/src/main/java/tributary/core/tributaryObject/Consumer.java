@@ -2,14 +2,6 @@ package tributary.core.tributaryObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import org.json.JSONObject;
-
-import tributary.core.util.Pair;
-import tributary.core.encryptionManager.EncryptionManager;
-import tributary.core.typeHandlerFactory.TypeHandler;
-import tributary.core.typeHandlerFactory.TypeHandlerFactory;
 
 public class Consumer<T> extends TributaryObject {
     private String groupId;
@@ -32,40 +24,10 @@ public class Consumer<T> extends TributaryObject {
      *         content,
      *         and the id of the consuming consumer.
      */
-    public JSONObject consume(Message<T> message, Partition<T> partition) {
-        // Create an Encryption manager with the same keys as this partition to ensure
-        // correct decryption
-        Pair<Long, Long> keyPair = partition.getAllocatedTopic().getPrivateKey(partition.getId());
-        EncryptionManager em = new EncryptionManager(keyPair);
-
-        // Create a JSON object to hold decrypted content
-        JSONObject contentJson = new JSONObject();
-        Class<T> type = partition.getAllocatedTopic().getType();
-        TypeHandler<T> handler = TypeHandlerFactory.getHandler(type);
-
-        // For each entry in the message content, decrypt the value and add it to the
-        // JSON object
-        for (Map.Entry<String, String> entry : message.getContent().entrySet()) {
-            String encrypted = entry.getValue();
-            String decrypted = em.decrypt(encrypted, message.getPublicKey());
-            T value = handler.handle(decrypted);
-            contentJson.put(entry.getKey(), value);
-        }
-
+    public T consume(Message<T> message, Partition<T> partition) {
         // Update partition offset for this consumer
         partition.setOffset(this, partition.getOffset(this) + 1);
-
-        // Include header as part of return data
-        JSONObject headerJson = new JSONObject();
-        headerJson.put("messageId", message.getId());
-        headerJson.put("createdDate", message.getCreatedDate().toString());
-
-        // Create the result JSON object
-        JSONObject result = new JSONObject();
-        result.put("header", headerJson);
-        result.put("content", contentJson);
-
-        return result;
+        return message.getPayload();
     }
 
     public String getGroup() {

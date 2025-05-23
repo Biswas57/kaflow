@@ -1,30 +1,35 @@
 package tributary.core.tributaryObject;
 
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.Objects;
 
 public class Message<T> extends TributaryObject {
-    private LocalDateTime createdDate;
-    public long publicKey;
-    private Map<String, String> content;
+    private LocalDateTime createdAt;
+    private Class<T> payloadType;
+    private byte[] key;
+    private T payload;
 
-    public Message(String messageId, LocalDateTime createdDate, Map<String, String> content,
-            Long publicKey) {
+    public Message(String messageId, LocalDateTime createdAt, Class<T> payloadType, byte[] key, T payload) {
         super(messageId);
-        this.createdDate = createdDate;
-        this.content = content;
-        this.publicKey = publicKey;
+        this.createdAt = Objects.requireNonNull(createdAt);
+        this.payloadType = Objects.requireNonNull(payloadType);
+        this.key = Objects.requireNonNull(key);
+        this.payload = Objects.requireNonNull(payload);
     }
 
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
+    public LocalDateTime getCreatedTime() {
+        return createdAt;
     }
 
-    public Map<String, String> getContent() {
-        return content;
+    public T getPayload() {
+        return payload;
     }
 
-    public long getPublicKey() {
-        return publicKey;
+    public Class<T> getPayloadType() {
+        return payloadType;
+    }
+
+    public byte[] getKey() {
+        return key;
     }
 }

@@ -1,7 +1,5 @@
 package tributary.core.tributaryFactory;
 
-import org.json.JSONObject;
-
 public interface ObjectFactory<T> {
     public abstract void createTopic(String topicId);
 
@@ -12,7 +10,4 @@ public interface ObjectFactory<T> {
     public abstract void createConsumer(String groupId, String consumerId);
 
     public abstract void createProducer(String producerId, String topicId, String allocation);
-
-    public abstract void createEvent(String producerId, String topicId,
-            JSONObject event, String partitionId);
 }

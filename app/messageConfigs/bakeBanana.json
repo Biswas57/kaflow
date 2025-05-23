@@ -1,9 +1,0 @@
-{
-    "eventId": "bakeBanana",
-    "PayloadType": "String",
-    "messageContents": {
-        "temperature": "180C",
-        "duration": "25 mins",
-        "description": "Bake the banana at 180C for 25 mins to create a caramelized, soft texture."
-    }
-}

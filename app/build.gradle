@@ -1,8 +1,8 @@
 plugins {
     id 'java'
-    id 'checkstyle'
     id 'jacoco'
     id("org.barfuin.gradle.jacocolog") version "3.1.0"
+    id 'com.google.protobuf' version '0.9.4'
     id 'org.springframework.boot' version '2.7.17'
     id 'io.spring.dependency-management' version '1.1.4'
 }
@@ -12,19 +12,33 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation group: 'org.json', name: 'json', version: '20230618'
+ext {
+    grpcVersion = '1.63.0'
+    protobufVersion = '3.25.3'
+}
 
-    // Use JUnit Jupiter & Mockito for testing.
+dependencies {
+    /* gRPC runtime */
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+
+    /* Spring-Boot integration for gRPC */
+    implementation 'net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE'
+
+    /* JSON helper (can be removed once you return POJOs everywhere) */
+    implementation 'org.json:json:20230618'
+
+    /* Spring Web & Actuator */
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    /* test */
     testImplementation 'com.github.stefanbirkner:system-lambda:1.0.0'
     testImplementation 'org.mockito:mockito-core:4.5.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-    // Access to API library
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 sourceSets {
@@ -57,21 +71,8 @@ tasks.named('test') {
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+    toolchain { languageVersion = JavaLanguageVersion.of(17) }
     modularity.inferModulePath = true
-}
-
-checkstyle {
-    configFile = file("${project.rootDir}/config/checkstyle.xml")
-    toolVersion = '10.3.3'
-}
-
-task lint {
-    description("Lints the entire codebase, runs both checkstyleMain and checkstyleTest")
-    group("verification")
-    dependsOn('checkstyleMain', 'checkstyleTest')
 }
 
 jacocoTestReport {
@@ -110,6 +111,18 @@ jacocoTestCoverageVerification {
     }
 
     dependsOn jacocoTestReport
+}
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:3.25.3" }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:1.63.0" }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins { grpc {} }
+        }
+    }
 }
 
 task coverage {

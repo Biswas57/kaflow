@@ -1,9 +1,0 @@
-{
-    "eventId": "roastBanana",
-    "PayloadType": "String",
-    "messageContents": {
-        "temperature": "200C",
-        "duration": "15 mins",
-        "description": "Roast the banana at 200C for 15 mins to enhance its sweetness."
-    }
-}

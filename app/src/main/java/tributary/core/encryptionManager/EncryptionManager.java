@@ -1,12 +1,17 @@
 package tributary.core.encryptionManager;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import tributary.core.util.Pair;
 
+@Deprecated
 public class EncryptionManager {
     private final long n; // Modulus for public and private keys
     private final long totient; // Euler's totient phi(N)
@@ -49,33 +54,36 @@ public class EncryptionManager {
     }
 
     // RSA encryption with refined encoding
-    public String encrypt(String message) {
-        byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
-        long[] encryptedArray = new long[messageBytes.length];
-        StringBuilder encryptedMessage = new StringBuilder();
+    public byte[] encrypt(byte[] plain) {
 
-        for (int i = 0; i < messageBytes.length; i++) {
+        List<Long> blocks = toLongBlocks(plain, true); // pad last block
+        ByteArrayOutputStream out = new ByteArrayOutputStream(blocks.size() * 8);
+
+        for (long m : blocks) {
             // ciphertext = byte^e mod n
-            encryptedArray[i] = modularExponentiation(messageBytes[i], e, n);
-            encryptedMessage.append(encryptedArray[i]).append(" ");
+            long c = modularExponentiation(m, e, n);
+            writeLong(out, c);
         }
-
-        return encryptedMessage.toString().trim();
+        return out.toByteArray();
     }
 
     // RSA decryption with refined decoding
-    public String decrypt(String ciphertext, long e) {
-        String[] ciphertextArray = ciphertext.split(" ");
-        byte[] decryptedBytes = new byte[ciphertextArray.length];
+    public byte[] decrypt(byte[] cipher) {
+
+        if (cipher.length % 8 != 0)
+            throw new IllegalArgumentException("cipher length must be multiple of 8");
+
+        ByteBuffer buf = ByteBuffer.wrap(cipher);
+        ByteArrayOutputStream plain = new ByteArrayOutputStream(cipher.length);
+        // plaintext = ciphertext^d mod n
         long d = modularInverse(e, totient);
 
-        for (int i = 0; i < ciphertextArray.length; i++) {
-            // plaintext = ciphertext^d mod n
-            long decryptedLong = modularExponentiation(Long.parseLong(ciphertextArray[i]), d, n);
-            decryptedBytes[i] = (byte) decryptedLong;
+        while (buf.hasRemaining()) {
+            long c = buf.getLong();
+            long m = modularExponentiation(c, d, n);
+            writeLong(plain, m);
         }
-
-        return new String(decryptedBytes, StandardCharsets.UTF_8);
+        return trimPadding(plain.toByteArray());
     }
 
     // Modular exponentiation: (base^exp) % mod.
@@ -141,62 +149,37 @@ public class EncryptionManager {
         return new Pair<>(p1, p2);
     }
 
-    public static long[] stringToLongArray(String input) {
-        String[] words = input.split(" ");
-        List<Long> longList = new ArrayList<>();
+    // helpers
+    private static List<Long> toLongBlocks(byte[] data, boolean pad) {
+        List<Long> blocks = new ArrayList<>();
+        ByteBuffer buf = ByteBuffer.wrap(data);
 
-        for (String word : words) {
-            byte[] wordBytes = word.getBytes(StandardCharsets.UTF_8);
-
-            // Ensure the word can be represented within a single long (max 8 bytes)
-            if (wordBytes.length > 8) {
-                throw new IllegalArgumentException("Word is too long to convert to a single long value.");
-            }
-
-            // Pad the byte array to 8 bytes if it's shorter
-            byte[] paddedBytes = new byte[8];
-            System.arraycopy(wordBytes, 0, paddedBytes, 8 - wordBytes.length, wordBytes.length);
-
-            // Convert the padded byte array to a long and add to list
-            longList.add(ByteBuffer.wrap(paddedBytes).getLong());
+        while (buf.remaining() >= 8) {
+            blocks.add(buf.getLong());
         }
 
-        return longList.stream().mapToLong(Long::longValue).toArray();
+        int rem = buf.remaining();
+        if (rem > 0 || pad) {
+            byte[] last = new byte[8];
+            if (rem > 0)
+                buf.get(last, 0, rem);
+            blocks.add(ByteBuffer.wrap(last).getLong());
+        }
+        return blocks;
     }
 
-    public static String longArrayToString(long[] longArray) {
-        StringBuilder result = new StringBuilder();
-
-        for (long l : longArray) {
-            // Convert the long to a byte array
-            byte[] bytes = ByteBuffer.allocate(8).putLong(l).array();
-
-            // Trim leading zero bytes and convert remaining bytes back to a String
-            String word = new String(bytes, StandardCharsets.UTF_8).trim();
-            result.append(word).append(" ");
+    private static void writeLong(OutputStream out, long value) {
+        try {
+            out.write(ByteBuffer.allocate(8).putLong(value).array());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-
-        return result.toString().trim();
     }
 
-    public static void main(String[] args) {
-        EncryptionManager encryptionManager = new EncryptionManager();
-
-        String originalMessage = "100";
-        System.out.println("Original Message: " + originalMessage);
-
-        // Encrypt the message
-        String encryptedMessage = encryptionManager.encrypt(originalMessage);
-        System.out.println("Encrypted Message: " + encryptedMessage);
-
-        // Decrypt the message
-        String decryptedMessage = encryptionManager.decrypt(encryptedMessage, encryptionManager.getPublicKey());
-        System.out.println("Decrypted Message: " + decryptedMessage);
-
-        if (originalMessage.equals(decryptedMessage)) {
-            System.out.println("Success: The decrypted message matches the original.");
-        } else {
-            System.out.println("Error: The decrypted message does not match the original.");
-        }
+    private static byte[] trimPadding(byte[] bytes) {
+        int i = bytes.length - 1;
+        while (i >= 0 && bytes[i] == 0)
+            i--; // remove trailing 0-padding
+        return Arrays.copyOf(bytes, i + 1);
     }
 }
