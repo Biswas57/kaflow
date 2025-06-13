@@ -6,8 +6,8 @@
     - Implementing a stream-like gRPC connection for message productions and consumption (Tomorrow afternoon)
     - Implement observer pattern for gRPC stream consumers
     - After stream is implemented, implement a gRPC bulk consumer request
-    - Make gRPC interface tomorrow
-    - Add generics to the proto file and implement JSON into our typehandling if possible
+    - Make gRPC interface tomorrow ✅
+    - Add generics to the proto file and implement JSON into our typehandling if possible ✅
 
                     ┌─────────────────────────────────────────────────┐
                     │              Spring-Boot Application            │
@@ -35,8 +35,8 @@
   - Not sure whether to have 1 thread per action or 1 thread per topic or IDK the relationship right now
   - When Implementing remove number of events to consume and change it to 1 consume per call / observer pattern
 
-3. Purge all implementations of RBAC (tomorrow morning)
-    - RBAC implementation is poorly implemented.
+3. Purge all implementations of RBAC (tomorrow morning) ✅
+    - RBAC implementation is poorly implemented. ✅
     - Replace it later on for actual RBAC implementation using Spring Security - Use Spring AuthService
     - RBAC is a good idea for this project, but should be implemented properly with Java's actual security features
 
