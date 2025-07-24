@@ -3,14 +3,14 @@
     - Implementing a HTTP Springboot interface for admin requestions from consumer and producer clients ✅
     - Complete all Exceptions so that Spring can handle them as they bubble up. ✅
 
-    - Implementing a stream-like gRPC connection for message productions and consumption (Tomorrow afternoon)
+    - Implementing a stream-like gRPC connection for message productions and consumption 
     - Implement observer pattern for gRPC stream consumers
     - After stream is implemented, implement a gRPC bulk consumer request
     - Make gRPC interface tomorrow ✅
     - Add generics to the proto file and implement JSON into our typehandling if possible ✅
 
                     ┌─────────────────────────────────────────────────┐
-                    │              Spring-Boot Application            │
+                    │              Kaflow Architecture                │
                     └─────────────────────────────────────────────────┘
         ┌──────────────┐  HTTP/JSON  ┌────────────────┐  in-proc  ┌─────────────┐
         │ Admin REST   │────────────▶│  AdminService  │──────────▶│             │
@@ -40,8 +40,11 @@
     - Replace it later on for actual RBAC implementation using Spring Security - Use Spring AuthService
     - RBAC is a good idea for this project, but should be implemented properly with Java's actual security features
 
-4. When deleting components of the Tributary system, make sure to delete all relationships
-    - SO that objects are not left dangling
+4. Message storage on Disk
+    - Implement a file system to store messages on disk
+    - Use a file per partition and load messages into memory when the offset changes or is set beyond the current partition
+    - This will help with OOM issues when partitions are full
+    - Have a worker thread that reads messages from disk and loads them into memory when needed and deletes them when when the messages is older than 30 days or so
     
 
 

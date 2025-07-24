@@ -33,20 +33,17 @@ public interface ProduceRequestOrBuilder extends
       getTopicIdBytes();
 
   /**
-   * <pre>
-   * ""  → broker decides
-   * </pre>
-   *
-   * <code>string partition_id = 3;</code>
+   * <code>optional string partition_id = 3;</code>
+   * @return Whether the partitionId field is set.
+   */
+  boolean hasPartitionId();
+  /**
+   * <code>optional string partition_id = 3;</code>
    * @return The partitionId.
    */
   java.lang.String getPartitionId();
   /**
-   * <pre>
-   * ""  → broker decides
-   * </pre>
-   *
-   * <code>string partition_id = 3;</code>
+   * <code>optional string partition_id = 3;</code>
    * @return The bytes for partitionId.
    */
   com.google.protobuf.ByteString
@@ -57,7 +54,7 @@ public interface ProduceRequestOrBuilder extends
    * "text", "json", "binary", etc.
    * </pre>
    *
-   * <code>string payload_type = 5;</code>
+   * <code>string payload_type = 4;</code>
    * @return The payloadType.
    */
   java.lang.String getPayloadType();
@@ -66,34 +63,30 @@ public interface ProduceRequestOrBuilder extends
    * "text", "json", "binary", etc.
    * </pre>
    *
-   * <code>string payload_type = 5;</code>
+   * <code>string payload_type = 4;</code>
    * @return The bytes for payloadType.
    */
   com.google.protobuf.ByteString
       getPayloadTypeBytes();
 
   /**
-   * <pre>
-   * ≤1000 bytes
-   * </pre>
-   *
-   * <code>bytes key = 6;</code>
+   * <code>bytes key = 5;</code>
    * @return The key.
    */
   com.google.protobuf.ByteString getKey();
 
   /**
-   * <code>.google.protobuf.Any payload = 7;</code>
+   * <code>.google.protobuf.Any payload = 6;</code>
    * @return Whether the payload field is set.
    */
   boolean hasPayload();
   /**
-   * <code>.google.protobuf.Any payload = 7;</code>
+   * <code>.google.protobuf.Any payload = 6;</code>
    * @return The payload.
    */
   com.google.protobuf.Any getPayload();
   /**
-   * <code>.google.protobuf.Any payload = 7;</code>
+   * <code>.google.protobuf.Any payload = 6;</code>
    */
   com.google.protobuf.AnyOrBuilder getPayloadOrBuilder();
 }

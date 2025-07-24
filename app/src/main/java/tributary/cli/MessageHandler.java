@@ -43,7 +43,7 @@ public class MessageHandler {
                     byte[] key = ByteBuffer.allocate(4).putInt(random.nextInt()).array();
                     JSONObject payload = new JSONObject(
                             Files.readString(Paths.get("messageConfigs/" + parts[4] + ".json")));
-                    String messageId = controller.produceMessage(parts[2], parts[3], parts[4], key, payload,
+                    String messageId = controller.produceMessage(parts[2], parts[3], parts[5], (byte[]) key, payload,
                             LocalDateTime.now(), parts.length > 6 ? parts[6] : null);
                     System.out.println("Produced message " + messageId);
                 } catch (IOException e) {

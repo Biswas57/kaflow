@@ -134,10 +134,6 @@ private static final long serialVersionUID = 0L;
   public static final int PAYLOAD_FIELD_NUMBER = 4;
   private com.google.protobuf.Any payload_;
   /**
-   * <pre>
-   * one message per event
-   * </pre>
-   *
    * <code>.google.protobuf.Any payload = 4;</code>
    * @return Whether the payload field is set.
    */
@@ -146,10 +142,6 @@ private static final long serialVersionUID = 0L;
     return ((bitField0_ & 0x00000001) != 0);
   }
   /**
-   * <pre>
-   * one message per event
-   * </pre>
-   *
    * <code>.google.protobuf.Any payload = 4;</code>
    * @return The payload.
    */
@@ -158,10 +150,6 @@ private static final long serialVersionUID = 0L;
     return payload_ == null ? com.google.protobuf.Any.getDefaultInstance() : payload_;
   }
   /**
-   * <pre>
-   * one message per event
-   * </pre>
-   *
    * <code>.google.protobuf.Any payload = 4;</code>
    */
   @java.lang.Override
@@ -768,10 +756,6 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.google.protobuf.Any, com.google.protobuf.Any.Builder, com.google.protobuf.AnyOrBuilder> payloadBuilder_;
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      * @return Whether the payload field is set.
      */
@@ -779,10 +763,6 @@ private static final long serialVersionUID = 0L;
       return ((bitField0_ & 0x00000008) != 0);
     }
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      * @return The payload.
      */
@@ -794,10 +774,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      */
     public Builder setPayload(com.google.protobuf.Any value) {
@@ -814,10 +790,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      */
     public Builder setPayload(
@@ -832,10 +804,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      */
     public Builder mergePayload(com.google.protobuf.Any value) {
@@ -857,10 +825,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      */
     public Builder clearPayload() {
@@ -874,10 +838,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      */
     public com.google.protobuf.Any.Builder getPayloadBuilder() {
@@ -886,10 +846,6 @@ private static final long serialVersionUID = 0L;
       return getPayloadFieldBuilder().getBuilder();
     }
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      */
     public com.google.protobuf.AnyOrBuilder getPayloadOrBuilder() {
@@ -901,10 +857,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * one message per event
-     * </pre>
-     *
      * <code>.google.protobuf.Any payload = 4;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<

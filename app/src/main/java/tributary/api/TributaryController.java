@@ -253,13 +253,14 @@ public class TributaryController {
      * @param partitionId The partition identifier (optional).
      * @throws IOException if event creation fails.
      */
-    public <T> String produceMessage(String producerId, String topicId, String typeString, byte[] key, T payload,
+    public <T> String produceMessage(String producerId, String topicId, String payloadType,
+            byte[] key, T payload,
             LocalDateTime createdAt,
             String partitionId)
             throws IllegalArgumentException {
         Producer<?> producer = helper.getProducer(producerId);
         Topic<?> topic = helper.getTopic(topicId);
-        Class<?> type = TypeMap.resolve(typeString.toLowerCase());
+        Class<?> type = TypeMap.resolve(payloadType.toLowerCase());
         if (producer == null || topic == null) {
             throw new IllegalArgumentException("Producer " + producerId + " or topic " + topicId + " not found.");
         } else if (!helper.verifyProducer(producer, topic)) {

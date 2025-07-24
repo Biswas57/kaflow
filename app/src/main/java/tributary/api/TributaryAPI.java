@@ -3,6 +3,7 @@ package tributary.api;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import tributary.api.dto.*;
 
@@ -10,7 +11,12 @@ import tributary.api.dto.*;
 @RequestMapping("/api")
 class TributaryAPI {
 
-    private final TributaryController controller = new TributaryController();
+    private final TributaryController controller;
+
+    @Autowired
+    public TributaryAPI(TributaryController controller) {
+        this.controller = controller;
+    }
 
     // Topic endpoints
 

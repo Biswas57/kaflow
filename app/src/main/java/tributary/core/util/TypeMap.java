@@ -22,7 +22,7 @@ public final class TypeMap {
         Class<?> typeClass = aliasToClass.get(alias.toLowerCase());
         if (typeClass == null)
             throw new IllegalArgumentException("Unknown type: " + alias);
-        return typeClass;
+        return Any.class;
     }
 
     // Conversion helpers

@@ -45,29 +45,32 @@ public final class TributaryModels {
   static {
     java.lang.String[] descriptorData = {
       "\n\017tributary.proto\022\020tributary.stream\032\031goo" +
-      "gle/protobuf/any.proto\"\227\001\n\016ProduceReques" +
-      "t\022\023\n\013producer_id\030\001 \001(\t\022\020\n\010topic_id\030\002 \001(\t" +
-      "\022\024\n\014partition_id\030\003 \001(\t\022\024\n\014payload_type\030\005" +
-      " \001(\t\022\013\n\003key\030\006 \001(\014\022%\n\007payload\030\007 \001(\0132\024.goo" +
-      "gle.protobuf.Any\"o\n\nProduceAck\022\023\n\013sequen" +
-      "ce_no\030\001 \001(\004\022\022\n\nmessage_id\030\002 \001(\t\022\024\n\014parti" +
-      "tion_id\030\003 \001(\t\022\017\n\007success\030\004 \001(\010\022\021\n\terror_" +
-      "msg\030\005 \001(\t\"`\n\020SubscribeRequest\022\023\n\013consume" +
-      "r_id\030\001 \001(\t\022\020\n\010group_id\030\002 \001(\t\022\020\n\010topic_id" +
-      "\030\003 \001(\t\022\023\n\013from_offset\030\004 \001(\004\"f\n\005Event\022\020\n\010" +
-      "topic_id\030\001 \001(\t\022\024\n\014partition_id\030\002 \001(\t\022\016\n\006" +
-      "offset\030\003 \001(\004\022%\n\007payload\030\004 \001(\0132\024.google.p" +
-      "rotobuf.Any2\254\001\n\017TributaryStream\022M\n\007Produ" +
-      "ce\022 .tributary.stream.ProduceRequest\032\034.t" +
-      "ributary.stream.ProduceAck(\0010\001\022J\n\tSubscr" +
-      "ibe\022\".tributary.stream.SubscribeRequest\032" +
-      "\027.tributary.stream.Event0\001B%\n\020tributary." +
-      "streamB\017TributaryModelsP\001b\006proto3"
+      "gle/protobuf/any.proto\032\037google/protobuf/" +
+      "timestamp.proto\"\255\001\n\016ProduceRequest\022\023\n\013pr" +
+      "oducer_id\030\001 \001(\t\022\020\n\010topic_id\030\002 \001(\t\022\031\n\014par" +
+      "tition_id\030\003 \001(\tH\000\210\001\001\022\024\n\014payload_type\030\004 \001" +
+      "(\t\022\013\n\003key\030\005 \001(\014\022%\n\007payload\030\006 \001(\0132\024.googl" +
+      "e.protobuf.AnyB\017\n\r_partition_id\"m\n\nProdu" +
+      "ceAck\022\022\n\nmessage_id\030\001 \001(\t\022\024\n\014partition_i" +
+      "d\030\002 \001(\t\022\017\n\007success\030\003 \001(\010\022\026\n\terror_msg\030\004 " +
+      "\001(\tH\000\210\001\001B\014\n\n_error_msg\"e\n\020SubscribeReque" +
+      "st\022\023\n\013consumer_id\030\001 \001(\t\022\020\n\010group_id\030\002 \001(" +
+      "\t\022\031\n\014partition_id\030\003 \001(\tH\000\210\001\001B\017\n\r_partiti" +
+      "on_id\"f\n\005Event\022\020\n\010topic_id\030\001 \001(\t\022\024\n\014part" +
+      "ition_id\030\002 \001(\t\022\016\n\006offset\030\003 \001(\004\022%\n\007payloa" +
+      "d\030\004 \001(\0132\024.google.protobuf.Any2\254\001\n\017Tribut" +
+      "aryStream\022M\n\007Produce\022 .tributary.stream." +
+      "ProduceRequest\032\034.tributary.stream.Produc" +
+      "eAck(\0010\001\022J\n\tSubscribe\022\".tributary.stream" +
+      ".SubscribeRequest\032\027.tributary.stream.Eve" +
+      "nt0\001B%\n\020tributary.streamB\017TributaryModel" +
+      "sP\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           com.google.protobuf.AnyProto.getDescriptor(),
+          com.google.protobuf.TimestampProto.getDescriptor(),
         });
     internal_static_tributary_stream_ProduceRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -80,13 +83,13 @@ public final class TributaryModels {
     internal_static_tributary_stream_ProduceAck_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_tributary_stream_ProduceAck_descriptor,
-        new java.lang.String[] { "SequenceNo", "MessageId", "PartitionId", "Success", "ErrorMsg", });
+        new java.lang.String[] { "MessageId", "PartitionId", "Success", "ErrorMsg", });
     internal_static_tributary_stream_SubscribeRequest_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_tributary_stream_SubscribeRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_tributary_stream_SubscribeRequest_descriptor,
-        new java.lang.String[] { "ConsumerId", "GroupId", "TopicId", "FromOffset", });
+        new java.lang.String[] { "ConsumerId", "GroupId", "PartitionId", });
     internal_static_tributary_stream_Event_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_tributary_stream_Event_fieldAccessorTable = new
@@ -94,6 +97,7 @@ public final class TributaryModels {
         internal_static_tributary_stream_Event_descriptor,
         new java.lang.String[] { "TopicId", "PartitionId", "Offset", "Payload", });
     com.google.protobuf.AnyProto.getDescriptor();
+    com.google.protobuf.TimestampProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

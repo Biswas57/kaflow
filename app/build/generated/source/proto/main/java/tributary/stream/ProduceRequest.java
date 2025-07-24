@@ -127,11 +127,15 @@ private static final long serialVersionUID = 0L;
   @SuppressWarnings("serial")
   private volatile java.lang.Object partitionId_ = "";
   /**
-   * <pre>
-   * ""  → broker decides
-   * </pre>
-   *
-   * <code>string partition_id = 3;</code>
+   * <code>optional string partition_id = 3;</code>
+   * @return Whether the partitionId field is set.
+   */
+  @java.lang.Override
+  public boolean hasPartitionId() {
+    return ((bitField0_ & 0x00000001) != 0);
+  }
+  /**
+   * <code>optional string partition_id = 3;</code>
    * @return The partitionId.
    */
   @java.lang.Override
@@ -148,11 +152,7 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <pre>
-   * ""  → broker decides
-   * </pre>
-   *
-   * <code>string partition_id = 3;</code>
+   * <code>optional string partition_id = 3;</code>
    * @return The bytes for partitionId.
    */
   @java.lang.Override
@@ -170,7 +170,7 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int PAYLOAD_TYPE_FIELD_NUMBER = 5;
+  public static final int PAYLOAD_TYPE_FIELD_NUMBER = 4;
   @SuppressWarnings("serial")
   private volatile java.lang.Object payloadType_ = "";
   /**
@@ -178,7 +178,7 @@ private static final long serialVersionUID = 0L;
    * "text", "json", "binary", etc.
    * </pre>
    *
-   * <code>string payload_type = 5;</code>
+   * <code>string payload_type = 4;</code>
    * @return The payloadType.
    */
   @java.lang.Override
@@ -199,7 +199,7 @@ private static final long serialVersionUID = 0L;
    * "text", "json", "binary", etc.
    * </pre>
    *
-   * <code>string payload_type = 5;</code>
+   * <code>string payload_type = 4;</code>
    * @return The bytes for payloadType.
    */
   @java.lang.Override
@@ -217,14 +217,10 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int KEY_FIELD_NUMBER = 6;
+  public static final int KEY_FIELD_NUMBER = 5;
   private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
   /**
-   * <pre>
-   * ≤1000 bytes
-   * </pre>
-   *
-   * <code>bytes key = 6;</code>
+   * <code>bytes key = 5;</code>
    * @return The key.
    */
   @java.lang.Override
@@ -232,18 +228,18 @@ private static final long serialVersionUID = 0L;
     return key_;
   }
 
-  public static final int PAYLOAD_FIELD_NUMBER = 7;
+  public static final int PAYLOAD_FIELD_NUMBER = 6;
   private com.google.protobuf.Any payload_;
   /**
-   * <code>.google.protobuf.Any payload = 7;</code>
+   * <code>.google.protobuf.Any payload = 6;</code>
    * @return Whether the payload field is set.
    */
   @java.lang.Override
   public boolean hasPayload() {
-    return ((bitField0_ & 0x00000001) != 0);
+    return ((bitField0_ & 0x00000002) != 0);
   }
   /**
-   * <code>.google.protobuf.Any payload = 7;</code>
+   * <code>.google.protobuf.Any payload = 6;</code>
    * @return The payload.
    */
   @java.lang.Override
@@ -251,7 +247,7 @@ private static final long serialVersionUID = 0L;
     return payload_ == null ? com.google.protobuf.Any.getDefaultInstance() : payload_;
   }
   /**
-   * <code>.google.protobuf.Any payload = 7;</code>
+   * <code>.google.protobuf.Any payload = 6;</code>
    */
   @java.lang.Override
   public com.google.protobuf.AnyOrBuilder getPayloadOrBuilder() {
@@ -278,17 +274,17 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(topicId_)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, topicId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(partitionId_)) {
+    if (((bitField0_ & 0x00000001) != 0)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, partitionId_);
     }
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(payloadType_)) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 5, payloadType_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, payloadType_);
     }
     if (!key_.isEmpty()) {
-      output.writeBytes(6, key_);
+      output.writeBytes(5, key_);
     }
-    if (((bitField0_ & 0x00000001) != 0)) {
-      output.writeMessage(7, getPayload());
+    if (((bitField0_ & 0x00000002) != 0)) {
+      output.writeMessage(6, getPayload());
     }
     getUnknownFields().writeTo(output);
   }
@@ -305,19 +301,19 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(topicId_)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, topicId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(partitionId_)) {
+    if (((bitField0_ & 0x00000001) != 0)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, partitionId_);
     }
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(payloadType_)) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, payloadType_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, payloadType_);
     }
     if (!key_.isEmpty()) {
       size += com.google.protobuf.CodedOutputStream
-        .computeBytesSize(6, key_);
+        .computeBytesSize(5, key_);
     }
-    if (((bitField0_ & 0x00000001) != 0)) {
+    if (((bitField0_ & 0x00000002) != 0)) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(7, getPayload());
+        .computeMessageSize(6, getPayload());
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
@@ -338,8 +334,11 @@ private static final long serialVersionUID = 0L;
         .equals(other.getProducerId())) return false;
     if (!getTopicId()
         .equals(other.getTopicId())) return false;
-    if (!getPartitionId()
-        .equals(other.getPartitionId())) return false;
+    if (hasPartitionId() != other.hasPartitionId()) return false;
+    if (hasPartitionId()) {
+      if (!getPartitionId()
+          .equals(other.getPartitionId())) return false;
+    }
     if (!getPayloadType()
         .equals(other.getPayloadType())) return false;
     if (!getKey()
@@ -364,8 +363,10 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getProducerId().hashCode();
     hash = (37 * hash) + TOPIC_ID_FIELD_NUMBER;
     hash = (53 * hash) + getTopicId().hashCode();
-    hash = (37 * hash) + PARTITION_ID_FIELD_NUMBER;
-    hash = (53 * hash) + getPartitionId().hashCode();
+    if (hasPartitionId()) {
+      hash = (37 * hash) + PARTITION_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getPartitionId().hashCode();
+    }
     hash = (37 * hash) + PAYLOAD_TYPE_FIELD_NUMBER;
     hash = (53 * hash) + getPayloadType().hashCode();
     hash = (37 * hash) + KEY_FIELD_NUMBER;
@@ -560,8 +561,10 @@ private static final long serialVersionUID = 0L;
       if (((from_bitField0_ & 0x00000002) != 0)) {
         result.topicId_ = topicId_;
       }
+      int to_bitField0_ = 0;
       if (((from_bitField0_ & 0x00000004) != 0)) {
         result.partitionId_ = partitionId_;
+        to_bitField0_ |= 0x00000001;
       }
       if (((from_bitField0_ & 0x00000008) != 0)) {
         result.payloadType_ = payloadType_;
@@ -569,12 +572,11 @@ private static final long serialVersionUID = 0L;
       if (((from_bitField0_ & 0x00000010) != 0)) {
         result.key_ = key_;
       }
-      int to_bitField0_ = 0;
       if (((from_bitField0_ & 0x00000020) != 0)) {
         result.payload_ = payloadBuilder_ == null
             ? payload_
             : payloadBuilder_.build();
-        to_bitField0_ |= 0x00000001;
+        to_bitField0_ |= 0x00000002;
       }
       result.bitField0_ |= to_bitField0_;
     }
@@ -633,7 +635,7 @@ private static final long serialVersionUID = 0L;
         bitField0_ |= 0x00000002;
         onChanged();
       }
-      if (!other.getPartitionId().isEmpty()) {
+      if (other.hasPartitionId()) {
         partitionId_ = other.partitionId_;
         bitField0_ |= 0x00000004;
         onChanged();
@@ -690,23 +692,23 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00000004;
               break;
             } // case 26
-            case 42: {
+            case 34: {
               payloadType_ = input.readStringRequireUtf8();
               bitField0_ |= 0x00000008;
               break;
-            } // case 42
-            case 50: {
+            } // case 34
+            case 42: {
               key_ = input.readBytes();
               bitField0_ |= 0x00000010;
               break;
-            } // case 50
-            case 58: {
+            } // case 42
+            case 50: {
               input.readMessage(
                   getPayloadFieldBuilder().getBuilder(),
                   extensionRegistry);
               bitField0_ |= 0x00000020;
               break;
-            } // case 58
+            } // case 50
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -870,11 +872,14 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object partitionId_ = "";
     /**
-     * <pre>
-     * ""  → broker decides
-     * </pre>
-     *
-     * <code>string partition_id = 3;</code>
+     * <code>optional string partition_id = 3;</code>
+     * @return Whether the partitionId field is set.
+     */
+    public boolean hasPartitionId() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>optional string partition_id = 3;</code>
      * @return The partitionId.
      */
     public java.lang.String getPartitionId() {
@@ -890,11 +895,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * ""  → broker decides
-     * </pre>
-     *
-     * <code>string partition_id = 3;</code>
+     * <code>optional string partition_id = 3;</code>
      * @return The bytes for partitionId.
      */
     public com.google.protobuf.ByteString
@@ -911,11 +912,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * ""  → broker decides
-     * </pre>
-     *
-     * <code>string partition_id = 3;</code>
+     * <code>optional string partition_id = 3;</code>
      * @param value The partitionId to set.
      * @return This builder for chaining.
      */
@@ -928,11 +925,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * ""  → broker decides
-     * </pre>
-     *
-     * <code>string partition_id = 3;</code>
+     * <code>optional string partition_id = 3;</code>
      * @return This builder for chaining.
      */
     public Builder clearPartitionId() {
@@ -942,11 +935,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * ""  → broker decides
-     * </pre>
-     *
-     * <code>string partition_id = 3;</code>
+     * <code>optional string partition_id = 3;</code>
      * @param value The bytes for partitionId to set.
      * @return This builder for chaining.
      */
@@ -966,7 +955,7 @@ private static final long serialVersionUID = 0L;
      * "text", "json", "binary", etc.
      * </pre>
      *
-     * <code>string payload_type = 5;</code>
+     * <code>string payload_type = 4;</code>
      * @return The payloadType.
      */
     public java.lang.String getPayloadType() {
@@ -986,7 +975,7 @@ private static final long serialVersionUID = 0L;
      * "text", "json", "binary", etc.
      * </pre>
      *
-     * <code>string payload_type = 5;</code>
+     * <code>string payload_type = 4;</code>
      * @return The bytes for payloadType.
      */
     public com.google.protobuf.ByteString
@@ -1007,7 +996,7 @@ private static final long serialVersionUID = 0L;
      * "text", "json", "binary", etc.
      * </pre>
      *
-     * <code>string payload_type = 5;</code>
+     * <code>string payload_type = 4;</code>
      * @param value The payloadType to set.
      * @return This builder for chaining.
      */
@@ -1024,7 +1013,7 @@ private static final long serialVersionUID = 0L;
      * "text", "json", "binary", etc.
      * </pre>
      *
-     * <code>string payload_type = 5;</code>
+     * <code>string payload_type = 4;</code>
      * @return This builder for chaining.
      */
     public Builder clearPayloadType() {
@@ -1038,7 +1027,7 @@ private static final long serialVersionUID = 0L;
      * "text", "json", "binary", etc.
      * </pre>
      *
-     * <code>string payload_type = 5;</code>
+     * <code>string payload_type = 4;</code>
      * @param value The bytes for payloadType to set.
      * @return This builder for chaining.
      */
@@ -1054,11 +1043,7 @@ private static final long serialVersionUID = 0L;
 
     private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <pre>
-     * ≤1000 bytes
-     * </pre>
-     *
-     * <code>bytes key = 6;</code>
+     * <code>bytes key = 5;</code>
      * @return The key.
      */
     @java.lang.Override
@@ -1066,11 +1051,7 @@ private static final long serialVersionUID = 0L;
       return key_;
     }
     /**
-     * <pre>
-     * ≤1000 bytes
-     * </pre>
-     *
-     * <code>bytes key = 6;</code>
+     * <code>bytes key = 5;</code>
      * @param value The key to set.
      * @return This builder for chaining.
      */
@@ -1082,11 +1063,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * ≤1000 bytes
-     * </pre>
-     *
-     * <code>bytes key = 6;</code>
+     * <code>bytes key = 5;</code>
      * @return This builder for chaining.
      */
     public Builder clearKey() {
@@ -1100,14 +1077,14 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.google.protobuf.Any, com.google.protobuf.Any.Builder, com.google.protobuf.AnyOrBuilder> payloadBuilder_;
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      * @return Whether the payload field is set.
      */
     public boolean hasPayload() {
       return ((bitField0_ & 0x00000020) != 0);
     }
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      * @return The payload.
      */
     public com.google.protobuf.Any getPayload() {
@@ -1118,7 +1095,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      */
     public Builder setPayload(com.google.protobuf.Any value) {
       if (payloadBuilder_ == null) {
@@ -1134,7 +1111,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      */
     public Builder setPayload(
         com.google.protobuf.Any.Builder builderForValue) {
@@ -1148,7 +1125,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      */
     public Builder mergePayload(com.google.protobuf.Any value) {
       if (payloadBuilder_ == null) {
@@ -1169,7 +1146,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      */
     public Builder clearPayload() {
       bitField0_ = (bitField0_ & ~0x00000020);
@@ -1182,7 +1159,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      */
     public com.google.protobuf.Any.Builder getPayloadBuilder() {
       bitField0_ |= 0x00000020;
@@ -1190,7 +1167,7 @@ private static final long serialVersionUID = 0L;
       return getPayloadFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      */
     public com.google.protobuf.AnyOrBuilder getPayloadOrBuilder() {
       if (payloadBuilder_ != null) {
@@ -1201,7 +1178,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.google.protobuf.Any payload = 7;</code>
+     * <code>.google.protobuf.Any payload = 6;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.google.protobuf.Any, com.google.protobuf.Any.Builder, com.google.protobuf.AnyOrBuilder> 

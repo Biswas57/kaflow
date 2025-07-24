@@ -19,7 +19,7 @@ private static final long serialVersionUID = 0L;
   private SubscribeRequest() {
     consumerId_ = "";
     groupId_ = "";
-    topicId_ = "";
+    partitionId_ = "";
   }
 
   @java.lang.Override
@@ -42,14 +42,11 @@ private static final long serialVersionUID = 0L;
             tributary.stream.SubscribeRequest.class, tributary.stream.SubscribeRequest.Builder.class);
   }
 
+  private int bitField0_;
   public static final int CONSUMER_ID_FIELD_NUMBER = 1;
   @SuppressWarnings("serial")
   private volatile java.lang.Object consumerId_ = "";
   /**
-   * <pre>
-   * auto-create if absent
-   * </pre>
-   *
    * <code>string consumer_id = 1;</code>
    * @return The consumerId.
    */
@@ -67,10 +64,6 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <pre>
-   * auto-create if absent
-   * </pre>
-   *
    * <code>string consumer_id = 1;</code>
    * @return The bytes for consumerId.
    */
@@ -128,58 +121,63 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int TOPIC_ID_FIELD_NUMBER = 3;
+  public static final int PARTITION_ID_FIELD_NUMBER = 3;
   @SuppressWarnings("serial")
-  private volatile java.lang.Object topicId_ = "";
+  private volatile java.lang.Object partitionId_ = "";
   /**
-   * <code>string topic_id = 3;</code>
-   * @return The topicId.
+   * <pre>
+   * Required by consumeEvent method
+   * </pre>
+   *
+   * <code>optional string partition_id = 3;</code>
+   * @return Whether the partitionId field is set.
    */
   @java.lang.Override
-  public java.lang.String getTopicId() {
-    java.lang.Object ref = topicId_;
+  public boolean hasPartitionId() {
+    return ((bitField0_ & 0x00000001) != 0);
+  }
+  /**
+   * <pre>
+   * Required by consumeEvent method
+   * </pre>
+   *
+   * <code>optional string partition_id = 3;</code>
+   * @return The partitionId.
+   */
+  @java.lang.Override
+  public java.lang.String getPartitionId() {
+    java.lang.Object ref = partitionId_;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
-      topicId_ = s;
+      partitionId_ = s;
       return s;
     }
   }
   /**
-   * <code>string topic_id = 3;</code>
-   * @return The bytes for topicId.
+   * <pre>
+   * Required by consumeEvent method
+   * </pre>
+   *
+   * <code>optional string partition_id = 3;</code>
+   * @return The bytes for partitionId.
    */
   @java.lang.Override
   public com.google.protobuf.ByteString
-      getTopicIdBytes() {
-    java.lang.Object ref = topicId_;
+      getPartitionIdBytes() {
+    java.lang.Object ref = partitionId_;
     if (ref instanceof java.lang.String) {
       com.google.protobuf.ByteString b = 
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
-      topicId_ = b;
+      partitionId_ = b;
       return b;
     } else {
       return (com.google.protobuf.ByteString) ref;
     }
-  }
-
-  public static final int FROM_OFFSET_FIELD_NUMBER = 4;
-  private long fromOffset_ = 0L;
-  /**
-   * <pre>
-   * 0 - start from latest
-   * </pre>
-   *
-   * <code>uint64 from_offset = 4;</code>
-   * @return The fromOffset.
-   */
-  @java.lang.Override
-  public long getFromOffset() {
-    return fromOffset_;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -202,11 +200,8 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(groupId_)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, groupId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(topicId_)) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, topicId_);
-    }
-    if (fromOffset_ != 0L) {
-      output.writeUInt64(4, fromOffset_);
+    if (((bitField0_ & 0x00000001) != 0)) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, partitionId_);
     }
     getUnknownFields().writeTo(output);
   }
@@ -223,12 +218,8 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(groupId_)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, groupId_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(topicId_)) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, topicId_);
-    }
-    if (fromOffset_ != 0L) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeUInt64Size(4, fromOffset_);
+    if (((bitField0_ & 0x00000001) != 0)) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, partitionId_);
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
@@ -249,10 +240,11 @@ private static final long serialVersionUID = 0L;
         .equals(other.getConsumerId())) return false;
     if (!getGroupId()
         .equals(other.getGroupId())) return false;
-    if (!getTopicId()
-        .equals(other.getTopicId())) return false;
-    if (getFromOffset()
-        != other.getFromOffset()) return false;
+    if (hasPartitionId() != other.hasPartitionId()) return false;
+    if (hasPartitionId()) {
+      if (!getPartitionId()
+          .equals(other.getPartitionId())) return false;
+    }
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -268,11 +260,10 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getConsumerId().hashCode();
     hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
     hash = (53 * hash) + getGroupId().hashCode();
-    hash = (37 * hash) + TOPIC_ID_FIELD_NUMBER;
-    hash = (53 * hash) + getTopicId().hashCode();
-    hash = (37 * hash) + FROM_OFFSET_FIELD_NUMBER;
-    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-        getFromOffset());
+    if (hasPartitionId()) {
+      hash = (37 * hash) + PARTITION_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getPartitionId().hashCode();
+    }
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -406,8 +397,7 @@ private static final long serialVersionUID = 0L;
       bitField0_ = 0;
       consumerId_ = "";
       groupId_ = "";
-      topicId_ = "";
-      fromOffset_ = 0L;
+      partitionId_ = "";
       return this;
     }
 
@@ -447,12 +437,12 @@ private static final long serialVersionUID = 0L;
       if (((from_bitField0_ & 0x00000002) != 0)) {
         result.groupId_ = groupId_;
       }
+      int to_bitField0_ = 0;
       if (((from_bitField0_ & 0x00000004) != 0)) {
-        result.topicId_ = topicId_;
+        result.partitionId_ = partitionId_;
+        to_bitField0_ |= 0x00000001;
       }
-      if (((from_bitField0_ & 0x00000008) != 0)) {
-        result.fromOffset_ = fromOffset_;
-      }
+      result.bitField0_ |= to_bitField0_;
     }
 
     @java.lang.Override
@@ -509,13 +499,10 @@ private static final long serialVersionUID = 0L;
         bitField0_ |= 0x00000002;
         onChanged();
       }
-      if (!other.getTopicId().isEmpty()) {
-        topicId_ = other.topicId_;
+      if (other.hasPartitionId()) {
+        partitionId_ = other.partitionId_;
         bitField0_ |= 0x00000004;
         onChanged();
-      }
-      if (other.getFromOffset() != 0L) {
-        setFromOffset(other.getFromOffset());
       }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
@@ -554,15 +541,10 @@ private static final long serialVersionUID = 0L;
               break;
             } // case 18
             case 26: {
-              topicId_ = input.readStringRequireUtf8();
+              partitionId_ = input.readStringRequireUtf8();
               bitField0_ |= 0x00000004;
               break;
             } // case 26
-            case 32: {
-              fromOffset_ = input.readUInt64();
-              bitField0_ |= 0x00000008;
-              break;
-            } // case 32
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -582,10 +564,6 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object consumerId_ = "";
     /**
-     * <pre>
-     * auto-create if absent
-     * </pre>
-     *
      * <code>string consumer_id = 1;</code>
      * @return The consumerId.
      */
@@ -602,10 +580,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * auto-create if absent
-     * </pre>
-     *
      * <code>string consumer_id = 1;</code>
      * @return The bytes for consumerId.
      */
@@ -623,10 +597,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * auto-create if absent
-     * </pre>
-     *
      * <code>string consumer_id = 1;</code>
      * @param value The consumerId to set.
      * @return This builder for chaining.
@@ -640,10 +610,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * auto-create if absent
-     * </pre>
-     *
      * <code>string consumer_id = 1;</code>
      * @return This builder for chaining.
      */
@@ -654,10 +620,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * auto-create if absent
-     * </pre>
-     *
      * <code>string consumer_id = 1;</code>
      * @param value The bytes for consumerId to set.
      * @return This builder for chaining.
@@ -744,118 +706,105 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object topicId_ = "";
+    private java.lang.Object partitionId_ = "";
     /**
-     * <code>string topic_id = 3;</code>
-     * @return The topicId.
+     * <pre>
+     * Required by consumeEvent method
+     * </pre>
+     *
+     * <code>optional string partition_id = 3;</code>
+     * @return Whether the partitionId field is set.
      */
-    public java.lang.String getTopicId() {
-      java.lang.Object ref = topicId_;
+    public boolean hasPartitionId() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <pre>
+     * Required by consumeEvent method
+     * </pre>
+     *
+     * <code>optional string partition_id = 3;</code>
+     * @return The partitionId.
+     */
+    public java.lang.String getPartitionId() {
+      java.lang.Object ref = partitionId_;
       if (!(ref instanceof java.lang.String)) {
         com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        topicId_ = s;
+        partitionId_ = s;
         return s;
       } else {
         return (java.lang.String) ref;
       }
     }
     /**
-     * <code>string topic_id = 3;</code>
-     * @return The bytes for topicId.
+     * <pre>
+     * Required by consumeEvent method
+     * </pre>
+     *
+     * <code>optional string partition_id = 3;</code>
+     * @return The bytes for partitionId.
      */
     public com.google.protobuf.ByteString
-        getTopicIdBytes() {
-      java.lang.Object ref = topicId_;
+        getPartitionIdBytes() {
+      java.lang.Object ref = partitionId_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        topicId_ = b;
+        partitionId_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
     /**
-     * <code>string topic_id = 3;</code>
-     * @param value The topicId to set.
+     * <pre>
+     * Required by consumeEvent method
+     * </pre>
+     *
+     * <code>optional string partition_id = 3;</code>
+     * @param value The partitionId to set.
      * @return This builder for chaining.
      */
-    public Builder setTopicId(
+    public Builder setPartitionId(
         java.lang.String value) {
       if (value == null) { throw new NullPointerException(); }
-      topicId_ = value;
+      partitionId_ = value;
       bitField0_ |= 0x00000004;
       onChanged();
       return this;
     }
     /**
-     * <code>string topic_id = 3;</code>
+     * <pre>
+     * Required by consumeEvent method
+     * </pre>
+     *
+     * <code>optional string partition_id = 3;</code>
      * @return This builder for chaining.
      */
-    public Builder clearTopicId() {
-      topicId_ = getDefaultInstance().getTopicId();
+    public Builder clearPartitionId() {
+      partitionId_ = getDefaultInstance().getPartitionId();
       bitField0_ = (bitField0_ & ~0x00000004);
       onChanged();
       return this;
     }
     /**
-     * <code>string topic_id = 3;</code>
-     * @param value The bytes for topicId to set.
+     * <pre>
+     * Required by consumeEvent method
+     * </pre>
+     *
+     * <code>optional string partition_id = 3;</code>
+     * @param value The bytes for partitionId to set.
      * @return This builder for chaining.
      */
-    public Builder setTopicIdBytes(
+    public Builder setPartitionIdBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) { throw new NullPointerException(); }
       checkByteStringIsUtf8(value);
-      topicId_ = value;
+      partitionId_ = value;
       bitField0_ |= 0x00000004;
-      onChanged();
-      return this;
-    }
-
-    private long fromOffset_ ;
-    /**
-     * <pre>
-     * 0 - start from latest
-     * </pre>
-     *
-     * <code>uint64 from_offset = 4;</code>
-     * @return The fromOffset.
-     */
-    @java.lang.Override
-    public long getFromOffset() {
-      return fromOffset_;
-    }
-    /**
-     * <pre>
-     * 0 - start from latest
-     * </pre>
-     *
-     * <code>uint64 from_offset = 4;</code>
-     * @param value The fromOffset to set.
-     * @return This builder for chaining.
-     */
-    public Builder setFromOffset(long value) {
-
-      fromOffset_ = value;
-      bitField0_ |= 0x00000008;
-      onChanged();
-      return this;
-    }
-    /**
-     * <pre>
-     * 0 - start from latest
-     * </pre>
-     *
-     * <code>uint64 from_offset = 4;</code>
-     * @return This builder for chaining.
-     */
-    public Builder clearFromOffset() {
-      bitField0_ = (bitField0_ & ~0x00000008);
-      fromOffset_ = 0L;
       onChanged();
       return this;
     }

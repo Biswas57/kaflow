@@ -9,19 +9,11 @@ public interface SubscribeRequestOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <pre>
-   * auto-create if absent
-   * </pre>
-   *
    * <code>string consumer_id = 1;</code>
    * @return The consumerId.
    */
   java.lang.String getConsumerId();
   /**
-   * <pre>
-   * auto-create if absent
-   * </pre>
-   *
    * <code>string consumer_id = 1;</code>
    * @return The bytes for consumerId.
    */
@@ -41,24 +33,31 @@ public interface SubscribeRequestOrBuilder extends
       getGroupIdBytes();
 
   /**
-   * <code>string topic_id = 3;</code>
-   * @return The topicId.
-   */
-  java.lang.String getTopicId();
-  /**
-   * <code>string topic_id = 3;</code>
-   * @return The bytes for topicId.
-   */
-  com.google.protobuf.ByteString
-      getTopicIdBytes();
-
-  /**
    * <pre>
-   * 0 - start from latest
+   * Required by consumeEvent method
    * </pre>
    *
-   * <code>uint64 from_offset = 4;</code>
-   * @return The fromOffset.
+   * <code>optional string partition_id = 3;</code>
+   * @return Whether the partitionId field is set.
    */
-  long getFromOffset();
+  boolean hasPartitionId();
+  /**
+   * <pre>
+   * Required by consumeEvent method
+   * </pre>
+   *
+   * <code>optional string partition_id = 3;</code>
+   * @return The partitionId.
+   */
+  java.lang.String getPartitionId();
+  /**
+   * <pre>
+   * Required by consumeEvent method
+   * </pre>
+   *
+   * <code>optional string partition_id = 3;</code>
+   * @return The bytes for partitionId.
+   */
+  com.google.protobuf.ByteString
+      getPartitionIdBytes();
 }

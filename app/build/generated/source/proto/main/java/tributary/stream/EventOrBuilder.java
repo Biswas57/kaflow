@@ -39,28 +39,16 @@ public interface EventOrBuilder extends
   long getOffset();
 
   /**
-   * <pre>
-   * one message per event
-   * </pre>
-   *
    * <code>.google.protobuf.Any payload = 4;</code>
    * @return Whether the payload field is set.
    */
   boolean hasPayload();
   /**
-   * <pre>
-   * one message per event
-   * </pre>
-   *
    * <code>.google.protobuf.Any payload = 4;</code>
    * @return The payload.
    */
   com.google.protobuf.Any getPayload();
   /**
-   * <pre>
-   * one message per event
-   * </pre>
-   *
    * <code>.google.protobuf.Any payload = 4;</code>
    */
   com.google.protobuf.AnyOrBuilder getPayloadOrBuilder();
