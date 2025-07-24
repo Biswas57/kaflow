@@ -8,7 +8,7 @@ import java.util.HashMap;
 public class Partition<T> extends TributaryObject {
     private List<Message<T>> messages;
     private Topic<T> allocatedTopic;
-    private Map<Consumer<T>, Integer> offset;
+    private Map<String, Integer> offset;
 
     public Partition(Topic<T> topicId, String partitionId) {
         super(partitionId);
@@ -33,21 +33,17 @@ public class Partition<T> extends TributaryObject {
         return messages.stream().filter(m -> m.getId().equals(messageId)).findFirst().orElse(null);
     }
 
-    public void setOffset(Consumer<T> consumer, int offset) {
-        this.offset.put(consumer, offset);
+    public void setOffset(String groupId, int offset) {
+        this.offset.put(groupId, offset);
     }
 
-    public void removeOffset(Consumer<T> consumer) {
-        offset.remove(consumer);
-    }
-
-    public int getOffset(Consumer<T> consumer) {
-        return offset.get(consumer);
+    public int getOffset(String groupId) {
+        return offset.getOrDefault(groupId, 0);
     }
 
     public void listOffsets() {
-        for (Map.Entry<Consumer<T>, Integer> entry : offset.entrySet()) {
-            System.out.println("Consumer " + entry.getKey().getId() + " offset: " + entry.getValue());
+        for (Map.Entry<String, Integer> entry : offset.entrySet()) {
+            System.out.println("Consumer " + entry + " offset: " + entry.getValue());
         }
     }
 }

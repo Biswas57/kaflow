@@ -54,16 +54,6 @@ public interface ProduceRequestOrBuilder extends
 
   /**
    * <pre>
-   * monotonic counter per stream
-   * </pre>
-   *
-   * <code>uint64 sequence_no = 4;</code>
-   * @return The sequenceNo.
-   */
-  long getSequenceNo();
-
-  /**
-   * <pre>
    * "text", "json", "binary", etc.
    * </pre>
    *

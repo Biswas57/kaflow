@@ -12,7 +12,6 @@ message ProduceRequest {
   string producer_id  = 1;
   string topic_id     = 2;
   string partition_id = 3;              // ""  → broker decides
-  uint64 sequence_no  = 4;              // monotonic counter per stream
   string payload_type      = 5;              // "text", "json", "binary", etc.
   bytes  key      = 6;              // ≤1000 bytes
   google.protobuf.Any payload   = 7;     
@@ -31,7 +30,7 @@ message SubscribeRequest {
   string consumer_id  = 1;        // auto-create if absent
   string group_id     = 2;
   string topic_id     = 3;
-  uint64 from_offset  = 4;        // 0 ⇒ start from latest
+  uint64 from_offset  = 4;        // 0 - start from latest
 }
 
 message Event {

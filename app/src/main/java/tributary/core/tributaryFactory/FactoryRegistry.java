@@ -11,11 +11,13 @@ public final class FactoryRegistry {
 
     private static final ConcurrentMap<Class<?>, ObjectFactory<?>> byClass = new ConcurrentHashMap<>();
 
+    @SuppressWarnings("unchecked")
     public static <T> ObjectFactory<T> get(Class<T> factoryClass) {
-        @SuppressWarnings("unchecked")
         ObjectFactory<T> factory = (ObjectFactory<T>) byClass.get(factoryClass);
-        if (factory == null)
+        if (factory == null) {
             register(factoryClass);
+            factory = (ObjectFactory<T>) byClass.get(factoryClass);
+        }
         return factory;
     }
 

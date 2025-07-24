@@ -146,7 +146,7 @@ public class TributaryHelper {
 
     private <T> T consumeHelper(Consumer<T> consumer, Partition<T> partition) {
         List<Message<T>> messages = partition.listMessages();
-        int currentOffset = partition.getOffset(consumer);
+        int currentOffset = partition.getOffset(consumer.getGroup());
         int numberOfEvents = messages.size();
 
         if (currentOffset == numberOfEvents) {
@@ -183,17 +183,17 @@ public class TributaryHelper {
     }
 
     private <T> void updateTypedConsumerOffset(Consumer<T> consumer, Partition<T> partition, int offset) {
-        int currentOffset = partition.getOffset(consumer);
+        int currentOffset = partition.getOffset(consumer.getGroup());
         // Enforce that the offset must be within bounds.
         if (Math.abs(offset) > currentOffset) {
             throw new IllegalArgumentException(
                     "Playback or Backtrack Offset cannot be greater than the number of messages in the partition.");
         } else if (offset == 0) {
-            partition.setOffset(consumer, partition.listMessages().size());
+            partition.setOffset(consumer.getGroup(), partition.listMessages().size());
         } else if (offset < 0) {
-            partition.setOffset(consumer, partition.listMessages().size() + offset + 1);
+            partition.setOffset(consumer.getGroup(), partition.listMessages().size() + offset + 1);
         } else {
-            partition.setOffset(consumer, offset);
+            partition.setOffset(consumer.getGroup(), offset);
         }
     }
 
@@ -208,9 +208,9 @@ public class TributaryHelper {
         Partition<T> typedPartition = (Partition<T>) partition;
 
         try {
-            return typedPartition.getOffset(typedConsumer);
+            return typedPartition.getOffset(typedConsumer.getGroup());
         } catch (NullPointerException e) {
-            typedPartition.setOffset(typedConsumer, 0);
+            typedPartition.setOffset(typedConsumer.getGroup(), 0);
             return 0;
         }
     }

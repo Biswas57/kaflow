@@ -171,7 +171,7 @@ private static final long serialVersionUID = 0L;
   private long fromOffset_ = 0L;
   /**
    * <pre>
-   * 0 ⇒ start from latest
+   * 0 - start from latest
    * </pre>
    *
    * <code>uint64 from_offset = 4;</code>
@@ -819,7 +819,7 @@ private static final long serialVersionUID = 0L;
     private long fromOffset_ ;
     /**
      * <pre>
-     * 0 ⇒ start from latest
+     * 0 - start from latest
      * </pre>
      *
      * <code>uint64 from_offset = 4;</code>
@@ -831,7 +831,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * 0 ⇒ start from latest
+     * 0 - start from latest
      * </pre>
      *
      * <code>uint64 from_offset = 4;</code>
@@ -847,7 +847,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * 0 ⇒ start from latest
+     * 0 - start from latest
      * </pre>
      *
      * <code>uint64 from_offset = 4;</code>

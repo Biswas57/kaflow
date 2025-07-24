@@ -54,7 +54,7 @@ public interface SubscribeRequestOrBuilder extends
 
   /**
    * <pre>
-   * 0 ⇒ start from latest
+   * 0 - start from latest
    * </pre>
    *
    * <code>uint64 from_offset = 4;</code>

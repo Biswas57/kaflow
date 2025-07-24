@@ -26,7 +26,7 @@ public class Consumer<T> extends TributaryObject {
      */
     public T consume(Message<T> message, Partition<T> partition) {
         // Update partition offset for this consumer
-        partition.setOffset(this, partition.getOffset(this) + 1);
+        partition.setOffset(this.getGroup(), partition.getOffset(this.getGroup()) + 1);
         return message.getPayload();
     }
 
@@ -35,14 +35,14 @@ public class Consumer<T> extends TributaryObject {
     }
 
     public void assignPartition(Partition<T> partition) {
+        // The partition will automatically use offset 0 for new groups
+        // due to getOrDefault() in Partition.getOffset()
         assignedPartitions.add(partition);
-        partition.setOffset(this, 0);
     }
 
     public void unassignPartition(String partitionId) {
         Partition<T> partition = getPartition(partitionId);
         assignedPartitions.remove(partition);
-        partition.removeOffset(this);
         return;
     }
 
