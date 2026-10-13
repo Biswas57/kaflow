@@ -5,6 +5,10 @@ prototype runtime from the new in-process V1 core. Its generated V1 Append schem
 is not a registered network service. The packaged smoke still checks the prototype;
 V1 core guarantees require the focused tests, not that health check.
 
+The [KF-003 storage design](design/kf-003-partition-log.md) specifies a separate
+file-backed partition component. It is not connected to either running prototype
+or V1 core, and completed writes are not durable acknowledgements.
+
 The current application is an in-memory prototype. A successful build or health
 check does not establish durable acknowledgements, correct delivery/offset
 semantics, Kafka compatibility, or performance. The active plan is [../todo.md](../todo.md);
@@ -83,7 +87,10 @@ The source inventory at KF-001 is seven active test methods in three classes:
 `TributaryStreamIntegrationTest` (3). Six other test files are entirely commented
 out. KF-002 preserves those seven and adds core, schema, ownership and network-boundary
 tests: the [KF-002 validation record](baseline/kf-002.md) reports 40 executed tests
-across ten classes. Inventory is not execution evidence or coverage. Derive outcomes
+across ten classes. KF-003 preserves those 40 and adds 80 storage test invocations:
+the [KF-003 validation record](baseline/kf-003.md) reports 120 passing tests across
+16 classes, including parameterized corruption cases and separate-JVM ownership.
+Inventory is not execution evidence or coverage. Derive outcomes
 from fresh XML reports; distinguish setup, test-body, teardown, discovery, and timeout errors.
 
 For an explicit local timeout on both macOS and Linux, use this standard-library

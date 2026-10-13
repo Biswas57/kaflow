@@ -3,13 +3,13 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-10-13. Current ticket: **none**. Latest completed: **KF-002**.
+Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-003**.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
 | KF-001 | Reproducible source build and honest baseline | DONE | None |
 | KF-002 | Injected broker ownership and V1 record/API contracts | DONE | KF-001 |
-| KF-003 | Partition-log framing, indexes, rotation, bounded immediate reads | READY | KF-002 |
+| KF-003 | Partition-log framing, indexes, rotation, bounded immediate reads | DONE | KF-002 |
 | KF-004 | Durable publication and crash recovery | READY | KF-003 |
 | KF-005 | Leased groups and generation fencing | READY | KF-004 |
 | KF-006 | Durable commits, immediate Fetch API, independent replay | READY | KF-005 |
@@ -249,13 +249,105 @@ acceptance criteria only on the next implementation request. Keep V1 unregistere
 until KF-004 durability. Built inputs match the retained source manifest; final
 source-of-truth updates are documentation only.
 
+## KF-003 — Partition-log framing, indexes, rotation, bounded immediate reads
+
+**Status:** DONE (2026-10-13).
+**Publication:** User authorized commit and push on 2026-10-14; no PR requested.
+**Branch:** `codex/kf-003-partition-log`.
+**Base:** `323ec4023c0c04aab29078064f10ac02f0ac893b` (KF-002).
+**Dependency at branch creation:** KF-002 was not merged. Fetched `origin/main` was
+`a704b7067710c776872c4ba60a453fba3308da52`, which does not contain KF-002.
+This is a dependent branch; the checkout was clean before branch creation.
+**Design:** [docs/design/kf-003-partition-log.md](docs/design/kf-003-partition-log.md).
+**Detailed evidence:** [docs/baseline/kf-003.md](docs/baseline/kf-003.md).
+
+### Scope and decisions
+
+Independent, file-backed storage for one qualified partition per explicitly selected
+owned directory. Reuse immutable values; storage alone assigns contiguous offsets.
+Opening thread owns serialized append, immediate read and close. No worker pipeline,
+concurrent read workers, in-memory broker integration, hidden adapter or migration.
+Versioned big-endian segment/record frames use CRC32C, exact opaque bytes and strict
+UTF-8 identity. Headers count toward immutable segment limits. Sparse derived indexes
+are validated against complete log scans, streamed/rebuilt with bounded memory.
+Capture completed-write boundaries for bounded immutable reads. File locks protect
+canonical directories, including separate JVMs. Failure after mutation latches failure
+without truncation or progress advancement; reopening validates complete logs only.
+No durable acknowledgement/publication, recovery repair, Fetch/Commit, leases, long
+polling, retention, V1 registration, public storage admin API or KF-004 work.
+The implementation request authorized local work only; commit and push were subsequently
+authorized on 2026-10-14. No PR, merge or KF-004 work is authorized.
+
+### Acceptance
+
+- [x] Write and review exact storage format, crash states, bounds and lifecycle design before code.
+- [x] Preserve all existing 40 tests and unregistered V1 network boundary.
+- [x] Preserve binary/empty payloads, key presence, timestamps and qualified identity.
+- [x] Literal/independent fixtures; reject malformed versions/flags/lengths/checksums/identity/offsets.
+- [x] Correct short I/O, bounded zero progress, truthful write receipts and failed-writer semantics.
+- [x] Exact-limit rotation, oversized rejection, unique segments and contiguous offsets.
+- [x] Sparse bounded index lookup/rebuild; derived damage never conceals corrupt log frames.
+- [x] Bounded immutable reads across segments, captured boundary, continuation/end and byte-budget errors.
+- [x] Clean reopen; separate directories; canonical same-process and separate-JVM ownership.
+- [x] Initialization failure/close cleanup, primary-error preservation, thread ownership and idempotence.
+- [x] Fresh source-only build/package, separate full tests, packaged smoke and recorded reports.
+- [x] Diff/claim review and exact KF-004 handoff; no automatic publication or next-ticket work.
+
+### Evidence and progress
+
+- Independently verified [KF-002 Linux run 38377151066](https://github.com/Biswas57/kaflow/actions/runs/38377151066):
+  revision `323ec4023c0c04aab29078064f10ac02f0ac893b`, completed/success; the build
+  job and compile/package, tests, packaged smoke and report upload steps all succeeded.
+  This is inherited evidence, not a KF-003 run. Raw API responses retained with local evidence.
+- Design recorded before code. Implemented independent `kaflow.storage` format, bounded
+  positional I/O, thread-owned partition log, OS directory ownership, rotation, streamed
+  index validation/rebuild and captured-boundary reads. Existing core/prototype untouched.
+- Added independent/literal format fixtures, corruption matrices, short/zero I/O and
+  partial-failure tests, rotation/read/index checks, and same/separate-JVM ownership
+  probes with bounded teardown.
+- Development full test run: exit 0 in 11.96 s; 110 executed/passed, zero
+  failures/errors/skips/timeouts. All original 40 tests unchanged and passing.
+- Review added file-size checks before index entry reads, rejection of nonregular lock
+  files before opening them, and failure latching when a byte-budget rejection also
+  encounters a cleanup error. Added focused regressions, bound configuration checks
+  and all-segments-before-index-repair evidence before final source-only validation.
+- Fresh candidate: `/private/tmp/kaflow-kf003-73u8mwzn/candidate`, 161 intended inputs,
+  87 Java files and two schemas, hash/mode manifest; no project outputs or build caches.
+  Environment: macOS 26.6.2 arm64, Temurin 17.0.20.1+1, Gradle wrapper 8.5. Reused
+  verified temporary tooling/dependency downloads; system defaults unchanged.
+- `./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon`: exit 0,
+  6.74 s; 18 generated Java files, production/tests compiled, executable JAR packaged.
+- Separate `./gradlew :app:test --rerun-tasks --no-daemon`: exit 0, 9.89 s;
+  **120 discovered/executed/passed**, **0 failed**, **0 errors**, **0 skipped**,
+  16 classes. Original 40 unchanged; 80 storage invocations. No setup/teardown/task
+  timeouts. Both Gradle commands bounded at 600 s.
+- `python3 scripts/smoke_bootjar.py`: exit 0; HTTP/gRPC ports 61618/61619,
+  health 200/UP, administration create/read 201/200, SIGTERM exit 143 in 0.456 s;
+  both listeners closed, no error/timeout/forced kill. Startup evidence only.
+- Real standalone and Spring V1 Append calls still returned UNIMPLEMENTED. Existing
+  production/tests, schemas, build configuration, wrapper and smoke are byte-for-byte
+  unchanged. Scope, resource/failure ownership, whitespace and unsupported claims reviewed.
+  Built inputs match the tested manifest; final evidence/source-of-truth changes are docs only.
+- Raw logs, manifest, fresh XML/HTML and smoke result/application log retained in ignored
+  `build/kf003-evidence/`; durable details and report paths in `docs/baseline/kf-003.md`.
+  No failed build/test attempt or remaining blocker. No KF-003 Linux CI result claimed.
+  Completed writes and valid clean reopen do not establish crash/power-loss durability.
+
+### Exact next action
+
+Commit and push this reviewed, validated change as authorized. Verify the resulting
+Linux workflow before recording KF-003 CI success; no PR requested or KF-004 work
+started. Keep V1 unregistered. The exact KF-004
+handoff is **durable publication, bounded checkpoints, crash recovery, directory
+synchronization, and late storage completion policy**. Integrate writer/completion
+ownership and bounded read workers without disk I/O on coordination; never replace a
+possibly running writer or release its directory lock on caller timeout. Preserve
+acknowledged retained data and decide tail handling using durable publication evidence.
+
 ## Remaining ticket acceptance outlines
 
 Expand the next eligible ticket into scope, decisions, steps, evidence, and handoff.
 
-- **KF-003:** versioned/checksummed framing, short writes, bounded immediate reads,
-  sparse rebuildable indexes, rotation, exclusive data-directory ownership. No durability
-  claim until KF-004. Demonstrate append/read at storage level.
 - **KF-004:** crash-state and bounded-checkpoint decisions; late completion policy;
   durable publication; restart/failpoint/corruption/disk-full evidence; unknown retry
   outcomes documented; filesystem assumptions enforced.

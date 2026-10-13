@@ -20,6 +20,8 @@ exactly-once processing, or unverified performance/durability.
 - Keep one canonical lowercase `todo.md`; do not create a second case-only filename.
 - KF-002 ownership, opaque-byte, admission, closure, and staged API contracts are in
   `docs/design/kf-002-broker-contracts.md`. V1 remains unregistered until durability.
+- KF-003 storage framing, ownership, resource limits and non-durability boundaries are
+  specified in `docs/design/kf-003-partition-log.md`.
 
 ## Ticket workflow
 
