@@ -1,3 +1,8 @@
+> **Current development baseline:** Kaflow is an in-memory prototype. Use the
+> [Java 17 build and smoke-test guide](docs/development.md),
+> [KF-001 validation record](docs/baseline/kf-001.md), and [ticket board](todo.md).
+> The prototype narrative and CLI instructions below are historical; old test-count,
+> coverage, and performance claims are not current verification evidence.
 
 ## Project Overview
 The Kaflow Message Broker is an extremely simplified version of the event streaming infrastructure [**Apache Kafka**](https://kafka.apache.org/). A quick read of Kafka's design and purpose is recommended to understand the basis and workings of this project, a brief video to understand what Kafka is can be found [**here**](https://youtu.be/vHbvbwSEYGo). 
