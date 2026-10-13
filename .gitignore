@@ -1,7 +1,8 @@
 # Gradle build directories
 build/
 app/build/
-!app/build/generated/
+app/bin/
+*.class
 
 # Gradle cache
 .gradle/
