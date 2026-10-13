@@ -3,12 +3,12 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-10-13. Current ticket: **none**. Latest completed: **KF-001**.
+Last updated: 2026-10-13. Current ticket: **none**. Latest completed: **KF-002**.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
 | KF-001 | Reproducible source build and honest baseline | DONE | None |
-| KF-002 | Injected broker ownership and V1 record/API contracts | READY | KF-001 |
+| KF-002 | Injected broker ownership and V1 record/API contracts | DONE | KF-001 |
 | KF-003 | Partition-log framing, indexes, rotation, bounded immediate reads | READY | KF-002 |
 | KF-004 | Durable publication and crash recovery | READY | KF-003 |
 | KF-005 | Leased groups and generation fencing | READY | KF-004 |
@@ -167,14 +167,92 @@ verifying its result. If rerunning locally, use the environment above (or
 another JDK 17 if the temporary installation is gone) and commands in the development
 guide. KF-002 is the next eligible ticket but was not started by this request.
 
+## KF-002 — Isolated ownership, byte records, and Append contracts
+
+**Status:** DONE (2026-10-13).
+**Publication:** User authorized commit and push on 2026-10-13; no PR requested.
+**Branch:** `codex/kf-002-broker-contracts`.
+**Base:** `a704b7067710c776872c4ba60a453fba3308da52` (clean merged KF-001 tree).
+**Design:** [docs/design/kf-002-broker-contracts.md](docs/design/kf-002-broker-contracts.md).
+**Detailed evidence:** [docs/baseline/kf-002.md](docs/baseline/kf-002.md).
+
+### Scope and decisions
+
+Inject isolated prototype state through controllers/helpers/factories and composition
+roots. Add a separate in-memory V1 core and single-record unary Append schema.
+Opaque immutable payload/key bytes; fixed qualified partitions; deterministic routing;
+truthful offsets/results; bounded admission/retained accounting; ordered close and
+bounded package-private inspection. Preserve existing prototype assertions and behaviour.
+No registered V1 implementation, successful V1 network acknowledgements, persistence,
+Fetch/Commit, leases, subscriptions, retention, migration, or KF-003 work. No automatic
+commit, push, or PR. The approved design document defines precise defaults and semantics.
+
+### Acceptance
+
+- [x] Remove prototype singleton/static factory state; prove independent ownership.
+- [x] Preserve seven existing assertions/tests with isolated fixtures and ephemeral ports.
+- [x] Immutable opaque bytes, exact binary/empty round trips, fixed qualified identities.
+- [x] Concrete unary V1 schema; no registered service or successful network Append.
+- [x] Actual partition/offset/timestamp receipts and independent fixed routing vectors.
+- [x] Contiguous unique concurrent offsets; exact stored/result correspondence; sequential order.
+- [x] Independent count/byte limits, including zero-byte records/calls and failure release.
+- [x] Deterministic close races, idempotence, memory-reference/accounting release, closed operations.
+- [x] Bounded immutable package-private snapshots, including after-close inspection rules.
+- [x] Clean source-only compile/package, separate full tests, packaged smoke, reviewed diff.
+- [x] Record files, commands/results, blockers, deferred limitations, and exact handoff.
+
+### Evidence and progress
+
+- Initial checkout clean on `main` at the base above; no user edits to preserve.
+- Independently verified KF-001 [Linux run 38364209464](https://github.com/Biswas57/kaflow/actions/runs/38364209464):
+  revision `7b3f527f579b86042a0e6b17df80e3c18b2ca7ed`; build/package, tests,
+  packaged smoke, and report upload all succeeded. This does not claim execution
+  against the later merge revision or KF-002.
+- Prototype: injected cluster/controller/helper/factories, Spring-owned service cleanup,
+  explicit standalone/CLI cleanup, ephemeral test ports and bounded channel/server teardown.
+- New core: `app/src/main/java/kaflow/broker/` owns immutable values, qualified records,
+  routing/offsets, admission/retained limits, close and package-private bounded inspection.
+  New schema: `app/src/main/proto/kaflow/v1/broker.proto`; generated, never registered.
+- Tests: `kaflow.broker` contracts/capacity/concurrency; `kaflow.v1` schema;
+  prototype ownership, real Spring composition and both V1 network rejection paths.
+  All seven original tests and 31 original assertion/failure lines remain preserved.
+- Development full test run exited 0 in 10.60 s: 38 passed, zero failures/errors/skips.
+  Review added lock-wait admission and per-topic round-robin tests, strengthened close
+  ordering checks, and completed composition-root cleanup before the final snapshot.
+- Clean source-only candidate copied 145 current tracked/intended untracked files
+  (73 Java, two schemas) with hash/mode manifest, no project outputs or compiled classes:
+  `/private/tmp/kaflow-kf002-anlnt21x/candidate`. Reused Java 17/dependency downloads only.
+- `./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon`: exit 0,
+  5.33 s; 18 generated Java files, production/tests compiled, executable JAR packaged.
+- Separate `./gradlew :app:test --rerun-tasks --no-daemon`: exit 0, 8.61 s;
+  **40 discovered/executed/passed**, **0 failed**, **0 errors**, **0 skipped**.
+  No setup/teardown/task timeouts. Both Gradle invocations bounded at 600 s.
+- `python3 scripts/smoke_bootjar.py`: exit 0. HTTP/gRPC ports 57156/57157,
+  health 200/UP, admin create/read 201/200, SIGTERM exit 143 in 0.476 s,
+  both listeners closed, no error/timeout/forced kill. Startup evidence, not durability.
+- Real standalone and Spring V1 Append calls returned UNIMPLEMENTED. Spring REST
+  creation and legacy gRPC production shared injected state. Concurrent core tests
+  matched all 800 accepted appends to unique contiguous partition records.
+- Diff/scope review and whitespace checks passed. Immutable payload boundary, fixed
+  vectors, each limit, exception release, both close outcomes and bounded inspection
+  have focused passing evidence. No production/test/schema changes after the candidate.
+- Raw evidence retained in ignored `build/kf002-evidence/`; durable details and report
+  paths in `docs/baseline/kf-002.md`. No failed attempts or remaining blocker. No KF-002
+  Linux CI run claimed, and no durability, Fetch or producer-sequencing claim.
+
+### Exact next action
+
+Commit and push this reviewed, validated change as authorized. Verify the resulting
+Linux workflow before recording CI success; no PR requested.
+KF-003 is the next eligible ticket, but is not started; expand its storage/framing
+acceptance criteria only on the next implementation request. Keep V1 unregistered
+until KF-004 durability. Built inputs match the retained source manifest; final
+source-of-truth updates are documentation only.
+
 ## Remaining ticket acceptance outlines
 
 Expand the next eligible ticket into scope, decisions, steps, evidence, and handoff.
 
-- **KF-002:** injected isolated broker state; immutable byte records and qualified
-  identities; bounded admission; deterministic routing; truthful results; invalid
-  partitions fail; concurrent offsets/order tested. Replace obsolete active components
-  incrementally. Include test-isolation repairs explicitly.
 - **KF-003:** versioned/checksummed framing, short writes, bounded immediate reads,
   sparse rebuildable indexes, rotation, exclusive data-directory ownership. No durability
   claim until KF-004. Demonstrate append/read at storage level.

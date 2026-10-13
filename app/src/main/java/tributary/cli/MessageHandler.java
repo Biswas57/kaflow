@@ -12,10 +12,10 @@ import org.json.JSONObject;
 import tributary.api.TributaryController;
 
 public class MessageHandler {
-    private TributaryController controller;
+    private final TributaryController controller;
 
-    public MessageHandler() {
-        this.controller = new TributaryController();
+    public MessageHandler(TributaryController controller) {
+        this.controller = java.util.Objects.requireNonNull(controller);
     }
 
     public <T> void handleCreateCommand(String[] parts) {

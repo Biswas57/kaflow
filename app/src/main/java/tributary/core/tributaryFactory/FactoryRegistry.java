@@ -1,27 +1,22 @@
 package tributary.core.tributaryFactory;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import tributary.core.tributaryObject.TributaryCluster;
 
-/*
- * This class is resposible for updating all types of possible factories
- * If I want to store a 
- */
+/** Factories are scoped to a single injected cluster, never cached process-wide. */
 public final class FactoryRegistry {
+    private final TributaryCluster cluster;
+    private final ConcurrentMap<Class<?>, ObjectFactory<?>> byClass = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<Class<?>, ObjectFactory<?>> byClass = new ConcurrentHashMap<>();
-
-    @SuppressWarnings("unchecked")
-    public static <T> ObjectFactory<T> get(Class<T> factoryClass) {
-        ObjectFactory<T> factory = (ObjectFactory<T>) byClass.get(factoryClass);
-        if (factory == null) {
-            register(factoryClass);
-            factory = (ObjectFactory<T>) byClass.get(factoryClass);
-        }
-        return factory;
+    public FactoryRegistry(TributaryCluster cluster) {
+        this.cluster = Objects.requireNonNull(cluster);
     }
 
-    private static <T> void register(Class<T> factoryClass) {
-        byClass.put(factoryClass, new GenericFactory<>(factoryClass));
+    @SuppressWarnings("unchecked")
+    public <T> ObjectFactory<T> get(Class<T> factoryClass) {
+        return (ObjectFactory<T>) byClass.computeIfAbsent(factoryClass,
+                type -> new GenericFactory<>(type, cluster));
     }
 }

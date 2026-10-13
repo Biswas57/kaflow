@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import tributary.api.TributaryController;
+import tributary.core.tributaryObject.TributaryCluster;
 import tributary.core.tributaryObject.Consumer;
 import tributary.core.tributaryObject.ConsumerGroup;
 import tributary.core.tributaryObject.Partition;
 import tributary.core.tributaryObject.Topic;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 public class OffsetManagementTest {
     private TributaryController controller;
@@ -19,8 +19,8 @@ public class OffsetManagementTest {
 
     @BeforeEach
     public void setup() {
-        controller = new TributaryController();
-        testTopicName = "testTopic_" + UUID.randomUUID().toString().replace("-", "");
+        controller = new TributaryController(new TributaryCluster());
+        testTopicName = "testTopic";
 
         // Create a topic and partition
         controller.createTopic(testTopicName, "string");

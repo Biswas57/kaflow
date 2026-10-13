@@ -17,16 +17,18 @@ import tributary.core.tributaryObject.*;
  * groups, as well as supporting parallel operations and event consumption.
  */
 public class TributaryController {
-    private TributaryCluster cluster;
-    private TributaryHelper helper;
+    private final TributaryCluster cluster;
+    private final TributaryHelper helper;
+    private final FactoryRegistry factories;
 
     /**
-     * Constructor to initialize the TributaryController with default settings.
+     * Constructor for a controller bound to one explicitly owned cluster.
      * It sets up the cluster, object factory, and type mappings.
      */
-    public TributaryController() {
-        this.cluster = TributaryCluster.getInstance();
-        this.helper = new TributaryHelper();
+    public TributaryController(TributaryCluster cluster) {
+        this.cluster = Objects.requireNonNull(cluster);
+        this.helper = new TributaryHelper(cluster);
+        this.factories = new FactoryRegistry(cluster);
     }
 
     public TributaryHelper getHelper() {
@@ -40,8 +42,8 @@ public class TributaryController {
         return c;
     }
 
-    private static <T> ObjectFactory<T> getFactory(Class<T> t) {
-        return FactoryRegistry.get(t);
+    private <T> ObjectFactory<T> getFactory(Class<T> t) {
+        return factories.get(t);
     }
 
     /*

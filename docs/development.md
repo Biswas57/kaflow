@@ -1,5 +1,10 @@
 # Build and verify Kaflow
 
+The [KF-002 contract](design/kf-002-broker-contracts.md) separates the injected
+prototype runtime from the new in-process V1 core. Its generated V1 Append schema
+is not a registered network service. The packaged smoke still checks the prototype;
+V1 core guarantees require the focused tests, not that health check.
+
 The current application is an in-memory prototype. A successful build or health
 check does not establish durable acknowledgements, correct delivery/offset
 semantics, Kafka compatibility, or performance. The active plan is [../todo.md](../todo.md);
@@ -12,8 +17,8 @@ old README/blog test-count and coverage claims are not baseline evidence.
 - Python 3 for the portable smoke check and optional bounded command runner below.
 - Network access to the Gradle distribution, Gradle Plugin Portal, Maven Central,
   and their download redirects on the first build.
-- Port **9091** available for the existing integration tests, which hardcode it.
-  Do not run those tests concurrently on one host or kill another process to free it.
+- Loopback sockets permitted. Integration tests select ephemeral ports and own their
+  server/channel teardown; no fixed test port needs to be freed.
 
 On macOS, select an installed JDK 17 for this shell:
 
@@ -57,9 +62,10 @@ adjustment is recorded in [baseline/kf-001.md](baseline/kf-001.md).
 ```
 
 Run these separately and retain each exit status. The first command generates
-messages and gRPC stubs from `app/src/main/proto/tributary.proto`, compiles production
+messages and gRPC stubs from the schemas under `app/src/main/proto/` (prototype and
+V1 Append), compiles production
 and test source, and creates the executable Spring Boot JAR in `app/build/libs/`.
-The second command reruns the existing tests; it also reruns task prerequisites.
+The second command reruns the full test suite; it also reruns task prerequisites.
 Neither command invokes the separate `coverage` threshold task.
 
 Generated Java, compiled classes, and reports belong in ignored build directories.
@@ -75,8 +81,10 @@ Reports from the test command:
 The source inventory at KF-001 is seven active test methods in three classes:
 `SimpleOffsetTest` (2), `OffsetManagementTest` (2), and
 `TributaryStreamIntegrationTest` (3). Six other test files are entirely commented
-out. Inventory is not execution evidence or coverage. Derive outcomes from fresh
-XML reports; distinguish setup, test-body, teardown, discovery, and timeout errors.
+out. KF-002 preserves those seven and adds core, schema, ownership and network-boundary
+tests: the [KF-002 validation record](baseline/kf-002.md) reports 40 executed tests
+across ten classes. Inventory is not execution evidence or coverage. Derive outcomes
+from fresh XML reports; distinguish setup, test-body, teardown, discovery, and timeout errors.
 
 For an explicit local timeout on both macOS and Linux, use this standard-library
 runner, changing `command` for the build or test command as needed. It propagates

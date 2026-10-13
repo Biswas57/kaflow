@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package kaflow.v1;
+option java_package = "kaflow.v1";
+option java_multiple_files = true;
+option java_outer_classname = "BrokerProtocol";
+
+// Contract only in KF-002. No service is registered before durable publication.
+service Broker {
+  rpc Append(AppendRequest) returns (AppendResponse);
+}
+
+message AppendRequest {
+  string topic = 1;
+  optional int32 partition = 2;
+  optional bytes key = 3;
+  // Opaque application bytes, including empty and invalid UTF-8. Never Any.
+  bytes payload = 4;
+}
+
+message TopicPartition {
+  string topic = 1;
+  int32 partition = 2;
+}
+
+message AppendResponse {
+  TopicPartition partition = 1;
+  int64 offset = 2; // Nonnegative, actual assigned partition offset.
+  int64 timestamp_millis = 3; // Broker Unix timestamp in milliseconds.
+}

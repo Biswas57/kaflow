@@ -18,6 +18,8 @@ exactly-once processing, or unverified performance/durability.
   old README/blog claims. `docs/history/prototype-todo.md` is historical only.
 - Generate Protobuf Java from `app/src/main/proto`; never hand-edit generated code.
 - Keep one canonical lowercase `todo.md`; do not create a second case-only filename.
+- KF-002 ownership, opaque-byte, admission, closure, and staged API contracts are in
+  `docs/design/kf-002-broker-contracts.md`. V1 remains unregistered until durability.
 
 ## Ticket workflow
 

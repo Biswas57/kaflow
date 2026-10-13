@@ -11,10 +11,10 @@ import tributary.core.tributaryObject.*;
  * and manipulation of Tributary objects.
  */
 public class TributaryHelper {
-    private TributaryCluster cluster;
+    private final TributaryCluster cluster;
 
-    public TributaryHelper() {
-        this.cluster = TributaryCluster.getInstance();
+    public TributaryHelper(TributaryCluster cluster) {
+        this.cluster = java.util.Objects.requireNonNull(cluster);
     }
 
     /**

@@ -4,18 +4,19 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import tributary.api.TributaryController;
+import tributary.core.tributaryObject.TributaryCluster;
 
 public class SimpleOffsetTest {
 
     @Test
     public void testBasicInstantiation() {
-        TributaryController controller = new TributaryController();
+        TributaryController controller = new TributaryController(new TributaryCluster());
         assertNotNull(controller);
     }
 
     @Test
     public void testCreateTopic() {
-        TributaryController controller = new TributaryController();
+        TributaryController controller = new TributaryController(new TributaryCluster());
 
         try {
             controller.createTopic("testTopic", "string");
