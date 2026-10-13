@@ -4,11 +4,12 @@ import tributary.core.tributaryObject.*;
 import tributary.core.tributaryObject.producers.*;
 
 public class GenericFactory<T> implements ObjectFactory<T> {
-    private final TributaryCluster cluster = TributaryCluster.getInstance();
+    private final TributaryCluster cluster;
     private final Class<T> type;
 
-    public GenericFactory(Class<T> type) {
-        this.type = type;
+    public GenericFactory(Class<T> type, TributaryCluster cluster) {
+        this.type = java.util.Objects.requireNonNull(type);
+        this.cluster = java.util.Objects.requireNonNull(cluster);
     }
 
     @Override

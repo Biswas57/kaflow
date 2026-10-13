@@ -4,24 +4,24 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import java.io.IOException;
 import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
 
 import tributary.api.TributaryController;
+import tributary.core.tributaryObject.TributaryCluster;
 
 /**
  * gRPC server for TributaryStream service.
  * This server hosts the streaming gRPC endpoints for producing and consuming
  * messages.
  */
-public class TributaryStreamServer {
+public class TributaryStreamServer implements AutoCloseable {
 
     private static final Logger logger = Logger.getLogger(TributaryStreamServer.class.getName());
 
-    private final int port;
     private final Server server;
     private final TributaryStreamImpl streamService;
 
     public TributaryStreamServer(int port, TributaryController controller) {
-        this.port = port;
         this.streamService = new TributaryStreamImpl(controller);
         this.server = ServerBuilder.forPort(port)
                 .addService(streamService)
@@ -33,24 +33,36 @@ public class TributaryStreamServer {
      */
     public void start() throws IOException {
         server.start();
-        logger.info("TributaryStream gRPC server started on port " + port);
-
-        // Add shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutting down gRPC server");
-            TributaryStreamServer.this.stop();
-        }));
+        logger.info("TributaryStream gRPC server started on port " + getPort());
     }
 
-    /**
-     * Stop the gRPC server.
-     */
+    public int getPort() {
+        return server.getPort();
+    }
+
+    /** The composition root owns shutdown; start() installs no global hooks. */
     public void stop() {
-        if (server != null) {
+        try {
             streamService.shutdown();
+        } finally {
             server.shutdown();
-            logger.info("TributaryStream gRPC server stopped");
+            try {
+                if (!server.awaitTermination(5, TimeUnit.SECONDS)) {
+                    server.shutdownNow();
+                    if (!server.awaitTermination(5, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("gRPC server did not terminate");
+                    }
+                }
+            } catch (InterruptedException e) {
+                server.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
+    }
+
+    @Override
+    public void close() {
+        stop();
     }
 
     /**
@@ -71,10 +83,20 @@ public class TributaryStreamServer {
             port = Integer.parseInt(args[0]);
         }
 
-        TributaryController controller = new TributaryController();
+        TributaryController controller = new TributaryController(new TributaryCluster());
         TributaryStreamServer server = new TributaryStreamServer(port, controller);
 
-        server.start();
-        server.blockUntilShutdown();
+        Thread shutdown = new Thread(server::stop, "tributary-shutdown");
+        Runtime.getRuntime().addShutdownHook(shutdown);
+        try (server) {
+            server.start();
+            server.blockUntilShutdown();
+        } finally {
+            try {
+                Runtime.getRuntime().removeShutdownHook(shutdown);
+            } catch (IllegalStateException ignored) {
+                // JVM shutdown has already begun.
+            }
+        }
     }
 }

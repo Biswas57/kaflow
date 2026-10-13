@@ -19,13 +19,13 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.StringValue;
 
 import tributary.api.TributaryController;
+import tributary.core.tributaryObject.TributaryCluster;
 
 /**
  * Integration test for TributaryStream gRPC service.
  */
 public class TributaryStreamIntegrationTest {
 
-    private static final int TEST_PORT = 9091;
     private static final String TEST_HOST = "localhost";
 
     private TributaryStreamServer server;
@@ -41,39 +41,38 @@ public class TributaryStreamIntegrationTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        // Generate unique test IDs to avoid conflicts
-        String testId = System.currentTimeMillis() + "_" + Thread.currentThread().getId();
-        testTopicId = "test-topic-" + testId;
-        testProducerId = "test-producer-" + testId;
-        testGroupId = "test-group-" + testId;
-        testConsumerId = "test-consumer-" + testId;
-        testPartitionId = "partition-1-" + testId;
+        // Every fixture owns its state; identifiers can be reused safely.
+        testTopicId = "test-topic";
+        testProducerId = "test-producer";
+        testGroupId = "test-group";
+        testConsumerId = "test-consumer";
+        testPartitionId = "partition-1";
 
         // Setup controller with test data
-        controller = new TributaryController();
+        controller = new TributaryController(new TributaryCluster());
         setupTestData();
 
         // Start gRPC server
-        server = new TributaryStreamServer(TEST_PORT, controller);
+        server = new TributaryStreamServer(0, controller);
         server.start();
 
         // Setup client
-        channel = ManagedChannelBuilder.forAddress(TEST_HOST, TEST_PORT)
+        channel = ManagedChannelBuilder.forAddress(TEST_HOST, server.getPort())
                 .usePlaintext()
                 .build();
         asyncStub = TributaryStreamGrpc.newStub(channel);
-
-        // Give server time to start
-        Thread.sleep(1000);
     }
 
     @AfterEach
     public void teardown() throws InterruptedException {
-        if (channel != null) {
-            channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
-        }
-        if (server != null) {
-            server.stop();
+        try {
+            if (channel != null) {
+                assertTrue(channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS));
+            }
+        } finally {
+            if (server != null) {
+                server.stop();
+            }
         }
     }
 

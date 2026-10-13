@@ -2,34 +2,27 @@ package tributary;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import tributary.api.TributaryController;
-
-import java.util.logging.Logger;
+import tributary.core.tributaryObject.TributaryCluster;
 
 @SpringBootApplication
 public class TributaryApplication {
 
-    private static final Logger logger = Logger.getLogger(TributaryApplication.class.getName());
-
     public static void main(String[] args) {
-        ConfigurableApplicationContext context = SpringApplication.run(TributaryApplication.class, args);
-        
-        // Graceful shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutting down Tributary application");
-            context.close();
-        }));
+        // Spring owns context shutdown and invokes the streaming service's cleanup.
+        SpringApplication.run(TributaryApplication.class, args);
     }
 
-    /**
-     * Create a shared TributaryController bean that will be used by both 
-     * the REST API and gRPC services to ensure consistent state.
-     */
     @Bean
-    public TributaryController tributaryController() {
-        return new TributaryController();
+    public TributaryCluster tributaryCluster() {
+        return new TributaryCluster();
+    }
+
+    /** One controller is shared by this application's REST and gRPC adapters. */
+    @Bean
+    public TributaryController tributaryController(TributaryCluster cluster) {
+        return new TributaryController(cluster);
     }
 }

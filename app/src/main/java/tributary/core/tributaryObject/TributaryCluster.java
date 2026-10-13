@@ -6,23 +6,14 @@ import java.util.List;
 import tributary.core.tributaryObject.producers.Producer;
 
 public class TributaryCluster {
-    private static TributaryCluster instance;
-    private List<Topic<?>> topics;
-    private List<ConsumerGroup<?>> consumerGroups;
-    private List<Producer<?>> producers;
+    private final List<Topic<?>> topics;
+    private final List<ConsumerGroup<?>> consumerGroups;
+    private final List<Producer<?>> producers;
 
-    private TributaryCluster() {
+    public TributaryCluster() {
         this.topics = new ArrayList<>();
         this.consumerGroups = new ArrayList<>();
         this.producers = new ArrayList<>();
-    }
-
-    public static synchronized TributaryCluster getInstance() {
-        if (instance == null) {
-            instance = new TributaryCluster();
-        }
-
-        return instance;
     }
 
     public void addTopic(Topic<?> topic) {
@@ -86,8 +77,4 @@ public class TributaryCluster {
         System.out.println("Consumer not found with ID: " + consumerId);
     }
 
-    // Test-friendly method to set the instance
-    public static void setInstance(TributaryCluster mockInstance) {
-        instance = mockInstance;
-    }
 }

@@ -1,18 +1,20 @@
 package tributary.cli;
 
 import java.util.Scanner;
+import tributary.api.TributaryController;
+import tributary.core.tributaryObject.TributaryCluster;
 
 /**
  * @deprecated This CLI interactor is deprecated. Please use the new API-based
  *             CLI interactor.
  */
 @Deprecated
-public class ControllerCLI {
-    private MessageHandler handler;
-    private Scanner scanner;
+public class ControllerCLI implements AutoCloseable {
+    private final MessageHandler handler;
+    private final Scanner scanner;
 
-    public ControllerCLI() {
-        this.handler = new MessageHandler();
+    public ControllerCLI(TributaryController controller) {
+        this.handler = new MessageHandler(controller);
         this.scanner = new Scanner(System.in);
     }
 
@@ -60,7 +62,14 @@ public class ControllerCLI {
         return handler;
     }
 
+    @Override
+    public void close() {
+        scanner.close();
+    }
+
     public static void main(String[] args) {
-        new ControllerCLI().start();
+        try (ControllerCLI cli = new ControllerCLI(new TributaryController(new TributaryCluster()))) {
+            cli.start();
+        }
     }
 }

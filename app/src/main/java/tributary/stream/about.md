@@ -57,7 +57,7 @@ message Event {
 ### Starting the Server
 
 ```java
-TributaryController controller = new TributaryController();
+TributaryController controller = new TributaryController(new TributaryCluster());
 TributaryStreamServer server = new TributaryStreamServer(9090, controller);
 server.start();
 server.blockUntilShutdown();

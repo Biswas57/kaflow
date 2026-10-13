@@ -263,6 +263,7 @@ public class TributaryStreamImpl extends TributaryStreamGrpc.TributaryStreamImpl
     /**
      * Shutdown the service gracefully.
      */
+    @javax.annotation.PreDestroy
     public void shutdown() {
         logger.info("Shutting down TributaryStream service");
 
