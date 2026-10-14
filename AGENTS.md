@@ -26,6 +26,9 @@ exactly-once processing, or unverified performance/durability.
 - KF-004 opt-in durability, checkpoints, recovery and ownership contracts are in
   `docs/design/kf-004-durable-publication.md`. Default prototype V1 remains unregistered.
 
+- KF-005 group metadata, membership, leases and fencing contracts are in
+  `docs/design/kf-005-leased-groups.md`.
+
 ## Ticket workflow
 
 1. Select the first eligible ticket whose dependencies are complete. Only one ticket

@@ -1,6 +1,8 @@
 package kaflow.storage;
 
 import kaflow.broker.TopicId;
+import kaflow.groups.GroupId;
+import kaflow.groups.GroupOptions;
 import kaflow.broker.TopicPartition;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -14,37 +16,56 @@ import java.util.UUID;
 
 import static kaflow.storage.StorageException.Code.*;
 
-/** Exact V1 catalog/checkpoint codecs. Metadata is bounded before allocation. */
+/** Exact V1/V2 catalog and V1 checkpoint codecs. Metadata is bounded before allocation. */
 final class DurableMetadata {
     static final int CATALOG = 0x4b464341;
     static final int CHECKPOINT = 0x4b464350;
     record Topic(int slot, TopicId id, int partitions) { }
-    record Catalog(UUID store, List<Topic> topics) {
-        Catalog { topics = List.copyOf(topics); }
+    record Group(GroupId id, TopicId topic) { }
+    record Catalog(UUID store, List<Topic> topics, List<Group> groups) {
+        Catalog(UUID store, List<Topic> topics) { this(store, topics, List.of()); }
+        Catalog { topics = List.copyOf(topics); groups = List.copyOf(groups); }
     }
     record Checkpoint(long end, long base, long bytes, long unkeyed) { }
 
     static ByteBuffer catalog(Catalog value) throws IOException {
         List<byte[]> names = new ArrayList<>();
-        int length = 44;
+        int length = value.groups.isEmpty() ? 44 : 48;
         for (Topic t : value.topics) {
             byte[] name = LogFormat.topicBytes(new TopicPartition(t.id, 0));
             names.add(name); length += 12 + name.length;
         }
+        for (Group g : value.groups) length = Math.addExact(length, 8 + g.id.byteLength());
         ByteBuffer b = prefix(CATALOG, length, value.store);
-        b.putLong(value.topics.size()).putInt(value.topics.size());
+        if (!value.groups.isEmpty()) b.putShort(4, (short) 2);
+        b.putLong(value.topics.size() + value.groups.size()).putInt(value.topics.size());
+        if (!value.groups.isEmpty()) b.putInt(value.groups.size());
         for (int i = 0; i < value.topics.size(); i++) {
             Topic t = value.topics.get(i); byte[] name = names.get(i);
             b.putInt(t.slot).putInt(t.partitions).putInt(name.length).put(name);
+        }
+        for (Group g : value.groups) {
+            byte[] name = g.id.value().getBytes(StandardCharsets.UTF_8);
+            int slot = value.topics.stream().filter(t -> t.id.equals(g.topic)).findFirst().orElseThrow().slot;
+            b.putInt(name.length).putInt(slot).put(name);
         }
         return finish(b);
     }
 
     static Catalog readCatalog(Path path, Persistence disk, DurableOptions options) throws IOException {
-        ByteBuffer b = read(path, CATALOG, 44, 65536, disk, options.storage());
+        return readCatalog(path, disk, options, GroupOptions.defaults());
+    }
+
+    static Catalog readCatalog(Path path, Persistence disk, DurableOptions options, GroupOptions groups) throws IOException {
+        ByteBuffer b = read(path, CATALOG, 44, groups.maxCatalogBytes(), disk, options.storage());
         UUID store = new UUID(b.getLong(), b.getLong());
         long generation = b.getLong(); int count = b.getInt();
-        if (count < 0 || count > options.maxTopics() || generation != count) throw LogFormat.corrupt("catalog count/generation");
+        int groupCount = 0;
+        if (b.getShort(4) == 2) {
+            require(b, 4); groupCount = b.getInt();
+            if (groupCount < 1 || groupCount > groups.maxGroups()) throw LogFormat.corrupt("catalog group count");
+        }
+        if (count < 0 || count > options.maxTopics() || generation != count + groupCount) throw LogFormat.corrupt("catalog count/generation");
         List<Topic> topics = new ArrayList<>(); HashSet<TopicId> names = new HashSet<>(); int total = 0;
         for (int i = 0; i < count; i++) {
             require(b, 12); int slot = b.getInt(); int partitions = b.getInt(); TopicId id = topic(b);
@@ -52,8 +73,24 @@ final class DurableMetadata {
                     || (total += partitions) > options.maxPartitions()) throw LogFormat.corrupt("catalog topic bounds");
             topics.add(new Topic(slot, id, partitions));
         }
+        List<Group> definitions = new ArrayList<>(); HashSet<GroupId> ids = new HashSet<>();
+        for (int i = 0; i < groupCount; i++) {
+            require(b, 8); int length = b.getInt(), slot = b.getInt();
+            if (length < 1 || length > 255 || slot < 0 || slot >= topics.size()) throw LogFormat.corrupt("catalog group binding");
+            require(b, length);
+            try {
+                ByteBuffer slice = b.slice(); slice.limit(length);
+                GroupId id = new GroupId(StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                        .onUnmappableCharacter(CodingErrorAction.REPORT).decode(slice).toString());
+                b.position(b.position() + length);
+                if (!ids.add(id)) throw LogFormat.corrupt("duplicate group identity");
+                definitions.add(new Group(id, topics.get(slot).id));
+            } catch (IllegalArgumentException | java.nio.charset.CharacterCodingException e) {
+                throw new StorageException(CORRUPT, "invalid group identity", e);
+            }
+        }
         if (b.remaining() != 4) throw LogFormat.corrupt("catalog trailing bytes");
-        return new Catalog(store, topics);
+        return new Catalog(store, topics, definitions);
     }
 
     static ByteBuffer checkpoint(UUID store, Topic topic, int partition, Checkpoint value) throws IOException {
@@ -87,8 +124,12 @@ final class DurableMetadata {
             if (f.size() < 6) return;
             ByteBuffer b = ByteBuffer.allocate(6);
             StorageIo.readFully(f, b, 0, options.zeroProgressLimit()); b.flip();
-            if (b.getInt() == magic && b.getShort() != 1) throw new StorageException(UNSUPPORTED_VERSION, "unsupported metadata version");
+            if (b.getInt() == magic && !supported(magic, b.getShort())) throw new StorageException(UNSUPPORTED_VERSION, "unsupported metadata version");
         }
+    }
+
+    private static boolean supported(int magic, short version) {
+        return version == 1 || magic == CATALOG && version == 2;
     }
 
     private static ByteBuffer prefix(int magic, int length, UUID store) {
@@ -107,7 +148,7 @@ final class DurableMetadata {
             ByteBuffer prefix = ByteBuffer.allocate(12);
             StorageIo.readFully(f, prefix, 0, options.zeroProgressLimit()); prefix.flip();
             if (prefix.getInt() != magic) throw LogFormat.corrupt("metadata magic");
-            if (prefix.getShort() != 1) throw new StorageException(UNSUPPORTED_VERSION, "unsupported metadata version");
+            if (!supported(magic, prefix.getShort())) throw new StorageException(UNSUPPORTED_VERSION, "unsupported metadata version");
             if (prefix.getShort() != 0 || prefix.getInt() != size) throw LogFormat.corrupt("metadata flags/length");
             ByteBuffer b = ByteBuffer.allocate((int) size); b.put(prefix.array());
             StorageIo.readFully(f, b, 12, options.zeroProgressLimit());

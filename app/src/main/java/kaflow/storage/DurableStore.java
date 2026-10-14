@@ -1,6 +1,8 @@
 package kaflow.storage;
 
 import kaflow.broker.ImmutableBytes;
+import kaflow.groups.GroupId;
+import kaflow.groups.GroupOptions;
 import kaflow.broker.StoredRecord;
 import kaflow.broker.TopicId;
 import kaflow.broker.TopicPartition;
@@ -24,10 +26,11 @@ import static kaflow.storage.StorageException.Code.*;
 /** Writer-thread-only persistent namespace. The coordinator is the only production caller. */
 final class DurableStore implements AutoCloseable {
     record TopicView(TopicId id, int count, int roundRobin) { }
-    record Recovery(List<TopicView> topics, Map<TopicPartition, Long> ends) { }
+    record Recovery(List<TopicView> topics, Map<TopicPartition, Long> ends, List<DurableMetadata.Group> groups) { }
     private final Thread owner = Thread.currentThread();
     private final DirectoryLease lease;
     private final DurableOptions options;
+    private final GroupOptions groupOptions;
     private final Persistence disk;
     private final Clock clock;
     private final Map<TopicPartition, PartitionLog> logs = new LinkedHashMap<>();
@@ -36,13 +39,17 @@ final class DurableStore implements AutoCloseable {
     private boolean failed, closed;
 
     static DurableStore open(Path requested, DurableOptions options, Clock clock, Persistence disk) throws IOException {
+        return open(requested, options, GroupOptions.defaults(), clock, disk);
+    }
+
+    static DurableStore open(Path requested, DurableOptions options, GroupOptions groups, Clock clock, Persistence disk) throws IOException {
         Path absolute = requested.toAbsolutePath();
         if (!Files.exists(absolute)) {
             if (!Files.isDirectory(absolute.getParent())) throw new IOException("data directory parent must exist");
             Files.createDirectory(absolute); disk.syncDirectory(absolute.getParent());
         }
         DirectoryLease lease = DirectoryLease.acquire(absolute);
-        DurableStore store = new DurableStore(lease, options, clock, disk);
+        DurableStore store = new DurableStore(lease, options, groups, clock, disk);
         try { disk.checkEnvironment(lease.directory); store.initialize(); return store; }
         catch (IOException | RuntimeException | Error primary) {
             try { store.close(); } catch (IOException cleanup) { primary.addSuppressed(cleanup); }
@@ -50,8 +57,8 @@ final class DurableStore implements AutoCloseable {
         }
     }
 
-    private DurableStore(DirectoryLease lease, DurableOptions options, Clock clock, Persistence disk) {
-        this.lease = lease; this.options = options; this.clock = clock; this.disk = disk;
+    private DurableStore(DirectoryLease lease, DurableOptions options, GroupOptions groups, Clock clock, Persistence disk) {
+        this.lease = lease; this.options = options; this.groupOptions = groups; this.clock = clock; this.disk = disk;
     }
 
     private void initialize() throws IOException {
@@ -70,7 +77,7 @@ final class DurableStore implements AutoCloseable {
         }
         if (!marked) throw LogFormat.corrupt("existing catalog has no durable root marker");
         regular(catalogPath);
-        catalog = DurableMetadata.readCatalog(catalogPath, disk, options);
+        catalog = DurableMetadata.readCatalog(catalogPath, disk, options, groupOptions);
         List<Path> scratch = new ArrayList<>(); Path orphan = null;
         for (Path path : rootEntries) {
             String name = path.getFileName().toString();
@@ -185,7 +192,7 @@ final class DurableStore implements AutoCloseable {
             }
             topics.add(new TopicView(t.id(), t.partitions(), rr));
         }
-        return new Recovery(List.copyOf(topics), Map.copyOf(ends));
+        return new Recovery(List.copyOf(topics), Map.copyOf(ends), catalog.groups());
     }
 
     void createTopic(TopicId id, int count) throws IOException {
@@ -197,6 +204,9 @@ final class DurableStore implements AutoCloseable {
         // Identity/header fit is validated before creating any directory.
         if (32L + LogFormat.topicBytes(new TopicPartition(id, 0)).length + LogFormat.FRAME_OVERHEAD > options.storage().segmentBytes()) throw new StorageException(INVALID_ARGUMENT, "identity exceeds segment capacity");
         var topic = new DurableMetadata.Topic(catalog.topics().size(), id, count);
+        List<DurableMetadata.Topic> nextTopics = new ArrayList<>(catalog.topics()); nextTopics.add(topic);
+        var next = new DurableMetadata.Catalog(catalog.store(), nextTopics, catalog.groups());
+        ByteBuffer metadata = catalogBytes(next);
         try {
             Files.createDirectory(topicDirectory(topic.slot()));
             for (int p = 0; p < count; p++) {
@@ -209,11 +219,33 @@ final class DurableStore implements AutoCloseable {
                 checkpoints.put(part, cp);
             }
             disk.syncDirectory(topicDirectory(topic.slot())); disk.syncDirectory(lease.directory); disk.event("topic-directories-synced");
-            List<DurableMetadata.Topic> topics = new ArrayList<>(catalog.topics()); topics.add(topic);
-            var next = new DurableMetadata.Catalog(catalog.store(), topics);
-            disk.atomic(lease.directory.resolve("catalog"), DurableMetadata.catalog(next), "catalog", options.storage().zeroProgressLimit());
+            disk.atomic(lease.directory.resolve("catalog"), metadata, "catalog", options.storage().zeroProgressLimit());
             catalog = next;
         } catch (IOException | RuntimeException e) { failed = true; throw e; }
+    }
+
+    void createGroup(GroupId id, TopicId topic) throws IOException {
+        ensureOpen();
+        if (catalog.topics().stream().noneMatch(t -> t.id().equals(topic))) throw new StorageException(INVALID_ARGUMENT, "unknown topic");
+        var existing = catalog.groups().stream().filter(g -> g.id().equals(id)).findFirst();
+        if (existing.isPresent()) {
+            if (!existing.get().topic().equals(topic)) throw new StorageException(INVALID_ARGUMENT, "group binding conflict");
+            return;
+        }
+        if (catalog.groups().size() >= groupOptions.maxGroups()) throw new StorageException(LIMIT, "group count");
+        var groups = new ArrayList<>(catalog.groups()); groups.add(new DurableMetadata.Group(id, topic));
+        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), groups);
+        ByteBuffer metadata = catalogBytes(next);
+        try {
+            disk.atomic(lease.directory.resolve("catalog"), metadata, "group-catalog", options.storage().zeroProgressLimit());
+            catalog = next;
+        } catch (IOException | RuntimeException e) { failed = true; throw e; }
+    }
+
+    private ByteBuffer catalogBytes(DurableMetadata.Catalog value) throws IOException {
+        ByteBuffer bytes = DurableMetadata.catalog(value);
+        if (bytes.remaining() > groupOptions.maxCatalogBytes()) throw new StorageException(LIMIT, "catalog byte capacity");
+        return bytes;
     }
 
     DurableReceipt append(TopicPartition id, Optional<ImmutableBytes> key, ImmutableBytes payload, boolean unkeyed) throws IOException {

@@ -18,6 +18,9 @@ old README/blog test-count and coverage claims are not baseline evidence.
 The [KF-004 design](design/kf-004-durable-publication.md) defines opt-in durable
 Append and its recovery/filesystem requirements.
 
+The [KF-005 design](design/kf-005-leased-groups.md) specifies durable one-topic group
+definitions and ephemeral leased membership; Fetch and Commit remain deferred.
+
 ## Prerequisites
 
 - JDK **17**, including `java` and `javac`, on macOS or Linux.
@@ -97,6 +100,9 @@ the [KF-003 validation record](baseline/kf-003.md) reports 120 passing tests acr
 KF-004 preserves those 120 and adds 71 durable test invocations: the
 [KF-004 validation record](baseline/kf-004.md) reports 191 passing tests in 21 classes,
 plus both packaged smokes on the final source after root-marker/orphan-cleanup review.
+KF-005 adds 57 membership/metadata/control/network/schema invocations: its
+[validation record](baseline/kf-005.md) reports 248 passing tests in 27 classes and both
+existing packaged smokes on final source. No KF-005 CI execution is claimed.
 Inventory is not execution evidence or coverage. Derive outcomes
 from fresh XML reports; distinguish setup, test-body, teardown, discovery, and timeout errors.
 
@@ -165,17 +171,32 @@ java -jar app/build/libs/app.jar --kaflow.durable.enabled=true \
 ```
 
 Successful recovery is required before V1 service registration. Initialization failure
-aborts startup; there is no volatile fallback. Only Append is exposed. Durable topics
+aborts startup; there is no volatile fallback. Append, Join, Heartbeat and Leave are exposed. Durable topics
 are created through the bounded internal `DurableBroker.createTopic` composition API;
 legacy REST administration does not create durable topics. No public Fetch or inspection
 endpoint exists. The fixture below seeds its own temporary topic internally.
 
-Durable mode uses a dedicated storage writer, coordinator, two response workers, and
-four transport workers with a bounded queue. Inbound message size and application
+Durable mode uses a dedicated storage writer, coordinator, two storage-response workers,
+two membership-response workers, and four transport workers with a bounded queue. Inbound message size and application
 admission have separate bounds; transport buffers precede admission. `/actuator/health`
 becomes OUT_OF_SERVICE when durable readiness degrades. A watchdog stops mutation
 admission and retains the writer/directory ownership; explicit close and recovery are
 required. A timed-out shutdown reports incomplete cleanup, without interrupting disk I/O.
+
+Join durably creates an exact group/topic binding if absent. Every Join allocates a fresh
+session, even with a duplicate label: lost-response retries can leave sessions until expiry.
+Keep the returned incarnation/session credentials private. Heartbeat renews a live session
+and returns its latest generation and qualified assignment without requiring the caller's
+old generation. The default lease is 30 seconds; renew well before it elapses. Expired or
+previous-incarnation credentials are fenced. Leave removes only its matching live session.
+
+GroupOptions defaults bound 128 groups, 32 members per group, 256 total members, 32 pending
+Joins, 128 controls, 2 MiB admitted control bytes and 128 KiB catalog metadata. Constructors
+can select lower limits within documented hard ceilings. Groups are durable; sessions and
+assignments must be re-established after restart. Independent control admission lets live
+members heartbeat during disk stalls; successful Heartbeat does not clear degraded readiness.
+V1 catalogs open unchanged with no groups. Creating the first group writes catalog V2,
+which old KF-004 binaries reject. Fetch, Commit and consumer progress remain deferred.
 
 After the source build and test compilation, run:
 

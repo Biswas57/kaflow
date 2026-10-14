@@ -3,7 +3,7 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-004**.
+Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-005**.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
@@ -11,7 +11,7 @@ Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-004**
 | KF-002 | Injected broker ownership and V1 record/API contracts | DONE | KF-001 |
 | KF-003 | Partition-log framing, indexes, rotation, bounded immediate reads | DONE | KF-002 |
 | KF-004 | Durable publication and crash recovery | DONE | KF-003 |
-| KF-005 | Leased groups and generation fencing | READY | KF-004 |
+| KF-005 | Leased groups and generation fencing | DONE | KF-004 |
 | KF-006 | Durable commits, immediate Fetch API, independent replay | READY | KF-005 |
 | KF-007 | Asynchronous long polling and cancellation | READY | KF-006 |
 | KF-008 | Retention, deletion, overload, bounded shutdown | READY | KF-007 |
@@ -454,12 +454,90 @@ revision's GitHub Actions run and report its URL/outcome separately from local e
 CI is configured for clean build, full tests, both packaged smokes and report upload;
 configuration alone is not execution evidence. Do not merge or start KF-005.
 
+## KF-005 — Durable groups, leased membership and generation fencing
+
+**Status:** DONE (2026-10-14), locally validated; publication authorized. **Branch:** `codex/kf-005-leased-groups`.
+**Verified merged base:** `7d1958a539d4dd5f5dd4fefa348b031d0e1e62ca` on clean main,
+also remote main; contains KF-004 commit `22babbbb32367f5ee2e5e0585469e1a1d9d01ca9`
+and has the same source tree. No unrelated uncommitted inputs. A 183-file base manifest
+is retained under ignored `build/kf005-evidence/base-manifest.json`.
+**Design:** [docs/design/kf-005-leased-groups.md](docs/design/kf-005-leased-groups.md).
+**Publication:** User authorized commit and push on 2026-10-14, followed by GitHub Actions
+verification for the exact pushed commit. This supersedes the implementation request's
+publication restriction. No PR or merge requested; do not begin KF-006.
+
+### Scope, decisions and acceptance
+
+Durable exact one-topic group bindings; coordinator-owned ephemeral sessions; fresh
+broker incarnation; monotonic leases; Join-order modulo assignment; current-generation
+apply-time fencing. V1 unary Join/Heartbeat/Leave are opt-in with durable Append.
+Catalog V2 embeds bounded definitions; V1 opens with zero groups. Separate bounded
+control/response capacity keeps membership responsive during a stalled writer.
+No Fetch, Commit, committed offsets, replay, reset, long polling or retention.
+
+Stages: KF-005.1 format/definition recovery; KF-005.2 membership/control scheduling;
+KF-005.3 wire protocol, deterministic/network tests, validation and handoff.
+
+- [x] Verify merged base/clean inputs; record ownership, wire, leases, bounds and compatibility before code.
+- [x] Durable idempotent group binding; V1 compatibility, failpoints and fail-closed metadata recovery.
+- [x] Independent groups, literal assignments, bounded members/timers and exact monotonic expiry.
+- [x] Incarnation/session/generation/partition fencing; live stale-generation members can renew.
+- [x] Retry/duplicate-label/Leave/cancellation/close semantics; exact reservation release.
+- [x] Responsive controls under blocked storage and latched degradation; safe late completion/locks.
+- [x] Generated unary membership schema and real network/restart tests; prototype isolated.
+- [x] Preserve prior tests; final source-only build, full suite and both packaged smokes.
+- [x] Record actual counts/errors/timeouts, review diff and exact KF-006 handoff.
+
+### Evidence and next action
+
+Inherited KF-004 exact-commit CI was independently verified earlier in this chat:
+[run 38492040645](https://github.com/Biswas57/kaflow/actions/runs/38492040645), revision
+`22babbbb32367f5ee2e5e0585469e1a1d9d01ca9`, completed success; build, full tests,
+both smokes and upload succeeded. This is inherited evidence, not a KF-005 run.
+Validation commands: `./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon`,
+`./gradlew :app:test --rerun-tasks --no-daemon`, `python3 scripts/smoke_bootjar.py`,
+`python3 scripts/smoke_durable.py`; Java 17, source-only candidate, bounded runner.
+Implemented catalog V2/read-only V1 compatibility, coordinator sessions/generations,
+bounded separate controls, unary membership RPCs and focused/network/crash tests.
+Initial compile failed on a lambda capture (corrected); 42 focused tests then passed,
+full development suite passed 240 tests, and 54 review tests passed. All test runs had
+zero failures/errors/skips. Review strengthened response-byte accounting and added wire
+bounds fixtures. Details in [docs/baseline/kf-005.md](docs/baseline/kf-005.md).
+Final source-only snapshot: 198 inputs, 118 Java files, two schemas. Build/package passed
+in 7.69 s; separate full suite passed in 27.00 s: **248 tests, 27 classes, zero failures,
+errors or skips**. Original packaged smoke passed in 2.37 s; durable packaged crash/restart
+smoke passed in 6.16 s. All four commands exited 0 without timeouts. Prototype health/admin
+and shutdown passed; durable smoke retained acknowledgements 0/1 across intentional SIGKILL,
+resumed at 2/3, and verified all four exact records. All selected listeners closed, no smoke
+errors or application WARN/ERROR entries. Membership round trips/restart fencing were exercised
+by the real-network suite; the existing durable packaged smoke continues to verify Append.
+
+Actual environment: macOS 26.6.2 aarch64, Temurin 17.0.20.1+1, wrapper 8.5, APFS checkout
+and candidate. Linux local storage remains the reference; honored force/atomic-replace/
+directory-sync semantics are required, and process-halt tests are not physical power-loss
+proof. Join retries can leave additional sessions until expiry; tokens are not transport
+authentication. Catalog V2 is not readable by old KF-004 binaries. This pre-publication
+record claims local validation only; the exact pushed revision still requires CI verification.
+
+Final diff review: 27 changed/new files, no unresolved findings/blockers, secret-pattern
+matches or tracked generated/build outputs. All production/test/schema/build/smoke inputs
+match the validated manifest; final changes are evidence-only docs. Evidence under ignored
+`build/kf005-evidence/final/`, with manifests and earlier results alongside it.
+The only original assertion update is the intentional service inventory extension;
+existing Append and durability assertions remain, with added prototype membership rejection.
+Exact next action under the latest authorization: commit and push the reviewed change,
+then verify GitHub Actions for that exact revision and report its URL/outcome separately
+from local evidence. Do not open a PR, merge or begin KF-006.
+
+### Handoff
+
+KF-006 remains unstarted: immediate bounded Fetch, durable next-offset Commit, apply-time
+ownership validation and commit/rebalance barrier around unresolved applying writes.
+
 ## Remaining ticket acceptance outlines
 
 Expand the next eligible ticket into scope, decisions, steps, evidence, and handoff.
 
-- **KF-005:** durable group definitions, leased sessions, deterministic assignment,
-  generations, restart invalidation, heartbeat responsiveness during storage stalls.
 - **KF-006:** immediate bounded Fetch exposed over gRPC; Fetch never commits; durable
   monotonic commits, apply-time validation, rebalance barrier, independent groups,
   inactive-group reset, replay and restart tests.
