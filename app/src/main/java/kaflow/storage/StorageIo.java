@@ -16,6 +16,7 @@ interface StorageIo {
         int read(ByteBuffer target, long position) throws IOException;
         int write(ByteBuffer source, long position) throws IOException;
         long size() throws IOException;
+        default void force() throws IOException { throw new IOException("file forcing unsupported"); }
         @Override void close() throws IOException;
     }
 
@@ -34,6 +35,7 @@ interface StorageIo {
                 @Override public int read(ByteBuffer target, long position) throws IOException { return channel.read(target, position); }
                 @Override public int write(ByteBuffer source, long position) throws IOException { return channel.write(source, position); }
                 @Override public long size() throws IOException { return channel.size(); }
+                @Override public void force() throws IOException { channel.force(true); }
                 @Override public void close() throws IOException { channel.close(); }
             };
         };

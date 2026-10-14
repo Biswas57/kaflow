@@ -1,18 +1,22 @@
 # Build and verify Kaflow
 
 The [KF-002 contract](design/kf-002-broker-contracts.md) separates the injected
-prototype runtime from the new in-process V1 core. Its generated V1 Append schema
-is not a registered network service. The packaged smoke still checks the prototype;
-V1 core guarantees require the focused tests, not that health check.
+prototype runtime from the in-process V1 core. Default startup keeps V1 Append
+unregistered. The ordinary packaged smoke checks that prototype; focused tests
+establish core behaviour.
 
-The [KF-003 storage design](design/kf-003-partition-log.md) specifies a separate
-file-backed partition component. It is not connected to either running prototype
-or V1 core, and completed writes are not durable acknowledgements.
+The [KF-003 storage design](design/kf-003-partition-log.md) specifies a file-backed
+partition component whose completed writes alone are not durable acknowledgements.
+KF-004 adds a separate durable runtime around it, with explicit force/publication
+ordering and recovery. It shares no state with either volatile namespace.
 
-The current application is an in-memory prototype. A successful build or health
+The default application is an in-memory prototype. A successful build or health
 check does not establish durable acknowledgements, correct delivery/offset
 semantics, Kafka compatibility, or performance. The active plan is [../todo.md](../todo.md);
 old README/blog test-count and coverage claims are not baseline evidence.
+
+The [KF-004 design](design/kf-004-durable-publication.md) defines opt-in durable
+Append and its recovery/filesystem requirements.
 
 ## Prerequisites
 
@@ -90,6 +94,9 @@ tests: the [KF-002 validation record](baseline/kf-002.md) reports 40 executed te
 across ten classes. KF-003 preserves those 40 and adds 80 storage test invocations:
 the [KF-003 validation record](baseline/kf-003.md) reports 120 passing tests across
 16 classes, including parameterized corruption cases and separate-JVM ownership.
+KF-004 preserves those 120 and adds 71 durable test invocations: the
+[KF-004 validation record](baseline/kf-004.md) reports 191 passing tests in 21 classes,
+plus both packaged smokes on the final source after root-marker/orphan-cleanup review.
 Inventory is not execution evidence or coverage. Derive outcomes
 from fresh XML reports; distinguish setup, test-body, teardown, discovery, and timeout errors.
 
@@ -148,6 +155,51 @@ startup/shutdown errors too. The command exits nonzero on a failed check.
 Health and listener checks are startup evidence only. They do not test subscription
 cleanup, durability, message delivery, crash recovery, or physical power loss.
 
+## Opt-in durable Append and restart smoke
+
+Use an explicitly selected persistent local directory with an existing parent:
+
+```sh
+java -jar app/build/libs/app.jar --kaflow.durable.enabled=true \
+  --kaflow.durable.directory=/absolute/path/to/kaflow-data
+```
+
+Successful recovery is required before V1 service registration. Initialization failure
+aborts startup; there is no volatile fallback. Only Append is exposed. Durable topics
+are created through the bounded internal `DurableBroker.createTopic` composition API;
+legacy REST administration does not create durable topics. No public Fetch or inspection
+endpoint exists. The fixture below seeds its own temporary topic internally.
+
+Durable mode uses a dedicated storage writer, coordinator, two response workers, and
+four transport workers with a bounded queue. Inbound message size and application
+admission have separate bounds; transport buffers precede admission. `/actuator/health`
+becomes OUT_OF_SERVICE when durable readiness degrades. A watchdog stops mutation
+admission and retains the writer/directory ownership; explicit close and recovery are
+required. A timed-out shutdown reports incomplete cleanup, without interrupting disk I/O.
+
+After the source build and test compilation, run:
+
+```sh
+python3 scripts/smoke_durable.py
+```
+
+This standard-library Python driver extracts production classes/dependencies from the
+actual executable JAR and runs a separate Java test fixture. It creates a private data
+directory, starts the packaged Spring application, receives real Append responses in
+an external client and forces its receipt witness. It then SIGKILLs that child, restarts
+from the same data, appends at recovered next offsets, shuts down normally and verifies
+all four exact records through the bounded internal fixture. No public API is added for
+inspection. Startup is bounded at 60 seconds, client commands at 30 seconds, shutdown at
+20 seconds (five-second forced cleanup). Logs, receipt witness, small data directory and
+result JSON are retained under `app/build/reports/durable-smoke/`; extraction scratch is
+removed. A successful run is process-crash/restart evidence, not physical power-loss proof.
+
+Linux local storage with correctly honored file/directory flushes is the durability
+reference. macOS/APFS is the development environment. Known remote/memory-only and
+unsupported filesystems fail rather than downgrade. Device caches, filesystem semantics,
+uncertain failed-write outcomes and explicit KF-003 compatibility policy are documented
+in the design. Standalone KF-003 directories without publication metadata are not migrated.
+
 ## Source-only verification and CI
 
 A fresh checkout excludes ignored artifacts. When verifying **uncommitted** changes,
@@ -166,7 +218,7 @@ outputs. KF-001 used a fresh source directory and no Gradle build cache, with
 cached downloads from its original-baseline run.
 
 [The Linux workflow](../.github/workflows/build.yml) uses Ubuntu 24.04 and Temurin 17,
-the wrapper, separate compile/package and test steps, then the same smoke script.
+the wrapper, separate compile/package and test steps, then both packaged smoke scripts.
 It has a 25-minute job limit and individual build/test limits. Available reports
 upload with `if: always()` even after failures; earlier failed steps remain failed.
 A build failure prevents tests; a test failure prevents the subsequent smoke step.

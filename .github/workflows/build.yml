@@ -35,6 +35,9 @@ jobs:
       - name: Check packaged startup and shutdown
         timeout-minutes: 2
         run: python3 scripts/smoke_bootjar.py
+      - name: Check durable Append and packaged process restart
+        timeout-minutes: 4
+        run: python3 scripts/smoke_durable.py
       - name: Retain available test and smoke reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -44,5 +47,6 @@ jobs:
             app/build/reports/tests/test/
             app/build/test-results/test/
             app/build/reports/smoke/
+            app/build/reports/durable-smoke/
           if-no-files-found: warn
           retention-days: 14

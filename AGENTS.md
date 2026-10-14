@@ -23,6 +23,9 @@ exactly-once processing, or unverified performance/durability.
 - KF-003 storage framing, ownership, resource limits and non-durability boundaries are
   specified in `docs/design/kf-003-partition-log.md`.
 
+- KF-004 opt-in durability, checkpoints, recovery and ownership contracts are in
+  `docs/design/kf-004-durable-publication.md`. Default prototype V1 remains unregistered.
+
 ## Ticket workflow
 
 1. Select the first eligible ticket whose dependencies are complete. Only one ticket
