@@ -5,9 +5,12 @@ option java_package = "kaflow.v1";
 option java_multiple_files = true;
 option java_outer_classname = "BrokerProtocol";
 
-// Contract only in KF-002. No service is registered before durable publication.
+// Available only in the explicitly configured durable runtime after recovery.
 service Broker {
   rpc Append(AppendRequest) returns (AppendResponse);
+  rpc Join(JoinRequest) returns (MembershipResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (MembershipResponse);
+  rpc Leave(LeaveRequest) returns (LeaveResponse);
 }
 
 message AppendRequest {
@@ -28,3 +31,34 @@ message AppendResponse {
   int64 offset = 2; // Nonnegative, actual assigned partition offset.
   int64 timestamp_millis = 3; // Broker Unix timestamp in milliseconds.
 }
+
+// Labels are descriptive only; duplicate labels create separate sessions.
+message JoinRequest {
+  string group = 1;
+  string topic = 2;
+  string member_label = 3;
+}
+
+// Opaque broker-issued credentials; never log or derive authority from a label.
+message SessionIdentity {
+  string group = 1;
+  string incarnation = 2;
+  string session_token = 3;
+}
+
+message HeartbeatRequest {
+  SessionIdentity session = 1;
+}
+
+message LeaveRequest {
+  SessionIdentity session = 1;
+}
+
+message MembershipResponse {
+  SessionIdentity session = 1;
+  int64 generation = 2;
+  int64 lease_duration_millis = 3; // Relative duration from application, not response receipt.
+  repeated TopicPartition assignments = 4;
+}
+
+message LeaveResponse {}

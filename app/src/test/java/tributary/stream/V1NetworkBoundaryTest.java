@@ -32,5 +32,12 @@ class V1NetworkBoundaryTest {
                 () -> BrokerGrpc.newBlockingStub(channel).withDeadlineAfter(5, TimeUnit.SECONDS)
                         .append(AppendRequest.newBuilder().setTopic("orders").build()));
         assertEquals(Status.Code.UNIMPLEMENTED, failure.getStatus().getCode());
+        var stub = BrokerGrpc.newBlockingStub(channel).withDeadlineAfter(5, TimeUnit.SECONDS);
+        assertEquals(Status.Code.UNIMPLEMENTED, assertThrows(StatusRuntimeException.class,
+                () -> stub.join(kaflow.v1.JoinRequest.getDefaultInstance())).getStatus().getCode());
+        assertEquals(Status.Code.UNIMPLEMENTED, assertThrows(StatusRuntimeException.class,
+                () -> stub.heartbeat(kaflow.v1.HeartbeatRequest.getDefaultInstance())).getStatus().getCode());
+        assertEquals(Status.Code.UNIMPLEMENTED, assertThrows(StatusRuntimeException.class,
+                () -> stub.leave(kaflow.v1.LeaveRequest.getDefaultInstance())).getStatus().getCode());
     }
 }
