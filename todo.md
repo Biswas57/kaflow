@@ -536,7 +536,7 @@ ownership validation and commit/rebalance barrier around unresolved applying wri
 
 ## KF-006 — Immediate bounded Fetch, durable commits and independent replay
 
-**Status:** DONE (2026-10-14), locally validated and uncommitted. **Branch:** `codex/kf-006-fetch-commit`.
+**Status:** DONE (2026-10-14), locally revalidated; follow-up CI verification pending. **Branch:** `codex/kf-006-fetch-commit`.
 **Verified merged base:** `6f1b667785ee770427fcc08963fa24d0f216d6c4` (remote main,
 merge PR #5); contains `66e3bfc6fbeeeb7051cb377806c3c9c1987544ed` with identical tree.
 Started with a clean checkout; no unrelated inputs. Base manifest is retained under
@@ -637,6 +637,34 @@ Exact next action at this prepublication checkpoint: review the staged diff, com
 and push `codex/kf-006-fetch-commit` to origin, then verify GitHub Actions for that exact SHA
 and report its URL/outcome. The configured CI runs build/package, full tests, both smokes and
 report upload; no KF-006 CI result is claimed before execution. No PR, merge or KF-007.
+
+### Exact-commit CI follow-up
+
+Initial authorized publication: `c0f9462c93ea88cd028ad0c02f814fcbf489f108` on
+`origin/codex/kf-006-fetch-commit`. [CI run 38506226589](https://github.com/Biswas57/kaflow/actions/runs/38506226589)
+built successfully but its full suite failed: fresh uploaded XML has 326 tests, one failure,
+zero errors/skips (325 passed). Both smokes were skipped; report upload succeeded.
+`DurableBrokerTest.concurrentAcceptedResultsExactlyMatchContiguousRecords` requested the
+entire inspection byte budget after observing append results but before the final response
+reservation necessarily unwound. RESOURCE_EXHAUSTED was valid; this was a test synchronization
+race, not a failed append. Added bounded `awaitIdle` before full-budget inspection and
+strengthened the blocked-response test to deterministically prove the same byte-reservation
+lifetime and subsequent successful inspection. All 64-record/offset/payload assertions remain;
+no production change, limit increase, ignored rejection, retry or weakened assertion.
+Failed CI job log and uploaded reports retained under `build/kf006-evidence/publication/`.
+Follow-up candidate `/private/tmp/kaflow-kf006-ci-fix-8bcr72yi/candidate` has 215 source-only
+inputs. Clean build/package exit 0 in 9.67 s; focused broker suite exit 0 in 10.48 s (9 tests).
+Separate full suite exit 0 in 37.79 s: recomputed 326 tests, 34 classes, zero failures/errors/skips.
+Original smoke exit 0 in 2.40 s; extended two-group crash/restart smoke exit 0 in 8.21 s.
+No timeouts, all listeners closed, original exact receipt and independent resume/replay
+assertions passed; no application WARN/ERROR entries. New manifest, focused/full XML and
+complete smoke/command reports retained in `build/kf006-evidence/publication-followup/`.
+Final source matches that candidate, with only evidence docs edited afterward. Reviewed
+three follow-up files (test plus two documents), now 37 changed files against KF-005;
+no production change, secrets, generated artifacts or unrelated changes. Commit/push the
+authorized follow-up and verify its exact SHA in Actions before reporting completion.
+The first failed CI remains recorded and cannot substitute for this verification.
+No PR, merge or KF-007.
 
 ### Handoff
 

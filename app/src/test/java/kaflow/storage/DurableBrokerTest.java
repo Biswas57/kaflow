@@ -66,6 +66,9 @@ class DurableBrokerTest {
             } finally { callers.shutdown(); assertTrue(callers.awaitTermination(5, TimeUnit.SECONDS)); }
             HashMap<Long,Integer> accepted = new HashMap<>();
             for (int i = 0; i < receipts.size(); i++) { var receipt = await(receipts.get(i)); assertNull(accepted.put(receipt.offset(), i)); }
+            // Future completion can wake this caller before the response worker's finally releases bytes.
+            // Inspection reserves the whole byte budget, so first wait for all append delivery to unwind.
+            broker.awaitIdle(WAIT);
             var records = await(broker.inspect(PART, 0, 128, 2097152)); assertEquals(64, records.size());
             for (int i = 0; i < records.size(); i++) { var record = records.get(i); assertEquals(i, record.offset()); assertEquals(accepted.get((long)i).byteValue(), record.payload().toByteArray()[0]); }
             broker.awaitIdle(WAIT); assertEquals(0, broker.diagnostics().admittedCalls());
@@ -153,12 +156,18 @@ class DurableBrokerTest {
         Events disk = new Events(); CountDownLatch callback = new CountDownLatch(1), release = new CountDownLatch(1);
         try (var broker = start(directory, options(160, 2, 2097152), new AtomicLong(), disk, e -> {})) {
             await(broker.createTopic(TOPIC, 1)); broker.awaitIdle(WAIT); disk.pause = "data-written";
-            var call = broker.append(command()); assertTrue(disk.entered.await(5, TimeUnit.SECONDS));
+            var call = broker.append(command((byte) 1)); assertTrue(disk.entered.await(5, TimeUnit.SECONDS));
             call.thenRun(() -> { assertEquals("kaflow-response", Thread.currentThread().getName()); callback.countDown(); try { barrier(release); } catch(IOException e){throw new RuntimeException(e);} });
             disk.proceed.countDown(); assertTrue(callback.await(5, TimeUnit.SECONDS));
+            assertEquals(0, await(call).offset()); // Result is observable while delivery still owns its reservation.
             assertTrue(broker.diagnostics().ready()); assertEquals(1, broker.diagnostics().admittedCalls());
+            assertEquals(1, broker.diagnostics().admittedBytes());
+            failure(DurableException.Code.RESOURCE_EXHAUSTED, broker.inspect(PART, 0, 128, 2097152));
             assertEquals(1, await(broker.append(command())).offset());
             release.countDown(); broker.awaitIdle(WAIT);
+            assertEquals(0, broker.diagnostics().admittedBytes());
+            var records = await(broker.inspect(PART, 0, 128, 2097152));
+            assertEquals(2, records.size()); assertArrayEquals(new byte[] {1}, records.get(0).payload().toByteArray());
         } finally { release.countDown(); disk.proceed.countDown(); }
     }
 
