@@ -22,7 +22,8 @@ final class DurableMetadata {
     static final int CHECKPOINT = 0x4b464350;
     record Topic(int slot, TopicId id, int partitions) { }
     record Group(GroupId id, TopicId topic) { }
-    record Catalog(UUID store, List<Topic> topics, List<Group> groups) {
+    record Catalog(UUID store, List<Topic> topics, List<Group> groups, boolean progress) {
+        Catalog(UUID store, List<Topic> topics, List<Group> groups) { this(store, topics, groups, false); }
         Catalog(UUID store, List<Topic> topics) { this(store, topics, List.of()); }
         Catalog { topics = List.copyOf(topics); groups = List.copyOf(groups); }
     }
@@ -30,7 +31,7 @@ final class DurableMetadata {
 
     static ByteBuffer catalog(Catalog value) throws IOException {
         List<byte[]> names = new ArrayList<>();
-        int length = value.groups.isEmpty() ? 44 : 48;
+        int length = value.groups.isEmpty() && !value.progress ? 44 : 48;
         for (Topic t : value.topics) {
             byte[] name = LogFormat.topicBytes(new TopicPartition(t.id, 0));
             names.add(name); length += 12 + name.length;
@@ -38,8 +39,9 @@ final class DurableMetadata {
         for (Group g : value.groups) length = Math.addExact(length, 8 + g.id.byteLength());
         ByteBuffer b = prefix(CATALOG, length, value.store);
         if (!value.groups.isEmpty()) b.putShort(4, (short) 2);
+        if (value.progress) b.putShort(4, (short) 3);
         b.putLong(value.topics.size() + value.groups.size()).putInt(value.topics.size());
-        if (!value.groups.isEmpty()) b.putInt(value.groups.size());
+        if (!value.groups.isEmpty() || value.progress) b.putInt(value.groups.size());
         for (int i = 0; i < value.topics.size(); i++) {
             Topic t = value.topics.get(i); byte[] name = names.get(i);
             b.putInt(t.slot).putInt(t.partitions).putInt(name.length).put(name);
@@ -61,7 +63,7 @@ final class DurableMetadata {
         UUID store = new UUID(b.getLong(), b.getLong());
         long generation = b.getLong(); int count = b.getInt();
         int groupCount = 0;
-        if (b.getShort(4) == 2) {
+        if (b.getShort(4) >= 2) {
             require(b, 4); groupCount = b.getInt();
             if (groupCount < 1 || groupCount > groups.maxGroups()) throw LogFormat.corrupt("catalog group count");
         }
@@ -90,7 +92,7 @@ final class DurableMetadata {
             }
         }
         if (b.remaining() != 4) throw LogFormat.corrupt("catalog trailing bytes");
-        return new Catalog(store, topics, definitions);
+        return new Catalog(store, topics, definitions, b.getShort(4) == 3);
     }
 
     static ByteBuffer checkpoint(UUID store, Topic topic, int partition, Checkpoint value) throws IOException {
@@ -129,7 +131,7 @@ final class DurableMetadata {
     }
 
     private static boolean supported(int magic, short version) {
-        return version == 1 || magic == CATALOG && version == 2;
+        return version == 1 || magic == CATALOG && (version == 2 || version == 3);
     }
 
     private static ByteBuffer prefix(int magic, int length, UUID store) {

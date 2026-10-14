@@ -7,6 +7,14 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.CompletionException;
 import kaflow.broker.AppendCommand;
+import kaflow.consumer.FetchCommand;
+import kaflow.consumer.CommitCommand;
+import kaflow.consumer.FetchResult;
+import kaflow.v1.FetchRequest;
+import kaflow.v1.FetchResponse;
+import kaflow.v1.CommitRequest;
+import kaflow.v1.CommitResponse;
+import com.google.protobuf.ByteString;
 import kaflow.groups.GroupId;
 import kaflow.groups.JoinCommand;
 import kaflow.groups.MembershipView;
@@ -80,6 +88,43 @@ public final class DurableAppendService extends BrokerGrpc.BrokerImplBase {
         catch (IllegalArgumentException e) { invalidMembership(output); }
     }
 
+    @Override public void fetch(FetchRequest request, StreamObserver<FetchResponse> output) {
+        try {
+            if (!request.hasPartition()) throw new IllegalArgumentException();
+            var command = new FetchCommand(identity(request.getSession()), request.getGeneration(),
+                    partition(request.getPartition()), request.getStartOffset(), request.getMaxRecords(), request.getMaxBytes());
+            ServerCallStreamObserver<?> call = output instanceof ServerCallStreamObserver<?> server ? server : null;
+            var future = broker.fetch(command, (value, error) -> {
+                if (call != null && call.isCancelled()) return;
+                if (error != null) { output.onError(status(error).asRuntimeException()); return; }
+                output.onNext(wire(value)); output.onCompleted();
+            });
+            if (call != null) { call.setOnCancelHandler(() -> future.cancel(false)); if (call.isCancelled()) future.cancel(false); }
+        } catch (IllegalArgumentException e) { invalidMembership(output); }
+    }
+    @Override public void commit(CommitRequest request, StreamObserver<CommitResponse> output) {
+        try {
+            if (!request.hasPartition()) throw new IllegalArgumentException();
+            membershipResponse(broker.commit(new CommitCommand(identity(request.getSession()), request.getGeneration(),
+                    partition(request.getPartition()), request.getNextOffset())), output,
+                    value -> CommitResponse.newBuilder().setDurableNextOffset(value).build());
+        } catch (IllegalArgumentException e) { invalidMembership(output); }
+    }
+    private static kaflow.broker.TopicPartition partition(kaflow.v1.TopicPartition partition) {
+        return new kaflow.broker.TopicPartition(new TopicId(partition.getTopic()), partition.getPartition());
+    }
+    private static FetchResponse wire(FetchResult result) {
+        var response = FetchResponse.newBuilder().setNextOffset(result.nextOffset()).setPublishedEnd(result.publishedEnd());
+        for (var value : result.records()) {
+            var record = kaflow.v1.Record.newBuilder().setPartition(kaflow.v1.TopicPartition.newBuilder()
+                    .setTopic(value.partition().topic().value()).setPartition(value.partition().partition()))
+                    .setOffset(value.offset()).setTimestampMillis(value.timestampMillis()).setPayload(ByteString.copyFrom(value.payload().asReadOnlyBuffer()));
+            value.key().ifPresent(key -> record.setKey(ByteString.copyFrom(key.asReadOnlyBuffer())));
+            response.addRecords(record);
+        }
+        return response.build();
+    }
+
     private static SessionIdentity identity(kaflow.v1.SessionIdentity identity) {
         return new SessionIdentity(new GroupId(identity.getGroup()), identity.getIncarnation(), identity.getSessionToken());
     }
@@ -90,6 +135,7 @@ public final class DurableAppendService extends BrokerGrpc.BrokerImplBase {
                 .setGeneration(view.generation()).setLeaseDurationMillis(view.leaseMillis());
         for (var p : view.assignments()) response.addAssignments(kaflow.v1.TopicPartition.newBuilder()
                 .setTopic(p.topic().value()).setPartition(p.partition()));
+        response.addAllCommittedNextOffsets(view.committedOffsets());
         return response.build();
     }
     private static void invalidMembership(StreamObserver<?> output) {
@@ -110,7 +156,9 @@ public final class DurableAppendService extends BrokerGrpc.BrokerImplBase {
         if (error instanceof CompletionException && error.getCause() != null) error = error.getCause();
         if (error instanceof DurableException e) {
             return switch (e.code()) {
-                case INVALID_ARGUMENT -> Status.INVALID_ARGUMENT.withDescription("Invalid append request");
+                case INVALID_ARGUMENT -> Status.INVALID_ARGUMENT.withDescription("Invalid broker request");
+                case OUT_OF_RANGE -> Status.OUT_OF_RANGE.withDescription("Offset exceeds published log");
+                case DATA_LOSS -> Status.DATA_LOSS.withDescription("Stored data failed validation");
                 case NOT_FOUND -> Status.NOT_FOUND.withDescription("Unknown topic");
                 case ALREADY_EXISTS -> Status.ALREADY_EXISTS.withDescription("Topic exists");
                 case RESOURCE_EXHAUSTED -> Status.RESOURCE_EXHAUSTED.withDescription("Broker capacity exhausted");

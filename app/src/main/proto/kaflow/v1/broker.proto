@@ -11,6 +11,8 @@ service Broker {
   rpc Join(JoinRequest) returns (MembershipResponse);
   rpc Heartbeat(HeartbeatRequest) returns (MembershipResponse);
   rpc Leave(LeaveRequest) returns (LeaveResponse);
+  rpc Fetch(FetchRequest) returns (FetchResponse);
+  rpc Commit(CommitRequest) returns (CommitResponse);
 }
 
 message AppendRequest {
@@ -59,6 +61,36 @@ message MembershipResponse {
   int64 generation = 2;
   int64 lease_duration_millis = 3; // Relative duration from application, not response receipt.
   repeated TopicPartition assignments = 4;
+  // Same length/order as assignments; each value is the durable next offset.
+  repeated int64 committed_next_offsets = 5;
 }
 
 message LeaveResponse {}
+
+message FetchRequest {
+  SessionIdentity session = 1;
+  int64 generation = 2;
+  TopicPartition partition = 3;
+  int64 start_offset = 4;
+  int32 max_records = 5;
+  int64 max_bytes = 6; // Key plus payload; zero is valid.
+}
+message Record {
+  TopicPartition partition = 1;
+  int64 offset = 2;
+  int64 timestamp_millis = 3;
+  optional bytes key = 4;
+  bytes payload = 5;
+}
+message FetchResponse {
+  repeated Record records = 1;
+  int64 next_offset = 2;
+  int64 published_end = 3;
+}
+message CommitRequest {
+  SessionIdentity session = 1;
+  int64 generation = 2;
+  TopicPartition partition = 3;
+  int64 next_offset = 4;
+}
+message CommitResponse { int64 durable_next_offset = 1; }

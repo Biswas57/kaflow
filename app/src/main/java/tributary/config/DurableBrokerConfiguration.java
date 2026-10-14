@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import kaflow.storage.DurableBroker;
 import kaflow.groups.GroupOptions;
+import kaflow.consumer.ConsumerOptions;
 import kaflow.storage.DurableOptions;
 import net.devh.boot.grpc.server.serverfactory.GrpcServerConfigurer;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,11 +28,14 @@ public class DurableBrokerConfiguration {
     @Bean
     public GroupOptions groupOptions() { return GroupOptions.defaults(); }
 
+    @Bean
+    public ConsumerOptions consumerOptions() { return ConsumerOptions.defaults(); }
+
     @Bean(destroyMethod = "close")
     public DurableBroker durableBroker(@Value("${kaflow.durable.directory}") String directory,
-                                       DurableOptions options, GroupOptions groups) throws IOException {
+                                       DurableOptions options, GroupOptions groups, ConsumerOptions consumers) throws IOException {
         if (directory.isBlank()) throw new IllegalArgumentException("durable directory is required");
-        return DurableBroker.open(Path.of(directory), options, groups, Clock.systemUTC());
+        return DurableBroker.open(Path.of(directory), options, groups, consumers, Clock.systemUTC());
     }
 
     @Bean

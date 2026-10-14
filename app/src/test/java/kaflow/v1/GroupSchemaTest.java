@@ -25,7 +25,7 @@ class GroupSchemaTest {
         var session=SessionIdentity.newBuilder().setGroup("g".repeat(255)).setIncarnation("8f1a4d08-0ee2-4fc8-984a-f1ef989e7f16")
                 .setSessionToken("e313b814-105a-4661-9c5a-d001af56e008");
         var response=MembershipResponse.newBuilder().setSession(session).setGeneration(Long.MAX_VALUE).setLeaseDurationMillis(300000);
-        for(int p=0;p<count;p++)response.addAssignments(TopicPartition.newBuilder().setTopic("t".repeat(255)).setPartition(p));
+        for(int p=0;p<count;p++) { response.addAssignments(TopicPartition.newBuilder().setTopic("t".repeat(255)).setPartition(p)); response.addCommittedNextOffsets(Long.MAX_VALUE); }
         assertTrue(response.build().getSerializedSize() <= 512L+count*(255L+16));
     }
 }

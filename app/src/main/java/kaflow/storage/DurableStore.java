@@ -26,7 +26,8 @@ import static kaflow.storage.StorageException.Code.*;
 /** Writer-thread-only persistent namespace. The coordinator is the only production caller. */
 final class DurableStore implements AutoCloseable {
     record TopicView(TopicId id, int count, int roundRobin) { }
-    record Recovery(List<TopicView> topics, Map<TopicPartition, Long> ends, List<DurableMetadata.Group> groups) { }
+    record Recovery(List<TopicView> topics, Map<TopicPartition, Long> ends, List<DurableMetadata.Group> groups, Map<TopicPartition, ReadSnapshot> snapshots,
+                    Map<GroupId, List<Long>> progress) { }
     private final Thread owner = Thread.currentThread();
     private final DirectoryLease lease;
     private final DurableOptions options;
@@ -36,6 +37,7 @@ final class DurableStore implements AutoCloseable {
     private final Map<TopicPartition, PartitionLog> logs = new LinkedHashMap<>();
     private final Map<TopicPartition, DurableMetadata.Checkpoint> checkpoints = new HashMap<>();
     private DurableMetadata.Catalog catalog;
+    private final Map<GroupId, ConsumerProgress.Value> progress = new LinkedHashMap<>();
     private boolean failed, closed;
 
     static DurableStore open(Path requested, DurableOptions options, Clock clock, Persistence disk) throws IOException {
@@ -63,7 +65,7 @@ final class DurableStore implements AutoCloseable {
 
     private void initialize() throws IOException {
         Path root = lease.directory;
-        List<Path> rootEntries = DurableRecovery.entries(root, options.maxTopics() + 3);
+        List<Path> rootEntries = DurableRecovery.entries(root, options.maxTopics() + 4);
         Path catalogPath = root.resolve("catalog");
         boolean marked = lease.hasDurableMarker();
         if (!Files.exists(catalogPath, LinkOption.NOFOLLOW_LINKS)) {
@@ -82,6 +84,7 @@ final class DurableStore implements AutoCloseable {
         for (Path path : rootEntries) {
             String name = path.getFileName().toString();
             if (name.equals(".kaflow.lock") || name.equals("catalog")) continue;
+            if (name.equals("progress") && Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) continue;
             if (name.equals("catalog.tmp")) {
                 regular(path); DurableMetadata.checkVersion(path, DurableMetadata.CATALOG, disk, options.storage()); scratch.add(path); continue;
             }
@@ -117,8 +120,10 @@ final class DurableStore implements AutoCloseable {
                     plans.put(id, DurableRecovery.validate(part, id, checkpoint, disk, options.storage()));
                 }
             }
+            List<Path> progressScratch = validateProgress();
             // All authoritative metadata and published log prefixes validated before any repair.
             disk.syncDirectory(root); // Unsupported directory force cannot silently become ready.
+            for (Path path : progressScratch) { disk.delete(path); disk.syncDirectory(path.getParent()); }
             for (var entry : plans.entrySet()) DurableRecovery.repair(entry.getValue(), disk);
             for (Path path : scratch) { disk.delete(path); disk.syncDirectory(path.getParent()); }
             for (Path path : orphanEntries) disk.delete(path);
@@ -192,7 +197,9 @@ final class DurableStore implements AutoCloseable {
             }
             topics.add(new TopicView(t.id(), t.partitions(), rr));
         }
-        return new Recovery(List.copyOf(topics), Map.copyOf(ends), catalog.groups());
+        Map<GroupId, List<Long>> positions = new HashMap<>();
+        for (var group : catalog.groups()) positions.put(group.id(), progress.get(group.id()).offsets());
+        return new Recovery(List.copyOf(topics), Map.copyOf(ends), catalog.groups(), snapshots(), Map.copyOf(positions));
     }
 
     void createTopic(TopicId id, int count) throws IOException {
@@ -205,7 +212,7 @@ final class DurableStore implements AutoCloseable {
         if (32L + LogFormat.topicBytes(new TopicPartition(id, 0)).length + LogFormat.FRAME_OVERHEAD > options.storage().segmentBytes()) throw new StorageException(INVALID_ARGUMENT, "identity exceeds segment capacity");
         var topic = new DurableMetadata.Topic(catalog.topics().size(), id, count);
         List<DurableMetadata.Topic> nextTopics = new ArrayList<>(catalog.topics()); nextTopics.add(topic);
-        var next = new DurableMetadata.Catalog(catalog.store(), nextTopics, catalog.groups());
+        var next = new DurableMetadata.Catalog(catalog.store(), nextTopics, catalog.groups(), catalog.progress());
         ByteBuffer metadata = catalogBytes(next);
         try {
             Files.createDirectory(topicDirectory(topic.slot()));
@@ -234,11 +241,15 @@ final class DurableStore implements AutoCloseable {
         }
         if (catalog.groups().size() >= groupOptions.maxGroups()) throw new StorageException(LIMIT, "group count");
         var groups = new ArrayList<>(catalog.groups()); groups.add(new DurableMetadata.Group(id, topic));
-        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), groups);
+        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), groups, catalog.progress());
         ByteBuffer metadata = catalogBytes(next);
         try {
+            var binding = catalog.topics().stream().filter(t -> t.id().equals(topic)).findFirst().orElseThrow();
+            var zero = ConsumerProgress.Value.zero(binding.partitions());
+            if (catalog.progress()) disk.atomic(progressFile(catalog.groups().size()),
+                    ConsumerProgress.encode(catalog.store(), catalog.groups().size(), binding.slot(), zero), "progress-initial", options.storage().zeroProgressLimit());
             disk.atomic(lease.directory.resolve("catalog"), metadata, "group-catalog", options.storage().zeroProgressLimit());
-            catalog = next;
+            catalog = next; progress.put(id, zero);
         } catch (IOException | RuntimeException e) { failed = true; throw e; }
     }
 
@@ -272,6 +283,89 @@ final class DurableStore implements AutoCloseable {
         ensureOpen(); PartitionLog log = logs.get(id);
         if (log == null) throw new StorageException(INVALID_ARGUMENT, "unknown partition");
         return log.read(id, start, count, bytes, log.captureBoundary()).records();
+    }
+
+    Map<TopicPartition, ReadSnapshot> snapshots() {
+        Map<TopicPartition, ReadSnapshot> result = new HashMap<>();
+        try { for (var entry : logs.entrySet()) result.put(entry.getKey(), entry.getValue().snapshot()); }
+        catch (StorageException e) { throw new IllegalStateException(e); }
+        return Map.copyOf(result);
+    }
+    ReadSnapshot snapshot(TopicPartition partition) throws IOException { ensureOpen(); return logs.get(partition).snapshot(); }
+
+    private Path progressDirectory() { return lease.directory.resolve("progress"); }
+    private Path progressFile(int slot) { return progressDirectory().resolve(String.format(Locale.ROOT, "g-%08d.commit", slot)); }
+    private DurableMetadata.Topic groupTopic(DurableMetadata.Group group) {
+        return catalog.topics().stream().filter(t -> t.id().equals(group.topic())).findFirst().orElseThrow();
+    }
+
+    /** Validate all progress authority before any recovery repairs or scratch removal. */
+    private List<Path> validateProgress() throws IOException {
+        List<Path> scratch = new ArrayList<>();
+        Path directory = progressDirectory();
+        if (catalog.progress() && !Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS)) throw LogFormat.corrupt("missing progress directory");
+        for (int i = 0; i < catalog.groups().size(); i++) {
+            var group = catalog.groups().get(i); var topic = groupTopic(group);
+            var value = catalog.progress() ? ConsumerProgress.read(progressFile(i), catalog.store(), i, topic.slot(), topic.partitions(), disk, options.storage())
+                    : ConsumerProgress.Value.zero(topic.partitions());
+            for (int p = 0; p < topic.partitions(); p++) if (value.offsets().get(p) > checkpoints.get(new TopicPartition(topic.id(), p)).end()) throw LogFormat.corrupt("progress beyond published log");
+            progress.put(group.id(), value);
+        }
+        if (!Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) return scratch;
+        if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS)) throw LogFormat.corrupt("progress directory type");
+        for (Path path : DurableRecovery.entries(directory, 2 * (groupOptions.maxGroups() + 1))) {
+            regular(path); String name = path.getFileName().toString();
+            if (!name.matches("g-[0-9]{8}\\.commit(\\.tmp)?")) throw LogFormat.corrupt("unexpected progress entry");
+            int slot = Integer.parseInt(name.substring(2, 10));
+            if (slot > catalog.groups().size()) throw LogFormat.corrupt("progress slot");
+            if (name.endsWith(".tmp")) {
+                DurableMetadata.checkVersion(path, ConsumerProgress.MAGIC, disk, options.storage()); scratch.add(path); continue;
+            }
+            if (catalog.progress() && slot < catalog.groups().size()) continue;
+            // A completed orphan/upgrade file must be a valid zero initial vector.
+            int topicSlot;
+            try (var file = disk.io.open(path, StorageIo.Mode.READ)) {
+                if (file.size() < 60 || file.size() > 564) throw LogFormat.corrupt("orphan progress length");
+                ByteBuffer prefix = ByteBuffer.allocate(40); StorageIo.readFully(file, prefix, 0, options.storage().zeroProgressLimit()); topicSlot = prefix.getInt(32);
+            }
+            if (topicSlot < 0 || topicSlot >= catalog.topics().size()) throw LogFormat.corrupt("orphan progress topic");
+            var topic = catalog.topics().get(topicSlot);
+            if (slot < catalog.groups().size() && !catalog.groups().get(slot).topic().equals(topic.id())) throw LogFormat.corrupt("upgrade binding");
+            var value = ConsumerProgress.read(path, catalog.store(), slot, topicSlot, topic.partitions(), disk, options.storage());
+            if (value.revision() != 0 || value.offsets().stream().anyMatch(n -> n != 0)) throw LogFormat.corrupt("uncatalogued nonzero progress");
+            scratch.add(path);
+        }
+        return scratch;
+    }
+
+    private void enableProgress() throws IOException {
+        if (catalog.progress()) return;
+        if (!Files.exists(progressDirectory(), LinkOption.NOFOLLOW_LINKS)) { Files.createDirectory(progressDirectory()); disk.syncDirectory(lease.directory); }
+        for (int i = 0; i < catalog.groups().size(); i++) {
+            var group = catalog.groups().get(i); var topic = groupTopic(group);
+            disk.atomic(progressFile(i), ConsumerProgress.encode(catalog.store(), i, topic.slot(), progress.get(group.id())),
+                    "progress-initial", options.storage().zeroProgressLimit());
+        }
+        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), catalog.groups(), true);
+        disk.atomic(lease.directory.resolve("catalog"), catalogBytes(next), "progress-catalog", options.storage().zeroProgressLimit());
+        catalog = next;
+    }
+
+    long commit(GroupId group, TopicPartition partition, long target, boolean reset) throws IOException {
+        ensureOpen();
+        int slot = -1;
+        for (int i = 0; i < catalog.groups().size(); i++) if (catalog.groups().get(i).id().equals(group)) slot = i;
+        if (slot < 0 || !catalog.groups().get(slot).topic().equals(partition.topic()) || !checkpoints.containsKey(partition)
+                || target < 0 || target > checkpoints.get(partition).end()) throw new StorageException(INVALID_ARGUMENT, "progress bounds");
+        var old = progress.get(group); long previous = old.offsets().get(partition.partition());
+        if (target == previous || !reset && target < previous) return previous;
+        var next = old.update(partition.partition(), target); // Overflow rejects before I/O.
+        try {
+            enableProgress();
+            var topic = groupTopic(catalog.groups().get(slot));
+            disk.atomic(progressFile(slot), ConsumerProgress.encode(catalog.store(), slot, topic.slot(), next), "commit", options.storage().zeroProgressLimit());
+            progress.put(group, next); return target;
+        } catch (IOException | RuntimeException e) { failed = true; throw e; }
     }
 
     private Path topicDirectory(int slot) { return lease.directory.resolve(String.format(Locale.ROOT, "t-%08d", slot)); }
