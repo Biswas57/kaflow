@@ -2,6 +2,8 @@ package kaflow.storage;
 
 import kaflow.broker.AppendCommand;
 import kaflow.groups.*;
+import kaflow.consumer.*;
+import java.util.function.BiConsumer;
 import kaflow.broker.ImmutableBytes;
 import kaflow.broker.StoredRecord;
 import kaflow.broker.TopicId;
@@ -37,10 +39,23 @@ public final class DurableBroker implements AutoCloseable {
     public record Diagnostics(State state, boolean ready, int admittedCalls, long admittedBytes,
                               int queuedCalls, long activeOperation, boolean watchdogExpired,
                               Map<TopicPartition, Long> published) { }
-    private enum Kind { CREATE, APPEND, INSPECT, GROUP, CLOSE }
+    private enum Kind { CREATE, APPEND, INSPECT, GROUP, COMMIT, RESET, CLOSE }
     private enum ControlKind { JOIN, HEARTBEAT, LEAVE, VALIDATE }
     public record MembershipDiagnostics(int groups, int members, int timerEntries, int admittedControls,
                                         long admittedBytes, int pendingJoins, int queuedControls) { }
+    private final ConsumerOptions consumerOptions;
+    private final ArrayBlockingQueue<ConsumerCall<?>> consumers;
+    private final ArrayBlockingQueue<ReadDone> readCompletions;
+    private final ThreadPoolExecutor readers, consumerResponses;
+    private final Map<Long, ConsumerCall<?>> reading = new HashMap<>();
+    private final Map<TopicPartition, ReadSnapshot> snapshots = new HashMap<>();
+    private final Map<GroupId, List<Long>> progress = new HashMap<>();
+    private final Persistence disk;
+    private int admittedReads, admittedProgress;
+    private long readCharge, progressCharge;
+    private volatile int activeReads, barriers;
+    public record ConsumerDiagnostics(int reads, long readBytes, int progressCalls, long progressBytes,
+                                      int activeReads, int barriers, int queuedReads) { }
     private final GroupOptions groupOptions;
     private final GroupMembership membership;
     private final ArrayBlockingQueue<Control<?>> controls;
@@ -64,7 +79,7 @@ public final class DurableBroker implements AutoCloseable {
     private final Map<TopicPartition, Long> published = new HashMap<>();
     private volatile Map<TopicPartition, Long> publishedView = Map.of();
     private volatile State state = State.INITIALIZING;
-    private volatile boolean closeRequested, watchdogExpired;
+    private volatile boolean closeRequested, watchdogExpired, readWatchdogExpired;
     private volatile long activeId;
     private int admittedCalls;
     private long admittedBytes, sequence;
@@ -77,7 +92,11 @@ public final class DurableBroker implements AutoCloseable {
     }
 
     public static DurableBroker open(Path directory, DurableOptions options, GroupOptions groups, Clock clock) throws IOException {
-        DurableBroker broker = start(directory, options, groups, clock, System::nanoTime, new Persistence(), event -> { });
+        return open(directory, options, groups, ConsumerOptions.defaults(), clock);
+    }
+
+    public static DurableBroker open(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers, Clock clock) throws IOException {
+        DurableBroker broker = start(directory, options, groups, consumers, clock, System::nanoTime, new Persistence(), event -> { });
         try { broker.initialized.get(30, TimeUnit.SECONDS); return broker; }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt(); broker.requestClose(); throw new IOException("durable initialization interrupted; cleanup pending", e);
@@ -93,18 +112,30 @@ public final class DurableBroker implements AutoCloseable {
 
     static DurableBroker start(Path directory, DurableOptions options, GroupOptions groups, Clock clock, LongSupplier nanos,
                                Persistence disk, Consumer<String> observer) {
-        return new DurableBroker(directory, options, groups, clock, nanos, disk, observer);
+        return start(directory, options, groups, ConsumerOptions.defaults(), clock, nanos, disk, observer);
     }
 
-    private DurableBroker(Path directory, DurableOptions options, GroupOptions groups, Clock clock, LongSupplier nanos,
+    static DurableBroker start(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers,
+                               Clock clock, LongSupplier nanos, Persistence disk, Consumer<String> observer) {
+        return new DurableBroker(directory, options, groups, consumers, clock, nanos, disk, observer);
+    }
+
+    private DurableBroker(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumerOptions, Clock clock, LongSupplier nanos,
                           Persistence disk, Consumer<String> observer) {
+        this.consumerOptions = Objects.requireNonNull(consumerOptions); this.disk = disk;
+        int consumerCalls = consumerOptions.maxReads() + consumerOptions.maxProgressCalls();
+        consumers = new ArrayBlockingQueue<>(consumerCalls); readCompletions = new ArrayBlockingQueue<>(consumerOptions.maxReads());
+        readers = new ThreadPoolExecutor(consumerOptions.readWorkers(), consumerOptions.readWorkers(), 0, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(consumerOptions.maxReads()), r -> thread("kaflow-reader", r));
+        consumerResponses = new ThreadPoolExecutor(2, 2, 0, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(consumerCalls), r -> thread("kaflow-consumer-response", r));
         this.options = Objects.requireNonNull(options); this.nanos = Objects.requireNonNull(nanos);
         this.observer = Objects.requireNonNull(observer);
         groupOptions = Objects.requireNonNull(groups); membership = new GroupMembership(groups);
         controls = new ArrayBlockingQueue<>(groups.maxControls());
         controlResponses = new ThreadPoolExecutor(2, 2, 0, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(groups.maxControls()), r -> thread("kaflow-control-response", r));
-        requests = new ArrayBlockingQueue<>(options.maxCalls() + groups.maxPendingJoins());
+        requests = new ArrayBlockingQueue<>(options.maxCalls() + groups.maxPendingJoins() + consumerOptions.maxProgressCalls());
         responses = new ThreadPoolExecutor(2, 2, 0, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(options.maxCalls()), r -> thread("kaflow-response", r));
         started = nanos.getAsLong();
@@ -164,7 +195,7 @@ public final class DurableBroker implements AutoCloseable {
     public Diagnostics diagnostics() {
         synchronized (gate) {
             return new Diagnostics(state, state == State.READY && !closeRequested, admittedCalls, admittedBytes,
-                    requests.size(), activeId, watchdogExpired, publishedView);
+                    requests.size(), activeId, watchdogExpired || readWatchdogExpired, publishedView);
         }
     }
 
@@ -180,7 +211,7 @@ public final class DurableBroker implements AutoCloseable {
     void awaitIdle(Duration timeout) throws InterruptedException, TimeoutException {
         long start = System.nanoTime(), budget = timeout.toNanos();
         synchronized (gate) {
-            while (admittedCalls != 0 || admittedControls != 0) {
+            while (admittedCalls != 0 || admittedControls != 0 || admittedReads != 0 || admittedProgress != 0) {
                 long remaining = budget - (System.nanoTime() - start);
                 if (remaining <= 0) throw new TimeoutException("broker work still admitted");
                 TimeUnit.NANOSECONDS.timedWait(gate, remaining);
@@ -195,6 +226,14 @@ public final class DurableBroker implements AutoCloseable {
             if (state == State.CLOSED) break;
             if (closeRequested && state != State.CLOSING) { transition(State.CLOSING); membership.invalidate(); }
             membership.expireBatch(nanos.getAsLong());
+            for (int i = 0; i < 8; i++) { ReadDone read = readCompletions.poll(); if (read == null) break; finishRead(read); }
+            for (int i = 0; i < 8; i++) { var call = consumers.poll(); if (call == null) break; applyConsumer(call); }
+            for (var call : reading.values()) if (!call.responseScheduled && nanos.getAsLong() - call.started >= options.watchdog().toNanos()) {
+                readWatchdogExpired = true;
+                if (state != State.CLOSING) transition(State.DEGRADED);
+                respondConsumer(call, null, new DurableException(UNAVAILABLE), false);
+            }
+            activeReads = reading.size(); barriers = membership.barriers();
             for (int i = 0; i < 8; i++) {
                 Control<?> control = controls.poll();
                 if (control == null) break;
@@ -210,19 +249,18 @@ public final class DurableBroker implements AutoCloseable {
             }
             if (state == State.DEGRADED || state == State.CLOSING) rejectQueued();
             if (!initializing && active == null) {
-                if (state == State.CLOSING && !closeDispatched && controls.isEmpty()) {
+                if (state == State.CLOSING && !closeDispatched && controls.isEmpty() && consumers.isEmpty() && reading.isEmpty()) {
                     closeDispatched = true;
                     dispatch(new Work<>(-1, Kind.CLOSE, null, 0, null, null, 0, 0, null));
                 } else if (state == State.READY) {
                     Work<?> work = requests.poll();
                     if (work != null) {
-                        DurableException invalid = prepare(work);
-                        if (invalid == null) {
-                            synchronized (gate) {
-                                if (closeRequested) respond(work, null, new DurableException(UNAVAILABLE), true);
-                                else dispatch(work);
-                            }
-                        } else respond(work, null, invalid, true);
+                        synchronized (gate) {
+                            DurableException invalid = closeRequested ? new DurableException(UNAVAILABLE) : prepare(work);
+                            if (invalid != null) respond(work, null, invalid, true);
+                            else if (work.noWrite) respond(work, work.start, null, true);
+                            else dispatch(work);
+                        }
                     }
                 }
             }
@@ -232,6 +270,16 @@ public final class DurableBroker implements AutoCloseable {
     }
 
     private DurableException prepare(Work<?> work) {
+        if (work.consumer != null) {
+            var call = work.consumer;
+            try {
+                validateConsumer(call);
+                long previous = progress.get(call.group).get(call.partition.partition());
+                if (call.offset == previous || !call.reset && call.offset < previous) { work.noWrite = true; work.start = previous; }
+                else { membership.pin(call.group); work.pinned = true; }
+                return null;
+            } catch (DurableException e) { return e; }
+        }
         TopicState topic = topics.get(work.topic);
         if (work.kind == Kind.GROUP) {
             if (topic == null) return new DurableException(NOT_FOUND);
@@ -281,11 +329,11 @@ public final class DurableBroker implements AutoCloseable {
             initializing = false;
             if (done.error != null) {
                 initialized.completeExceptionally(done.error);
-                transition(State.CLOSED); responses.shutdown(); controlResponses.shutdown(); terminated.completeExceptionally(done.error); return;
+                transition(State.CLOSED); responses.shutdown(); controlResponses.shutdown(); readers.shutdown(); consumerResponses.shutdown(); terminated.completeExceptionally(done.error); return;
             }
             var recovered = (DurableStore.Recovery) done.value;
             for (var t : recovered.topics()) topics.put(t.id(), new TopicState(t.count(), t.roundRobin()));
-            published.putAll(recovered.ends()); publishedView = Map.copyOf(published);
+            published.putAll(recovered.ends()); snapshots.putAll(recovered.snapshots()); progress.putAll(recovered.progress()); publishedView = Map.copyOf(published);
             for (var g : recovered.groups()) membership.define(g.id(), g.topic(), topics.get(g.topic()).count);
             groupCount = membership.groupCount();
             if (!watchdogExpired && !closeRequested) { transition(State.READY); initialized.complete(null); }
@@ -294,14 +342,21 @@ public final class DurableBroker implements AutoCloseable {
         }
         Work<?> work = active; active = null; activeId = 0;
         if (work.kind == Kind.CLOSE) {
-            transition(State.CLOSED); responses.shutdown(); controlResponses.shutdown();
+            snapshots.clear(); progress.clear(); membership.closed(); barriers = 0;
+            transition(State.CLOSED); responses.shutdown(); controlResponses.shutdown(); readers.shutdown(); consumerResponses.shutdown();
             if (done.error == null) terminated.complete(null); else terminated.completeExceptionally(done.error);
             return;
         }
         if (done.error == null) {
-            if (work.kind == Kind.GROUP) {
+            snapshots.putAll(done.snapshots);
+            if (work.consumer != null) {
+                var call = work.consumer; var next = new ArrayList<>(progress.get(call.group));
+                next.set(call.partition.partition(), (Long) done.value); progress.put(call.group, List.copyOf(next));
+                membership.resolve(call.group, nanos.getAsLong());
+            } else if (work.kind == Kind.GROUP) {
                 var join = work.control.join;
                 membership.define(join.group(), join.topic(), topics.get(join.topic()).count);
+                progress.putIfAbsent(join.group(), java.util.Collections.nCopies(topics.get(join.topic()).count, 0L));
                 groupCount = membership.groupCount();
             } else if (work.kind == Kind.CREATE) {
                 topics.put(work.topic, new TopicState(work.count, 0));
@@ -317,6 +372,7 @@ public final class DurableBroker implements AutoCloseable {
         } else if (!safeRejection(done.error)) {
             if (state != State.CLOSING) transition(State.DEGRADED);
         }
+        if (done.error != null && work.pinned && safeRejection(done.error)) membership.resolve(work.consumer.group, nanos.getAsLong());
         respond(work, done.value, done.error == null ? null : mapped(done.error), true);
     }
 
@@ -326,6 +382,7 @@ public final class DurableBroker implements AutoCloseable {
     }
     private static DurableException mapped(Throwable error) {
         if (error instanceof StorageException e) {
+            if (e.code() == StorageException.Code.CORRUPT || e.code() == StorageException.Code.WRONG_IDENTITY || e.code() == StorageException.Code.UNSUPPORTED_VERSION) return new DurableException(DATA_LOSS, e);
             if (e.code() == StorageException.Code.INVALID_ARGUMENT) return new DurableException(INVALID_ARGUMENT, e);
             if (e.code() == StorageException.Code.LIMIT || e.code() == StorageException.Code.BUDGET_TOO_SMALL) return new DurableException(RESOURCE_EXHAUSTED, e);
         }
@@ -339,13 +396,14 @@ public final class DurableBroker implements AutoCloseable {
 
     @SuppressWarnings("unchecked")
     private <T> void respond(Work<T> work, Object value, Throwable error, boolean resolved) {
+        if (work.consumer != null) { respondConsumer(work.consumer, value, error, resolved); return; }
         if (work.kind == Kind.GROUP) {
             synchronized (gate) {
                 Object result = null;
                 if (resolved && error == null) {
                     if (state != State.READY || closeRequested || work.control.responseScheduled) error = new DurableException(UNAVAILABLE);
                     else {
-                        try { result = membership.join(work.control.join, nanos.getAsLong()); }
+                        try { result = positions(membership.join(work.control.join, nanos.getAsLong())); }
                         catch (DurableException e) { error = e; }
                         memberCount = membership.memberCount();
                     }
@@ -372,23 +430,29 @@ public final class DurableBroker implements AutoCloseable {
             Work<?> work;
             try { work = writerQueue.take(); }
             catch (InterruptedException ignored) { continue; } // Interrupting a waiter is not releasing ownership.
-            Object value = null; Throwable error = null;
+            Object value = null; Throwable error = null; Map<TopicPartition, ReadSnapshot> views = Map.of();
             try {
                 switch (work.kind) {
                     case CREATE -> store.createTopic(work.topic, work.count);
                     case GROUP -> store.createGroup(work.control.join.group(), work.topic);
                     case APPEND -> value = store.append(work.partition, work.command.key(), work.command.payload(), work.unkeyed);
                     case INSPECT -> value = store.inspect(work.partition, work.start, work.count, work.readBytes);
+                    case COMMIT, RESET -> value = store.commit(work.consumer.group, work.partition, work.consumer.offset, work.kind == Kind.RESET);
                     case CLOSE -> store.close();
                 }
+                if (work.kind == Kind.CREATE) views = store.snapshots();
+                else if (work.kind == Kind.APPEND) views = Map.of(work.partition, store.snapshot(work.partition));
             } catch (Throwable failure) { error = failure; }
-            post(work.id, value, error);
+            post(work.id, value, error, views);
             if (work.kind == Kind.CLOSE) return;
         }
     }
 
     private void post(long id, Object value, Throwable error) {
-        if (!completion.compareAndSet(null, new Completion(epoch, id, value, error))) throw new IllegalStateException("completion queue invariant");
+        post(id, value, error, Map.of());
+    }
+    private void post(long id, Object value, Throwable error, Map<TopicPartition, ReadSnapshot> snapshots) {
+        if (!completion.compareAndSet(null, new Completion(epoch, id, value, error, snapshots))) throw new IllegalStateException("completion queue invariant");
         signal();
     }
 
@@ -405,7 +469,9 @@ public final class DurableBroker implements AutoCloseable {
         catch (TimeoutException e) { return false; }
         catch (ExecutionException e) { throw new IOException("durable close failed", e.getCause()); }
         boolean dataDone = responses.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS);
-        return controlResponses.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS) && dataDone;
+        boolean controlDone = controlResponses.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS);
+        boolean readDone = readers.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS);
+        return consumerResponses.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS) && dataDone && controlDone && readDone;
     }
 
     @Override public void close() throws IOException {
@@ -476,9 +542,9 @@ public final class DurableBroker implements AutoCloseable {
                             if (!requests.offer(work)) throw new IllegalStateException("pending join invariant");
                             return;
                         }
-                        result = membership.join(control.join, now);
+                        result = positions(membership.join(control.join, now));
                     }
-                    case HEARTBEAT -> result = membership.heartbeat(control.identity, now);
+                    case HEARTBEAT -> result = positions(membership.heartbeat(control.identity, now));
                     case LEAVE -> membership.leave(control.identity, now);
                     case VALIDATE -> membership.validate(control.identity, control.generation, control.partition, now);
                 }
@@ -524,6 +590,164 @@ public final class DurableBroker implements AutoCloseable {
         }
     }
 
+    private MembershipView positions(MembershipView view) {
+        var offsets = progress.get(view.identity().group());
+        return new MembershipView(view.identity(), view.generation(), view.leaseMillis(), view.assignments(),
+                view.assignments().stream().map(p -> offsets.get(p.partition())).toList());
+    }
+
+    public CompletableFuture<FetchResult> fetch(FetchCommand command) { return fetch(command, null); }
+    /** Delivery callback executes within the reservation, including serialization and transport handoff. */
+    public CompletableFuture<FetchResult> fetch(FetchCommand command, BiConsumer<FetchResult, Throwable> delivery) {
+        Objects.requireNonNull(command);
+        if (command.generation() < 1 || command.startOffset() < 0 || command.maxRecords() < 1
+                || command.maxRecords() > options.storage().maxReadRecords() || command.maxBytes() < 0
+                || command.maxBytes() > options.storage().maxReadBytes()) return rejectedConsumer(INVALID_ARGUMENT, delivery);
+        long charge = 3 * command.maxBytes() + 512L * command.maxRecords() + 1024
+                + 3L * (36L + options.storage().maxKeyBytes() + options.storage().maxPayloadBytes())
+                + 64L * options.storage().maxSegments();
+        return submitConsumer(new ConsumerCall<>(command.session(), command.generation(), command.session().group(),
+                command.partition(), command.startOffset(), command.maxRecords(), command.maxBytes(), false, true, charge, delivery));
+    }
+    public CompletableFuture<Long> commit(CommitCommand command) {
+        Objects.requireNonNull(command);
+        if (command.generation() < 1 || command.nextOffset() < 0) return rejected(INVALID_ARGUMENT);
+        return submitConsumer(new ConsumerCall<>(command.session(), command.generation(), command.session().group(),
+                command.partition(), command.nextOffset(), 0, 0, false, false, 2048, null));
+    }
+    /** Internal administrative interface; deliberately absent from the network API. */
+    public CompletableFuture<Long> reset(GroupId group, TopicPartition partition, long target) {
+        Objects.requireNonNull(group); Objects.requireNonNull(partition);
+        if (target < 0) return rejected(INVALID_ARGUMENT);
+        return submitConsumer(new ConsumerCall<>(null, 0, group, partition, target, 0, 0, true, false, 2048, null));
+    }
+    private <T> CompletableFuture<T> rejectedConsumer(DurableException.Code code, BiConsumer<T, Throwable> delivery) {
+        var error = new DurableException(code);
+        if (delivery != null) delivery.accept(null, error); // No retained result; caller/transport owns rejection.
+        return CompletableFuture.failedFuture(error);
+    }
+    private <T> CompletableFuture<T> submitConsumer(ConsumerCall<T> call) {
+        // Exact identity validation occurs without retaining or allocating payload buffers.
+        try { GroupId.validate(call.partition.topic().value(), 255, false); }
+        catch (IllegalArgumentException e) { return rejectedConsumer(INVALID_ARGUMENT, call.delivery); }
+        DurableException.Code rejection;
+        synchronized (gate) {
+            if (state != State.READY || closeRequested) rejection = UNAVAILABLE;
+            else if (sequence == Long.MAX_VALUE || (call.read ? admittedReads == consumerOptions.maxReads()
+                    || call.charge > consumerOptions.maxReadCharge() - readCharge
+                    : admittedProgress == consumerOptions.maxProgressCalls() || call.charge > consumerOptions.maxProgressCharge() - progressCharge))
+                rejection = RESOURCE_EXHAUSTED;
+            else {
+                call.id = ++sequence;
+                if (call.read) { admittedReads++; readCharge += call.charge; }
+                else { admittedProgress++; progressCharge += call.charge; }
+                if (!consumers.offer(call)) throw new IllegalStateException("consumer admission invariant");
+                signal(); return call.future;
+            }
+        }
+        return rejectedConsumer(rejection, call.delivery);
+    }
+    public ConsumerDiagnostics consumerDiagnostics() {
+        synchronized (gate) { return new ConsumerDiagnostics(admittedReads, readCharge, admittedProgress, progressCharge,
+                activeReads, barriers, readers.getQueue().size()); }
+    }
+    private void validateConsumer(ConsumerCall<?> call) {
+        if (state != State.READY || closeRequested) throw new DurableException(UNAVAILABLE);
+        if (call.future.isCancelled()) throw new DurableException(UNAVAILABLE);
+        if (call.reset) membership.inactive(call.group, call.partition, nanos.getAsLong());
+        else membership.validate(call.identity, call.generation, call.partition, nanos.getAsLong());
+        Long end = published.get(call.partition);
+        if (end == null) throw new DurableException(FENCED);
+        if (call.offset > end) throw new DurableException(OUT_OF_RANGE);
+    }
+    private void applyConsumer(ConsumerCall<?> call) {
+        try {
+            synchronized (gate) {
+                validateConsumer(call);
+                if (!call.read) {
+                    Work<?> work = new Work<>(call.id, call.reset ? Kind.RESET : Kind.COMMIT, call.partition.topic(),
+                            0, null, call.partition, call.offset, 0, null);
+                    work.consumer = call;
+                    if (!requests.offer(work)) throw new IllegalStateException("progress queue invariant");
+                    observer.accept("progress-queued"); return;
+                }
+                ReadSnapshot snapshot = snapshots.get(call.partition);
+                if (snapshot.end != published.get(call.partition)) throw new IllegalStateException("read publication invariant");
+                var handle = snapshot.acquire(); call.boundary = snapshot.end; call.started = nanos.getAsLong();
+                reading.put(call.id, call);
+                readers.execute(() -> {
+                    Object result = null; Throwable error = null;
+                    try (handle) {
+                        disk.event("fetch-read-started");
+                        if (!call.future.isCancelled()) {
+                            var batch = handle.read(call.offset, call.count, call.bytes);
+                            result = new FetchResult(batch.records(), batch.nextOffset(), call.boundary);
+                        }
+                        disk.event("fetch-read-complete");
+                    } catch (Throwable failure) { error = failure; }
+                    if (!readCompletions.offer(new ReadDone(call, result, error))) throw new IllegalStateException("read completion invariant");
+                    signal();
+                });
+            }
+        } catch (DurableException error) { respondConsumer(call, null, error, true); }
+    }
+    private void finishRead(ReadDone done) {
+        var call = done.call;
+        reading.remove(call.id);
+        Throwable error = done.error;
+        if (error != null) {
+            if (!safeRejection(error) && state != State.CLOSING) transition(State.DEGRADED);
+            error = mapped(error);
+        }
+        synchronized (gate) {
+            if (error == null) {
+                try { validateConsumer(call); observer.accept("fetch-authorized"); }
+                catch (DurableException fenced) { error = fenced; }
+            }
+            respondConsumer(call, done.value, error, true);
+        }
+    }
+    @SuppressWarnings("unchecked")
+    private <T> void respondConsumer(ConsumerCall<T> call, Object value, Throwable error, boolean resolved) {
+        synchronized (gate) {
+            if (resolved) call.resolved = true;
+            releaseConsumer(call);
+            if (call.responseScheduled) return;
+            call.responseScheduled = true;
+        }
+        consumerResponses.execute(() -> {
+            try {
+                if (!call.future.isCancelled()) {
+                    if (call.delivery != null) call.delivery.accept((T) value, error);
+                    if (error == null) call.future.complete((T) value); else call.future.completeExceptionally(error);
+                }
+            } catch (Throwable failure) { call.future.completeExceptionally(failure); }
+            finally { synchronized (gate) { call.delivered = true; releaseConsumer(call); } }
+        });
+    }
+    private void releaseConsumer(ConsumerCall<?> call) {
+        if (call.resolved && call.delivered && !call.released) {
+            call.released = true;
+            if (call.read) { admittedReads--; readCharge -= call.charge; }
+            else { admittedProgress--; progressCharge -= call.charge; }
+            gate.notifyAll(); signal();
+        }
+    }
+    private static final class ConsumerCall<T> {
+        final SessionIdentity identity; final GroupId group; final TopicPartition partition;
+        final long generation, offset, bytes, charge; final int count; final boolean reset, read;
+        final BiConsumer<T, Throwable> delivery;
+        final CompletableFuture<T> future = new CompletableFuture<>();
+        long id, boundary, started; boolean resolved, delivered, released, responseScheduled;
+        ConsumerCall(SessionIdentity identity, long generation, GroupId group, TopicPartition partition,
+                     long offset, int count, long bytes, boolean reset, boolean read, long charge, BiConsumer<T, Throwable> delivery) {
+            this.identity = identity; this.generation = generation; this.group = group; this.partition = partition;
+            this.offset = offset; this.count = count; this.bytes = bytes; this.reset = reset; this.read = read;
+            this.charge = charge; this.delivery = delivery;
+        }
+    }
+    private record ReadDone(ConsumerCall<?> call, Object value, Throwable error) { }
+
     private final class Reservation {
         final long bytes; boolean resolved, delivered, released;
         Reservation(long bytes) { this.bytes = bytes; }
@@ -539,9 +763,10 @@ public final class DurableBroker implements AutoCloseable {
     }
     private static final class Work<T> {
         final long id; final Kind kind; final TopicId topic; final int count; final AppendCommand command;
-        TopicPartition partition; final long start, readBytes; final Reservation reservation;
+        TopicPartition partition; long start; final long readBytes; final Reservation reservation;
         final CompletableFuture<T> future = new CompletableFuture<>();
-        boolean unkeyed, responseScheduled;
+        boolean unkeyed, responseScheduled, noWrite, pinned;
+        ConsumerCall<?> consumer;
         Control<?> control;
         Work(long id, Kind kind, TopicId topic, int count, AppendCommand command, TopicPartition partition,
              long start, long readBytes, Reservation reservation) {
@@ -549,5 +774,5 @@ public final class DurableBroker implements AutoCloseable {
             this.partition = partition; this.start = start; this.readBytes = readBytes; this.reservation = reservation;
         }
     }
-    private record Completion(Object epoch, long id, Object value, Throwable error) { }
+    private record Completion(Object epoch, long id, Object value, Throwable error, Map<TopicPartition, ReadSnapshot> snapshots) { }
 }

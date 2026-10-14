@@ -1,7 +1,7 @@
 # Build and verify Kaflow
 
 The [KF-002 contract](design/kf-002-broker-contracts.md) separates the injected
-prototype runtime from the in-process V1 core. Default startup keeps V1 Append
+prototype runtime from the in-process V1 core. Default startup keeps the V1 service
 unregistered. The ordinary packaged smoke checks that prototype; focused tests
 establish core behaviour.
 
@@ -19,7 +19,8 @@ The [KF-004 design](design/kf-004-durable-publication.md) defines opt-in durable
 Append and its recovery/filesystem requirements.
 
 The [KF-005 design](design/kf-005-leased-groups.md) specifies durable one-topic group
-definitions and ephemeral leased membership; Fetch and Commit remain deferred.
+definitions and ephemeral leased membership. The [KF-006 design](design/kf-006-fetch-commit.md)
+adds immediate Fetch, durable Commit, independent replay and internal inactive reset.
 
 ## Prerequisites
 
@@ -171,13 +172,15 @@ java -jar app/build/libs/app.jar --kaflow.durable.enabled=true \
 ```
 
 Successful recovery is required before V1 service registration. Initialization failure
-aborts startup; there is no volatile fallback. Append, Join, Heartbeat and Leave are exposed. Durable topics
+aborts startup; there is no volatile fallback. Append, Join, Heartbeat, Leave, Fetch and
+Commit are exposed. Durable topics
 are created through the bounded internal `DurableBroker.createTopic` composition API;
-legacy REST administration does not create durable topics. No public Fetch or inspection
+legacy REST administration does not create durable topics. No public inspection or reset
 endpoint exists. The fixture below seeds its own temporary topic internally.
 
 Durable mode uses a dedicated storage writer, coordinator, two storage-response workers,
-two membership-response workers, and four transport workers with a bounded queue. Inbound message size and application
+two membership-response workers, two consumer-response workers, a bounded read pool (two
+workers by default), and four transport workers with a bounded queue. Inbound message size and application
 admission have separate bounds; transport buffers precede admission. `/actuator/health`
 becomes OUT_OF_SERVICE when durable readiness degrades. A watchdog stops mutation
 admission and retains the writer/directory ownership; explicit close and recovery are
@@ -196,7 +199,8 @@ can select lower limits within documented hard ceilings. Groups are durable; ses
 assignments must be re-established after restart. Independent control admission lets live
 members heartbeat during disk stalls; successful Heartbeat does not clear degraded readiness.
 V1 catalogs open unchanged with no groups. Creating the first group writes catalog V2,
-which old KF-004 binaries reject. Fetch, Commit and consumer progress remain deferred.
+which old KF-004 binaries reject. First effective Commit/reset installs catalog V3 and
+required per-group progress vectors, which older KF-005 binaries reject.
 
 After the source build and test compilation, run:
 
@@ -207,8 +211,10 @@ python3 scripts/smoke_durable.py
 This standard-library Python driver extracts production classes/dependencies from the
 actual executable JAR and runs a separate Java test fixture. It creates a private data
 directory, starts the packaged Spring application, receives real Append responses in
-an external client and forces its receipt witness. It then SIGKILLs that child, restarts
-from the same data, appends at recovered next offsets, shuts down normally and verifies
+an external client and forces its receipt witness. Two independent groups Fetch/Commit
+and verify replay without progress changes. It then SIGKILLs that child, restarts from
+the same data, appends at recovered next offsets, rejoins/resumes each group at its own
+committed position, shuts down normally and verifies
 all four exact records through the bounded internal fixture. No public API is added for
 inspection. Startup is bounded at 60 seconds, client commands at 30 seconds, shutdown at
 20 seconds (five-second forced cleanup). Logs, receipt witness, small data directory and
@@ -250,3 +256,50 @@ Missing reports are not passing tests. Action revisions are pinned to the offici
 
 Authoring this workflow is not evidence of a GitHub Actions run. See the dated
 [KF-001 validation record](baseline/kf-001.md) for observed local results and limits.
+
+KF-006 consumer protocol and storage extension: [design](design/kf-006-fetch-commit.md).
+
+## KF-006 consumer flow
+
+In opt-in durable mode, Join/Heartbeat return qualified `assignments` and a parallel
+`committed_next_offsets` list of exactly the same length/order. Start at your assigned
+committed position, call unary Fetch with session/incarnation/generation, qualified partition,
+explicit start offset, positive count and key+payload byte budget, process returned bytes,
+then Commit the next offset. Processing records 0–9 means Commit(10). Fetch alone never
+commits. Continue Heartbeat: Fetch/Commit do not renew leases. Rejoin after restart and use
+the new incarnation plus recovered assignment positions. Groups progress independently;
+explicit earlier Fetch offsets replay retained records without rewinding progress.
+
+Fetch is immediate and bounded: at end it returns an empty batch, unchanged continuation
+and captured published end. Beyond end is OUT_OF_RANGE; a first record larger than the
+byte budget is RESOURCE_EXHAUSTED. Key presence, original binary bytes and timestamps survive.
+Equal/lower authorized commits report the effective position; the broker does not prove
+application processing. A timeout/lost response has unknown outcome. Retry only with current
+ownership. Rebalancing rejects work fenced during reads and defers assignment changes while
+an applying progress write is unresolved. Join can temporarily return UNAVAILABLE for that
+pinned group; surviving members can Heartbeat. Separate groups remain responsive.
+
+`DurableBroker.reset(group, partition, target)` is internal administration only: group must
+have no members or applying/uncertain progress. It deliberately permits backward movement
+within the durable log. There is no reset network endpoint. Catalog V3 upgrades V1/V2 on
+first effective progress mutation and requires per-group checksummed progress files.
+Old binaries reject V3; do not downgrade a progressed store. See the [full contract](design/kf-006-fetch-commit.md)
+for crash/upgrade states, filesystem assumptions, resource accounting and future segment pins.
+
+`ConsumerOptions` (also an injectable durable Spring bean) bounds read workers/calls/bytes
+and progress calls/bytes independently of Append and membership admission. Defaults: two
+read workers, 16 reads, 64 MiB read charge, 64 progress calls, 1 MiB progress charge. Read
+charge covers configured frame scratch, requested records/bytes, descriptors and response
+conversion; it excludes caller-held values and transport buffers after handoff. Shutdown
+waits for actual readers and the writer before releasing directory ownership; a bounded
+shutdown timeout reports incomplete cleanup instead of interrupting or replacing I/O.
+
+The actual durable smoke remains `python3 scripts/smoke_durable.py`. It now drives two
+consumer groups through public Fetch/Commit, checks replay leaves progress unchanged,
+SIGKILLs the first packaged broker after acknowledged progress, rejoins after restart,
+checks distinct resumed positions (2 and 1), and commits to 4 and 3. Original exact Append
+witness/recovery and normal shutdown checks remain. Process crashes are not power-loss proof.
+
+KF-006 [local validation](baseline/kf-006.md): clean source build, 326 passing tests in
+34 classes, original prototype smoke and extended durable consumer restart smoke. The
+prepublication record distinguishes these local results from subsequent exact-commit CI.

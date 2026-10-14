@@ -93,7 +93,7 @@ class GroupPersistenceTest {
             case "truncated" -> Files.write(file,java.util.Arrays.copyOf(bytes,bytes.length-1));
             default -> {
                 switch(damage) {
-                    case "version" -> b.putShort(4,(short)3);
+                    case "version" -> b.putShort(4,(short)4);
                     case "count" -> b.putInt(40,0);
                     case "generation" -> b.putLong(28,99);
                     case "length" -> b.putInt(62,Integer.MAX_VALUE);
@@ -130,7 +130,7 @@ class GroupPersistenceTest {
 
     @Test void unknownTemporaryVersionPreventsRepairAndAuthoritativeV2CannotBeMissing() throws Exception {
         try(var store=DurableStore.open(directory,OPTIONS,CLOCK,new Persistence())) {store.createTopic(TOPIC,1);store.createGroup(GROUP,TOPIC);}
-        byte[] catalog=Files.readAllBytes(directory.resolve("catalog"));byte[] temp=catalog.clone();ByteBuffer.wrap(temp).putShort(4,(short)3);
+        byte[] catalog=Files.readAllBytes(directory.resolve("catalog"));byte[] temp=catalog.clone();ByteBuffer.wrap(temp).putShort(4,(short)4);
         Files.write(directory.resolve("catalog.tmp"),temp);
         assertEquals(StorageException.Code.UNSUPPORTED_VERSION,assertThrows(StorageException.class,()->DurableStore.open(directory,OPTIONS,CLOCK,new Persistence())).code());
         assertArrayEquals(temp,Files.readAllBytes(directory.resolve("catalog.tmp")));assertArrayEquals(catalog,Files.readAllBytes(directory.resolve("catalog")));

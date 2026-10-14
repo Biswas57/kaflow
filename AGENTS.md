@@ -29,6 +29,9 @@ exactly-once processing, or unverified performance/durability.
 - KF-005 group metadata, membership, leases and fencing contracts are in
   `docs/design/kf-005-leased-groups.md`.
 
+- KF-006 consumer reads, durable progress and commit/rebalance barriers are specified in
+  `docs/design/kf-006-fetch-commit.md`.
+
 ## Ticket workflow
 
 1. Select the first eligible ticket whose dependencies are complete. Only one ticket

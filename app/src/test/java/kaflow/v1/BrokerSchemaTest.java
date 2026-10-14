@@ -35,11 +35,11 @@ class BrokerSchemaTest {
     }
 
     @Test
-    void schemaPreservesSingleRecordAppendAndAddsOnlyUnaryMembership() throws Exception {
+    void schemaPreservesSingleRecordAppendAndAddsUnaryConsumerMethods() throws Exception {
         assertEquals("kaflow.v1.Broker", BrokerGrpc.SERVICE_NAME);
-        assertEquals(List.of("Append", "Join", "Heartbeat", "Leave"), BrokerProtocol.getDescriptor()
+        assertEquals(List.of("Append", "Join", "Heartbeat", "Leave", "Fetch", "Commit"), BrokerProtocol.getDescriptor()
                 .findServiceByName("Broker").getMethods().stream().map(Descriptors.MethodDescriptor::getName).toList());
-        assertEquals(4, BrokerGrpc.getServiceDescriptor().getMethods().size());
+        assertEquals(6, BrokerGrpc.getServiceDescriptor().getMethods().size());
         assertTrue(BrokerGrpc.getServiceDescriptor().getMethods().stream().allMatch(m -> m.getType() == MethodDescriptor.MethodType.UNARY));
         assertEquals(MethodDescriptor.MethodType.UNARY, BrokerGrpc.getAppendMethod().getType());
         assertEquals(List.of("topic", "partition", "key", "payload"), AppendRequest.getDescriptor()

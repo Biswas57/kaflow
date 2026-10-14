@@ -36,6 +36,7 @@ final class GroupMembership {
         Group group = groups.get(join.group());
         if (group != null) {
             expire(group, now);
+            if (group.pinned) throw new DurableException(UNAVAILABLE);
             if (!group.topic.equals(join.topic())) throw new DurableException(BINDING_CONFLICT);
             if (group.exhausted || group.generation == Long.MAX_VALUE || group.live.size() >= options.maxMembersPerGroup()) throw new DurableException(RESOURCE_EXHAUSTED);
         } else if (groups.size() >= options.maxGroups()) throw new DurableException(RESOURCE_EXHAUSTED);
@@ -60,6 +61,7 @@ final class GroupMembership {
 
     void leave(SessionIdentity identity, long now) {
         Group group = required(identity.group()); expire(group, now); live(group, identity);
+        if (group.pinned) { group.live.get(identity.session()).invalid = true; members--; return; }
         long next = increment(group.generation); // Reject overflow without changing membership.
         group.live.remove(identity.session()); members--; group.generation = next;
     }
@@ -68,6 +70,7 @@ final class GroupMembership {
         Group group = required(identity.group()); expire(group, now); Member member = live(group, identity);
         if (generation != group.generation || !partition.topic().equals(group.topic)
                 || partition.partition() >= group.partitions || !assigned(group, member).contains(partition)) throw new DurableException(FENCED);
+        if (group.pinned) throw new DurableException(UNAVAILABLE);
     }
 
     void expireBatch(long now) {
@@ -79,7 +82,11 @@ final class GroupMembership {
 
     private void expire(Group group, long now) {
         List<String> expired = new ArrayList<>();
-        for (Member member : group.live.values()) if (now - member.renewed >= options.lease().toNanos()) expired.add(member.token);
+        for (Member member : group.live.values()) if (!member.invalid && now - member.renewed >= options.lease().toNanos()) expired.add(member.token);
+        if (group.pinned) {
+            for (String token : expired) { group.live.get(token).invalid = true; members--; }
+            return;
+        }
         if (expired.isEmpty()) return;
         if (group.generation == Long.MAX_VALUE) {
             group.exhausted = true; members -= group.live.size(); group.live.clear(); return;
@@ -87,6 +94,30 @@ final class GroupMembership {
         for (String token : expired) group.live.remove(token);
         members -= expired.size(); group.generation++;
     }
+
+    void inactive(GroupId id, TopicPartition partition, long now) {
+        Group group = required(id); expire(group, now);
+        if (!group.topic.equals(partition.topic()) || partition.partition() >= group.partitions) throw new DurableException(FENCED);
+        if (group.pinned) throw new DurableException(UNAVAILABLE);
+        if (!group.live.isEmpty()) throw new DurableException(FENCED);
+    }
+    void pin(GroupId id) {
+        Group group = required(id);
+        if (group.pinned) throw new IllegalStateException("duplicate group barrier");
+        group.pinned = true;
+    }
+    void resolve(GroupId id, long now) {
+        Group group = required(id); expire(group, now); // Mark due expiry while still pinned.
+        group.pinned = false;
+        boolean changed = group.live.values().removeIf(member -> member.invalid);
+        if (changed) {
+            if (group.generation == Long.MAX_VALUE) { group.exhausted = true; members -= group.live.size(); group.live.clear(); }
+            else group.generation++;
+        }
+    }
+    int barriers() { return (int) groups.values().stream().filter(g -> g.pinned).count(); }
+
+    void closed() { invalidate(); for (Group group : sweep) group.pinned = false; }
 
     void invalidate() {
         for (Group group : sweep) group.live.clear();
@@ -105,7 +136,7 @@ final class GroupMembership {
     }
     private Member live(Group group, SessionIdentity identity) {
         Member member = group.live.get(identity.session());
-        if (!incarnation.equals(identity.incarnation()) || member == null || group.exhausted) throw new DurableException(FENCED);
+        if (!incarnation.equals(identity.incarnation()) || member == null || member.invalid || group.exhausted) throw new DurableException(FENCED);
         return member;
     }
     private MembershipView view(Group group, Member member) {
@@ -122,11 +153,11 @@ final class GroupMembership {
     private static final class Group {
         final GroupId id; final TopicId topic; final int partitions;
         final Map<String, Member> live = new LinkedHashMap<>();
-        long generation; boolean exhausted;
+        long generation; boolean exhausted, pinned;
         Group(GroupId id, TopicId topic, int partitions) { this.id = id; this.topic = topic; this.partitions = partitions; }
     }
     private static final class Member {
-        final String token; long renewed;
+        final String token; long renewed; boolean invalid;
         Member(String token, long renewed) { this.token = token; this.renewed = renewed; }
     }
 }

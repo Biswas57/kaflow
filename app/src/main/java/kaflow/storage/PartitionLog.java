@@ -286,6 +286,12 @@ public final class PartitionLog implements AutoCloseable {
         try { activeLog.force(); } catch (IOException e) { fail(e); throw e; }
     }
 
+    ReadSnapshot snapshot() throws StorageException {
+        ensureOpen();
+        return new ReadSnapshot(identity, completedEnd, lease.directory, segments.stream()
+                .map(s -> new ReadSnapshot.Segment(s.base, s.end, s.bytes, s.headerChecksum)).toList(), options, io);
+    }
+
     public ReadBoundary captureBoundary() throws StorageException {
         checkOwner();
         if (state == State.CLOSED) throw new StorageException(CLOSED, "storage is closed");

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Bounded opt-in packaged Append/restart smoke, using a separate Java test client.
+"""Bounded opt-in packaged Append/consumer/restart smoke, using a separate Java test client.
 
 Run after testClasses and bootJar. Data and acknowledgements remain under --output.
 The client uses production classes/dependencies extracted from the executable JAR.
-No public Fetch or storage administration endpoint is introduced.
+Fetch/Commit use the public consumer API; administration/inspection remain internal.
 """
 import argparse
 import json
@@ -42,6 +42,14 @@ def main():
                 if not destination.is_relative_to(extracted):
                     raise ValueError('Unsafe JAR entry')
                 jar.extract(entry, extracted)
+    # Standalone fixtures do not run Spring's logging initialization. Keep protocol DATA
+    # frames (which contain session credentials) out of DEBUG logs and stdout confirmations.
+    client_logging = extracted / 'client-logback.xml'
+    client_logging.write_text('''<configuration>
+      <appender name="stderr" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target><encoder><pattern>%level %logger - %msg%n</pattern></encoder>
+      </appender><root level="INFO"><appender-ref ref="stderr"/></root>
+    </configuration>''')
     java = str(Path(os.environ['JAVA_HOME'])/'bin/java') if os.environ.get('JAVA_HOME') else 'java'
     classpath = os.pathsep.join([str(tests), str(extracted/'BOOT-INF/classes'), str(extracted/'BOOT-INF/lib/*')])
     data = run/'data'; witness = run/'acknowledgements.bin'
@@ -49,7 +57,7 @@ def main():
               'claim': 'real network acknowledgement and process restart; not physical power-loss proof'}
 
     def fixture(*arguments):
-        command = [java, '-cp', classpath, 'kaflow.storage.DurableSmokeClient', *map(str, arguments)]
+        command = [java, f'-Dlogback.configurationFile={client_logging}', '-cp', classpath, 'kaflow.storage.DurableSmokeClient', *map(str, arguments)]
         completed = subprocess.run(command, capture_output=True, text=True, timeout=30)
         (run / ('client-' + arguments[0] + '-' + str(len(result['phases'])) + '.log')).write_text(completed.stdout+completed.stderr)
         if completed.returncode:
@@ -87,6 +95,11 @@ def main():
                     else:
                         raise TimeoutError('Durable startup exceeded 60 seconds')
                     outcome['client'] = fixture('append', gp, witness, phase*2)
+                    outcome['consumer'] = fixture('consume', gp, witness, phase)
+                    expected_consumer = ('CONSUMED two independent groups; resumed=0,0 committed=2,1'
+                                         if phase == 0 else 'CONSUMED two independent groups; resumed=2,1 committed=4,3')
+                    if outcome['consumer'] != expected_consumer:
+                        raise RuntimeError('Missing exact public consumer confirmation')
                 finally:
                     start = time.monotonic()
                     # First restart is an abrupt process termination after the external client
@@ -111,7 +124,9 @@ def main():
         result['errors'].append(f'{type(error).__name__}: {error}')
     finally:
         shutil.rmtree(extracted)  # Only this invocation's extracted dependency scratch.
-    result['passed'] = not result['errors'] and result.get('inspection') == 'VERIFIED 4 acknowledged records'
+    result['passed'] = (not result['errors'] and result.get('inspection') == 'VERIFIED 4 acknowledged records'
+                        and len(result['phases']) == 2
+                        and all(p.get('consumer', '').startswith('CONSUMED two independent groups;') for p in result['phases']))
     (args.output/'result.json').write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps(result, indent=2))
     return 0 if result['passed'] else 1

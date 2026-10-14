@@ -15,6 +15,7 @@ import kaflow.broker.TopicId;
 import kaflow.broker.TopicPartition;
 import kaflow.v1.AppendRequest;
 import kaflow.v1.BrokerGrpc;
+import kaflow.v1.*;
 
 /** Offline fixture and separate real-network client for packaged smoke; never a public API. */
 public final class DurableSmokeClient {
@@ -46,6 +47,40 @@ public final class DurableSmokeClient {
                     }
                 } finally { if(!channel.shutdownNow().awaitTermination(5,TimeUnit.SECONDS))throw new AssertionError("channel shutdown"); }
                 System.out.println("ACKNOWLEDGED "+expected+" "+(expected+1));
+            }
+            case "consume" -> {
+                int port=Integer.parseInt(args[1]), phase=Integer.parseInt(args[3]);
+                var channel=ManagedChannelBuilder.forAddress("127.0.0.1",port).usePlaintext().build();
+                try {
+                    var stub=BrokerGrpc.newBlockingStub(channel).withDeadlineAfter(10,TimeUnit.SECONDS);
+                    var partition=kaflow.v1.TopicPartition.newBuilder().setTopic(TOPIC.value()).setPartition(0).build();
+                    java.util.Map<Long,kaflow.v1.Record> expected=new java.util.HashMap<>();
+                    try(var input=new DataInputStream(new FileInputStream(args[2]))) {
+                        for(;;) {
+                            long offset;try{offset=input.readLong();}catch(EOFException end){break;}
+                            long timestamp=input.readLong();boolean key=input.readBoolean();int length=input.readInt();
+                            if(length<0||length>100)throw new AssertionError("witness length");
+                            var record=kaflow.v1.Record.newBuilder().setPartition(partition).setOffset(offset).setTimestampMillis(timestamp).setPayload(ByteString.copyFrom(input.readNBytes(length)));
+                            if(key)record.setKey(ByteString.EMPTY);expected.put(offset,record.build());
+                        }
+                    }
+                    for(int group=0;group<2;group++) {
+                        long start=phase==0?0:(group==0?2:1), target=phase*2+(group==0?2:1);
+                        var member=stub.join(JoinRequest.newBuilder().setGroup("smoke-group-"+group).setTopic(TOPIC.value()).build());
+                        if(!member.getAssignmentsList().equals(java.util.List.of(partition))||!member.getCommittedNextOffsetsList().equals(java.util.List.of(start)))throw new AssertionError("incorrect resumed progress");
+                        var request=FetchRequest.newBuilder().setSession(member.getSession()).setGeneration(member.getGeneration()).setPartition(partition).setStartOffset(start).setMaxRecords(128).setMaxBytes(128);
+                        var batch=stub.fetch(request.build());long end=phase*2+2;
+                        if(batch.getPublishedEnd()!=end||batch.getNextOffset()!=end||batch.getRecordsCount()!=end-start)throw new AssertionError("consumer boundary");
+                        for(var record:batch.getRecordsList())if(!record.equals(expected.get(record.getOffset())))throw new AssertionError("public record changed");
+                        if(stub.heartbeat(HeartbeatRequest.newBuilder().setSession(member.getSession()).build()).getCommittedNextOffsets(0)!=start)throw new AssertionError("fetch committed progress");
+                        var commit=CommitRequest.newBuilder().setSession(member.getSession()).setGeneration(member.getGeneration()).setPartition(partition).setNextOffset(target);
+                        if(stub.commit(commit.build()).getDurableNextOffset()!=target)throw new AssertionError("commit result");
+                        if(stub.commit(commit.setNextOffset(0).build()).getDurableNextOffset()!=target)throw new AssertionError("commit regressed");
+                        var replay=stub.fetch(request.setStartOffset(0).build());
+                        if(replay.getRecordsCount()!=end||stub.heartbeat(HeartbeatRequest.newBuilder().setSession(member.getSession()).build()).getCommittedNextOffsets(0)!=target)throw new AssertionError("replay changed progress");
+                    }
+                } finally {if(!channel.shutdownNow().awaitTermination(5,TimeUnit.SECONDS))throw new AssertionError("channel shutdown");}
+                System.out.println("CONSUMED two independent groups; resumed="+(phase==0?"0,0":"2,1")+" committed="+(phase==0?"2,1":"4,3"));
             }
             case "inspect" -> {
                 int count=0;

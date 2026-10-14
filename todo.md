@@ -3,7 +3,7 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-005**.
+Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-006**.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
@@ -12,7 +12,7 @@ Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-005**
 | KF-003 | Partition-log framing, indexes, rotation, bounded immediate reads | DONE | KF-002 |
 | KF-004 | Durable publication and crash recovery | DONE | KF-003 |
 | KF-005 | Leased groups and generation fencing | DONE | KF-004 |
-| KF-006 | Durable commits, immediate Fetch API, independent replay | READY | KF-005 |
+| KF-006 | Durable commits, immediate Fetch API, independent replay | DONE | KF-005 |
 | KF-007 | Asynchronous long polling and cancellation | READY | KF-006 |
 | KF-008 | Retention, deletion, overload, bounded shutdown | READY | KF-007 |
 | KF-009 | Operable release, Docker, metrics, measured benchmarks | READY | KF-008 |
@@ -534,13 +534,147 @@ from local evidence. Do not open a PR, merge or begin KF-006.
 KF-006 remains unstarted: immediate bounded Fetch, durable next-offset Commit, apply-time
 ownership validation and commit/rebalance barrier around unresolved applying writes.
 
+## KF-006 — Immediate bounded Fetch, durable commits and independent replay
+
+**Status:** DONE (2026-10-14), locally revalidated; follow-up CI verification pending. **Branch:** `codex/kf-006-fetch-commit`.
+**Verified merged base:** `6f1b667785ee770427fcc08963fa24d0f216d6c4` (remote main,
+merge PR #5); contains `66e3bfc6fbeeeb7051cb377806c3c9c1987544ed` with identical tree.
+Started with a clean checkout; no unrelated inputs. Base manifest is retained under
+ignored `build/kf006-evidence/`. Local main remains at its earlier revision; the new
+branch was created directly from verified `origin/main`.
+**Publication:** User authorized validation, commit and push on 2026-10-14, followed by
+exact-commit GitHub Actions verification. No PR, merge or KF-007.
+**Design:** [docs/design/kf-006-fetch-commit.md](docs/design/kf-006-fetch-commit.md).
+
+### Scope, decisions and acceptance
+
+Single-partition immediate Fetch and durable next-offset Commit; independent group
+progress, replay without progress mutation, and internal inactive-group reset. Immutable
+writer-issued snapshots, independent bounded positional readers, admission/completion
+fencing, and group-wide application barriers. Catalog V3 makes bounded per-group progress
+files authoritative; old V1/V2 stores upgrade on first progress mutation. No long polling,
+retention, transactions, delivery tracking, cross-partition batches or exactly-once claim.
+Stages: KF-006.1 storage/progress and read ownership; KF-006.2 consumer scheduling/barriers;
+KF-006.3 protocol, deterministic/network/crash tests, packaged lifecycle and final evidence.
+
+- [x] Verify merged ancestry, clean inputs, inherited evidence and document design before code.
+- [x] Immutable read handles, captured publication, independent channels and bounded resources.
+- [x] Fetch admission/completion fencing, corruption policy, cancellation and shutdown cleanup.
+- [x] Versioned durable progress, upgrade, strict recovery, independent groups and idempotency.
+- [x] Writer-ready application validation, group barrier, expiry/Leave and ambiguous/late outcomes.
+- [x] Bounded committed assignment positions, inactive reset and safe Join/reset race.
+- [x] Unary Fetch/Commit transport, exact bytes/key presence, sanitized status and prototype isolation.
+- [x] Deterministic limits/races/failpoints/recovery tests and public consumer packaged restart smoke.
+- [x] Clean source build/package, separate full suite, original and actual durable packaged smokes.
+- [x] Final diff review, actual evidence/limitations and KF-007 handoff.
+
+### Evidence, progress and exact next action
+
+Retained KF-005 final XML independently summed: 248 tests, zero failures/errors/skips.
+Inherited exact-commit [CI run 38495562718](https://github.com/Biswas57/kaflow/actions/runs/38495562718)
+was verified in this chat: build, full tests, both smokes and report upload succeeded for
+`66e3bfc6fbeeeb7051cb377806c3c9c1987544ed`. This is not KF-006 execution evidence.
+Inspected KF-003/004/005 designs, baselines, storage/coordinator/membership/transport code.
+Validation commands: `./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon`,
+`./gradlew :app:test --rerun-tasks --no-daemon`, `python3 scripts/smoke_bootjar.py`,
+`python3 scripts/smoke_durable.py`. Use Java 17, bounded runners and source-only final inputs.
+Implemented immutable writer-issued read snapshots, independent bounded readers, coordinator
+completion fencing, group-wide apply-time commit/reset barriers, catalog V3 and bounded
+per-group progress files, assignment positions and unary public Fetch/Commit. Extended the
+existing durable smoke to two independent public consumers and restart/resume.
+Development compile passed (5.95 s). Initial inherited full suite: 248 tests, one failure
+because the unknown catalog version fixture used newly supported V3; moved that sentinel to
+V4, preserving the unknown-version assertion. Raw failed XML/logs retained. Focused suites
+then passed 47 and 75 invocations with zero failures/errors/skips. Added further independent
+reader-channel/short-read, concurrent Append/read, uncertain reset and qualified-partition
+progress tests. Full development suite passed 326 invocations in 39.96 s. First clean candidate build,
+326-test suite and original smoke passed. Its extended durable smoke exited 1 because
+standalone Netty DEBUG text preceded the confirmation line, despite successful public
+consumer phases and recovery. Configured fixture logging to stderr at INFO and required
+exact phase confirmations; retained the failed report and reran all final checks.
+
+Final source-only candidate: `/private/tmp/kaflow-kf006-final-7v59prm4`, 215 inputs,
+133 Java sources/two schemas. Accepted clean build/package exited 0 in 7.76 s; separate
+full suite exited 0 in 39.95 s: **326 tests, 34 classes, zero failures/errors/skips**.
+Original packaged smoke passed in 2.45 s; extended durable smoke passed in 8.17 s. No
+command/client/test-child/shutdown timeout. Prototype health/admin/shutdown passed. Durable
+smoke acknowledged Append 0/1 and two group commits 2/1, survived SIGKILL, rejoined/resumed
+at 2/1, appended 2/3, committed 4/3 and shut down normally; all four exact records matched
+the external witness. All listeners closed, empty smoke error lists, no application
+WARN/ERROR entries. [Full evidence](docs/baseline/kf-006.md), ignored reports/manifests in
+`build/kf006-evidence/final/` and adjacent retained development/failure directories.
+
+Actual environment: Java 17.0.20.1 Adoptium, macOS 26.6.2 aarch64, wrapper 8.5, APFS
+checkout/candidate. No KF-006 Linux CI execution claimed. Linux local storage remains
+reference; honored force/atomic replacement/directory sync is required. Process kills do
+not prove power-loss durability. Catalog V3 rejects downgrade; Commit does not prove
+processing; canceled/timed-out writes can have unknown outcomes. Bound accounting excludes
+caller-held values, transport buffers after handoff and total heap. No public reset endpoint.
+
+Final review: 36 changed/new files; no unresolved findings/blockers, credential-pattern
+matches or intended generated outputs. Final code/test/schema/build/smoke matches the tested
+manifest; later edits are documentation only. No dependency/wrapper/workflow changes.
+Publication revalidation passed under the user's 2026-10-14 authorization. Re-fetched
+origin/main and verified the same base and identical merged KF-005 tree. Reviewed all
+36 changed/new files, especially apply-time fences/barrier lifetime, late completions,
+read ownership/publication/cleanup, recovery, reset/Join and V3 compatibility; no blocker
+or production fix found. Fresh source-only snapshot:
+`/private/tmp/kaflow-kf006-publish-dvwavl45/candidate`, 215 inputs, 133 Java files/two schemas.
+Clean build/package passed in 9.86 s; separate full tests passed in 39.99 s. Recomputed fresh
+XML: **326 tests, 34 classes, zero failures/errors/skips**. Original packaged smoke passed
+in 2.40 s and extended two-group Fetch/Commit crash/restart smoke in 8.15 s. All exits 0,
+no timeouts; all listeners closed, replay preserved progress, restart resumed 2/1 then
+committed 4/3, and the four-record witness matched. No application WARN/ERROR entries.
+New raw reports/manifests/environment/counts are in ignored `build/kf006-evidence/publication/`;
+[publication validation record](docs/baseline/kf-006.md#authorized-publication-validation--2026-10-14)
+contains ports, shutdown outcomes, JAR hash and review details. The same macOS/APFS/Java 17
+filesystem assumptions and limitations above apply. V3 has no supported downgrade; checksums
+do not detect replacement with older otherwise-valid metadata. No generated outputs or
+credential-pattern matches; original smoke, dependencies, wrapper and workflow unchanged.
+Final executable inputs match the manifest; later edits only record documentation.
+
+Exact next action at this prepublication checkpoint: review the staged diff, commit KF-006
+and push `codex/kf-006-fetch-commit` to origin, then verify GitHub Actions for that exact SHA
+and report its URL/outcome. The configured CI runs build/package, full tests, both smokes and
+report upload; no KF-006 CI result is claimed before execution. No PR, merge or KF-007.
+
+### Exact-commit CI follow-up
+
+Initial authorized publication: `c0f9462c93ea88cd028ad0c02f814fcbf489f108` on
+`origin/codex/kf-006-fetch-commit`. [CI run 38506226589](https://github.com/Biswas57/kaflow/actions/runs/38506226589)
+built successfully but its full suite failed: fresh uploaded XML has 326 tests, one failure,
+zero errors/skips (325 passed). Both smokes were skipped; report upload succeeded.
+`DurableBrokerTest.concurrentAcceptedResultsExactlyMatchContiguousRecords` requested the
+entire inspection byte budget after observing append results but before the final response
+reservation necessarily unwound. RESOURCE_EXHAUSTED was valid; this was a test synchronization
+race, not a failed append. Added bounded `awaitIdle` before full-budget inspection and
+strengthened the blocked-response test to deterministically prove the same byte-reservation
+lifetime and subsequent successful inspection. All 64-record/offset/payload assertions remain;
+no production change, limit increase, ignored rejection, retry or weakened assertion.
+Failed CI job log and uploaded reports retained under `build/kf006-evidence/publication/`.
+Follow-up candidate `/private/tmp/kaflow-kf006-ci-fix-8bcr72yi/candidate` has 215 source-only
+inputs. Clean build/package exit 0 in 9.67 s; focused broker suite exit 0 in 10.48 s (9 tests).
+Separate full suite exit 0 in 37.79 s: recomputed 326 tests, 34 classes, zero failures/errors/skips.
+Original smoke exit 0 in 2.40 s; extended two-group crash/restart smoke exit 0 in 8.21 s.
+No timeouts, all listeners closed, original exact receipt and independent resume/replay
+assertions passed; no application WARN/ERROR entries. New manifest, focused/full XML and
+complete smoke/command reports retained in `build/kf006-evidence/publication-followup/`.
+Final source matches that candidate, with only evidence docs edited afterward. Reviewed
+three follow-up files (test plus two documents), now 37 changed files against KF-005;
+no production change, secrets, generated artifacts or unrelated changes. Commit/push the
+authorized follow-up and verify its exact SHA in Actions before reporting completion.
+The first failed CI remains recorded and cannot substitute for this verification.
+No PR, merge or KF-007.
+
+### Handoff
+
+KF-007 remains unstarted: bounded asynchronous waiters, lost-wakeup prevention, cancellation,
+leases/ownership revalidation and no read worker occupied while waiting.
+
 ## Remaining ticket acceptance outlines
 
 Expand the next eligible ticket into scope, decisions, steps, evidence, and handoff.
 
-- **KF-006:** immediate bounded Fetch exposed over gRPC; Fetch never commits; durable
-  monotonic commits, apply-time validation, rebalance barrier, independent groups,
-  inactive-group reset, replay and restart tests.
 - **KF-007:** bounded waiter registry; lost-wakeup, cancellation, deadline, ownership
   and lifecycle tests; many waiters without one worker per waiter.
 - **KF-008:** retention boundaries, out-of-range errors, segment pinning, crash-safe
