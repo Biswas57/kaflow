@@ -3,14 +3,14 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-003**.
+Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-004**.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
 | KF-001 | Reproducible source build and honest baseline | DONE | None |
 | KF-002 | Injected broker ownership and V1 record/API contracts | DONE | KF-001 |
 | KF-003 | Partition-log framing, indexes, rotation, bounded immediate reads | DONE | KF-002 |
-| KF-004 | Durable publication and crash recovery | READY | KF-003 |
+| KF-004 | Durable publication and crash recovery | DONE | KF-003 |
 | KF-005 | Leased groups and generation fencing | READY | KF-004 |
 | KF-006 | Durable commits, immediate Fetch API, independent replay | READY | KF-005 |
 | KF-007 | Asynchronous long polling and cancellation | READY | KF-006 |
@@ -344,13 +344,120 @@ ownership and bounded read workers without disk I/O on coordination; never repla
 possibly running writer or release its directory lock on caller timeout. Preserve
 acknowledged retained data and decide tail handling using durable publication evidence.
 
+## KF-004 — Durable publication and crash recovery
+
+**Status:** DONE (2026-10-14); final local acceptance passed.
+**Branch:** `codex/kf-004-durable-publication`.
+**Committed base:** `d9fa545abbed4493c36ede933f32d36b9f1ee7d9` (KF-003).
+**Inherited inputs:** clean checkout, no staged/unstaged/untracked source changes;
+162 file SHA-256/mode manifest in ignored `build/kf004-evidence/inherited-manifest.json`.
+The supplied ticket's uncommitted-KF-003 summary is stale: user-authorized commit/push
+preceded this request. Fetched main `d2e352c340f07d046abbc7ab0387113ccd1aded2` contains
+KF-002 but not KF-003. This remains a dependent branch; no work was discarded.
+**Design:** [docs/design/kf-004-durable-publication.md](docs/design/kf-004-durable-publication.md).
+**Publication:** the user's final-validation request on 2026-10-14 explicitly authorizes
+commit and push of this branch after passing acceptance. It supersedes the implementation
+request's publication restriction. No PR, merge or KF-005. Verify CI against the exact pushed
+revision; no KF-004 CI result is claimed in this pre-publication record.
+**Detailed evidence:** [docs/baseline/kf-004.md](docs/baseline/kf-004.md).
+
+### Scope, decisions and stages
+
+One dedicated storage owner; responsive coordinator; bounded admission, queues and response
+workers. Globally serialize mutations; publish only after forced record/name persistence and
+atomic forced per-partition checkpoints. Durable bounded catalog changes only at topic creation.
+Recover published data exactly; discard only tails proven unpublished by valid metadata.
+Latch degradation after watchdog/failure and retain ownership until actual writer completion.
+Explicit durable Spring configuration registers unary V1 Append after successful recovery.
+Default prototype/volatile core remain separate. No Fetch/Commit, leases, retention or migration.
+The design records formats, checkpoint cost, filesystem assumptions and crash-state policy.
+
+Reviewable stages within this ticket: KF-004.1 storage protocol/recovery; KF-004.2 coordinator,
+opt-in transport/lifecycle; KF-004.3 deterministic failures, process/network evidence and docs.
+Only KF-004 is active; these stages are not permission to start a later milestone.
+
+### Acceptance
+
+- [x] Reconcile actual ancestry/inputs and verify inherited evidence; record design before code.
+- [x] Durable topic metadata, exact identity and bounded checkpoint protocol; no volatile success.
+- [x] Preserve KF-003 framing/rotation; explicit force and directory synchronization ordering.
+- [x] Validate all published data; conservative tail repair; interrupted/repeated recovery.
+- [x] Bounded coordinator/writer/response ownership, routing, admission and exact reservation release.
+- [x] Monotonic watchdog, responsive diagnostics, safe late completion/cancellation/shutdown.
+- [x] Opt-in real V1 Append success only after publication; default UNIMPLEMENTED remains.
+- [x] Deterministic persistence faults, disk-full, corruption, process termination and restart tests.
+- [x] All existing assertions preserved; source-only build/full tests and both packaged smokes.
+- [x] Record exact results, limitations and KF-005 handoff; review inherited versus new diff.
+
+### Evidence and progress
+
+- Inspected retained KF-003 XML: 120 tests, 16 classes, zero failures/errors/skips; build/test
+  exit 0 and prototype smoke passed. Production inputs matched the tested manifest before
+  KF-003 commit. Independently inspected completed Linux run 38472166665 at `d9fa545`:
+  build job completed/success. A separate run 38472307492 was in progress; no outcome claimed.
+- Commands planned: `./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon`,
+  separate `./gradlew :app:test --rerun-tasks --no-daemon`, `python3 scripts/smoke_bootjar.py`,
+  plus bounded durable-mode packaged smoke. Use Java 17, wrapper 8.5 and fresh source snapshot.
+- Implemented KF-004.1 durable catalog/checkpoints, force/name ordering and conservative two-phase
+  validation/repair; KF-004.2 bounded coordinator/writer/response ownership, watchdog and opt-in
+  Spring V1 Append. Existing prototype paths and all 120 baseline assertions preserved.
+- Development compile passed. Focused storage and coordinator suites passed. Network/crash run:
+  12 tests, one new test failed because native oversized transport rejection surfaced CANCELLED,
+  not application RESOURCE_EXHAUSTED. Separated the transport boundary from application status
+  mapping and verified no publication; eight process halt cases passed.
+- Expanded focused suite: 67 tests, one new inspection assertion failed after strengthening
+  inspection admission to reserve requested return bytes. Adjusted the fixture to request its
+  configured three-byte budget and explicitly test oversized inspection-budget rejection.
+  Original failing XML/logs retained; no baseline assertion weakened.
+- Added packaged durable smoke with an external real-gRPC client that forces received receipts,
+  kills the first broker process, restarts, appends at recovered next offsets and inspects exact
+  records offline. Added CI invocation/report upload; no KF-004 CI execution claimed.
+- Full development suite passed: 188 tests, zero failures/errors/skips. First clean candidate
+  built in 6.74 s and passed 188 tests in 17.69 s. Both commands exited 0 without timeouts.
+- Review added a durable marker on the existing owning root lock channel: a missing catalog
+  in an initialized empty store must fail closed rather than reinitialize. Added two regression
+  tests; also verified root exclusion from another JVM while a watchdog-expired writer runs.
+- The marker candidate built in 6.68 s and passed 190 tests in 18.92 s. Final review also
+  rejects uncatalogued topics with record/nonzero publication evidence as inconsistent,
+  including when their data is truncated. Added a regression before final validation.
+  No KF-004 CI run or power-loss proof claimed.
+- Final post-marker/post-orphan source-only snapshot: 183 input files, 105 Java sources,
+  two Protobuf schemas, no copied generated/build artifacts. SHA-256/modes matched the
+  checkout before final evidence-only document edits. Compile/package passed in 8.59 s;
+  separate full suite passed in 21.34 s: **191 tests, 21 classes, zero failures/errors/skips**.
+  All commands exited 0; no command, child-process or shutdown timeout occurred.
+- Original packaged smoke passed in 2.01 s: health UP, HTTP/gRPC listening, REST create 201
+  and get 200; SIGTERM exit 143 in 0.450 s, both listeners closed. Default V1 remained
+  unregistered, also proven by the retained network-boundary test.
+- Durable packaged smoke passed in 4.93 s: external real-gRPC receipts at offsets 0/1,
+  forced witness, intentional SIGKILL exit -9, restart receipts at 2/3, SIGTERM exit 143
+  in 0.454 s. Both instances ready and all listeners closed; offline inspection verified
+  all four records' exact identity/offset/timestamp/key presence/bytes. No smoke errors.
+- Final environment: macOS 26.6.2 aarch64, Temurin 17.0.20.1+1, wrapper 8.5, APFS.
+  Linux local storage remains the reference, requiring honored file/device flushes,
+  atomic same-directory replacement and directory sync. Process crashes do not prove
+  physical power-loss durability. Unknown failed/canceled outcomes may survive and retries
+  may duplicate. Missing/corrupt authoritative metadata fails closed; no KF-003 migration.
+- Final reports/logs/manifest and review summary retained under ignored
+  `build/kf004-evidence/final/` and `build/kf004-evidence/candidate-manifest.json`.
+  Reviewed correctness, scope, secrets and tracked outputs: no unresolved findings, no
+  secret-pattern matches or generated/build outputs to commit. No schema/dependency/wrapper
+  changes; all 120 inherited assertions preserved. No unresolved acceptance blockers.
+
+### Handoff
+
+KF-005 remains unstarted: durable group definitions, leased membership and generation fencing.
+No public Fetch or consumer progress in KF-004. Record measured local/CI evidence separately;
+process termination is not physical power-loss proof.
+Next action under the latest authorization: commit/push KF-004, inspect the exact pushed
+revision's GitHub Actions run and report its URL/outcome separately from local evidence.
+CI is configured for clean build, full tests, both packaged smokes and report upload;
+configuration alone is not execution evidence. Do not merge or start KF-005.
+
 ## Remaining ticket acceptance outlines
 
 Expand the next eligible ticket into scope, decisions, steps, evidence, and handoff.
 
-- **KF-004:** crash-state and bounded-checkpoint decisions; late completion policy;
-  durable publication; restart/failpoint/corruption/disk-full evidence; unknown retry
-  outcomes documented; filesystem assumptions enforced.
 - **KF-005:** durable group definitions, leased sessions, deterministic assignment,
   generations, restart invalidation, heartbeat responsiveness during storage stalls.
 - **KF-006:** immediate bounded Fetch exposed over gRPC; Fetch never commits; durable

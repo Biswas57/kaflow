@@ -86,6 +86,12 @@ public final class PartitionLog implements AutoCloseable {
             throw new StorageException(INVALID_ARGUMENT, "segment cannot contain this identity and an empty frame");
         }
         DirectoryLease lease = DirectoryLease.acquire(directory);
+        return openOwned(lease, identity, topic, options, clock, io);
+    }
+
+    /** Consumes an already acquired lease; used only after durable recovery validation. */
+    static PartitionLog openOwned(DirectoryLease lease, TopicPartition identity, byte[] topic,
+                                  StorageOptions options, Clock clock, StorageIo io) throws IOException {
         PartitionLog log = new PartitionLog(identity, topic, options, clock, io, lease);
         try {
             log.initialize();
@@ -265,6 +271,19 @@ public final class PartitionLog implements AutoCloseable {
     static long nextOffset(long current) throws StorageException {
         if (current < 0 || current == Long.MAX_VALUE) throw new StorageException(LIMIT, "storage offset overflow");
         return Math.incrementExact(current);
+    }
+
+    record WritePosition(long end, long base, long bytes) { }
+
+    WritePosition writtenPosition() throws StorageException {
+        ensureOpen();
+        Segment last = segments.get(segments.size() - 1);
+        return new WritePosition(completedEnd, last.base, last.bytes);
+    }
+
+    void forceWritten() throws IOException {
+        ensureOpen();
+        try { activeLog.force(); } catch (IOException e) { fail(e); throw e; }
     }
 
     public ReadBoundary captureBoundary() throws StorageException {

@@ -123,6 +123,7 @@ final class StorageTestSupport {
                     } finally { data.limit(limit); }
                 }
                 @Override public long size() throws IOException { return file.size(); }
+                @Override public void force() throws IOException { file.force(); }
                 @Override public void close() throws IOException {
                     file.close();
                     if (!released) { released = true; closed++; live--; }
