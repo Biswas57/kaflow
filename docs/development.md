@@ -75,7 +75,7 @@ adjustment is recorded in [baseline/kf-001.md](baseline/kf-001.md).
 
 Run these separately and retain each exit status. The first command generates
 messages and gRPC stubs from the schemas under `app/src/main/proto/` (prototype and
-V1 Append), compiles production
+V1 broker), compiles production
 and test source, and creates the executable Spring Boot JAR in `app/build/libs/`.
 The second command reruns the full test suite; it also reruns task prerequisites.
 Neither command invokes the separate `coverage` threshold task.
@@ -270,7 +270,7 @@ commits. Continue Heartbeat: Fetch/Commit do not renew leases. Rejoin after rest
 the new incarnation plus recovered assignment positions. Groups progress independently;
 explicit earlier Fetch offsets replay retained records without rewinding progress.
 
-Fetch is immediate and bounded: at end it returns an empty batch, unchanged continuation
+With omitted/zero `max_wait_millis`, Fetch is immediate and bounded: at end it returns an empty batch, unchanged continuation
 and captured published end. Beyond end is OUT_OF_RANGE; a first record larger than the
 byte budget is RESOURCE_EXHAUSTED. Key presence, original binary bytes and timestamps survive.
 Equal/lower authorized commits report the effective position; the broker does not prove
@@ -303,3 +303,38 @@ witness/recovery and normal shutdown checks remain. Process crashes are not powe
 KF-006 [local validation](baseline/kf-006.md): clean source build, 326 passing tests in
 34 classes, original prototype smoke and extended durable consumer restart smoke. The
 prepublication record distinguishes these local results from subsequent exact-commit CI.
+
+## KF-007 optional Fetch waiting
+
+Set `FetchRequest.max_wait_millis` to wait only when the requested offset equals the
+current published end. For example, reuse the current membership credentials and assignment,
+request `start_offset` from the prior continuation, `max_records=128`, `max_bytes=1048576`
+and `max_wait_millis=1000`. Existing data reads immediately; a valid server wait expiry returns
+empty with unchanged continuation. Negative waits or values above the configured maximum
+are INVALID_ARGUMENT; beyond-end offsets still return OUT_OF_RANGE. Native gRPC deadlines
+and cancellation retain their own outcomes. Fetch never commits or renews the lease;
+continue Heartbeat independently and retry only with current ownership.
+
+Parked requests consume bounded metadata, with no read worker, handle or channel. The
+injectable `WaitOptions` bean defaults to 256 positive-wait requests, 16 per session,
+64 per qualified partition, 512 KiB logical metadata (2 KiB per call), 30 seconds maximum
+wait, and eight notifications/eight maintenance entries per coordinator iteration.
+These admission bounds last through response delivery, including activated reads. Read
+admission is separate and reserved before snapshot/worker dispatch. Activation without read
+capacity returns RESOURCE_EXHAUSTED. No unbounded runnable queue or disk polling is used.
+
+Wait duration uses monotonic elapsed time from admission and is never restarted. It bounds
+waiting for data; disk work and response delivery may take longer and retain their existing
+watchdog/accounting rules. No exact wall-clock timeout-delivery promise. Cancellation of an
+active read does not release resources still in use. Group changes, leases, commit barriers,
+degradation and close are revalidated before activation and response authorization.
+
+The durable smoke also runs a separate fixture against production classes/dependencies
+extracted from the same built JAR. It starts real Spring HTTP/gRPC listeners on ephemeral
+ports, proves registration through a bounded package-private seam, confirms zero readers
+before Append, and checks exact returned binary key/payload, offset/timestamp, unchanged
+committed progress and complete cleanup. This is separate from the two preserved `java -jar`
+crash/restart phases. No test endpoint or fixture is added to the executable JAR.
+
+Full contract: [bounded asynchronous Fetch waiting](design/kf-007-long-polling.md).
+Executed checks and limitations: [KF-007 validation record](baseline/kf-007.md).

@@ -32,6 +32,9 @@ exactly-once processing, or unverified performance/durability.
 - KF-006 consumer reads, durable progress and commit/rebalance barriers are specified in
   `docs/design/kf-006-fetch-commit.md`.
 
+- KF-007 waiter ownership, deadlines and cancellation contracts are in
+  `docs/design/kf-007-long-polling.md`.
+
 ## Ticket workflow
 
 1. Select the first eligible ticket whose dependencies are complete. Only one ticket

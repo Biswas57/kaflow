@@ -8,6 +8,7 @@ import java.util.OptionalInt;
 import java.util.concurrent.CompletionException;
 import kaflow.broker.AppendCommand;
 import kaflow.consumer.FetchCommand;
+import kaflow.consumer.FetchCancellation;
 import kaflow.consumer.CommitCommand;
 import kaflow.consumer.FetchResult;
 import kaflow.v1.FetchRequest;
@@ -89,17 +90,27 @@ public final class DurableAppendService extends BrokerGrpc.BrokerImplBase {
     }
 
     @Override public void fetch(FetchRequest request, StreamObserver<FetchResponse> output) {
+        ServerCallStreamObserver<?> call = output instanceof ServerCallStreamObserver<?> server ? server : null;
+        var cancellation = new FetchCancellation();
+        var pending = new java.util.concurrent.atomic.AtomicReference<java.util.concurrent.CompletableFuture<FetchResult>>();
+        if (call != null) {
+            call.setOnCancelHandler(() -> {
+                cancellation.cancel();
+                var future = pending.get(); if (future != null) future.cancel(false);
+            });
+            if (call.isCancelled()) cancellation.cancel();
+        }
         try {
             if (!request.hasPartition()) throw new IllegalArgumentException();
             var command = new FetchCommand(identity(request.getSession()), request.getGeneration(),
-                    partition(request.getPartition()), request.getStartOffset(), request.getMaxRecords(), request.getMaxBytes());
-            ServerCallStreamObserver<?> call = output instanceof ServerCallStreamObserver<?> server ? server : null;
+                    partition(request.getPartition()), request.getStartOffset(), request.getMaxRecords(), request.getMaxBytes(), request.getMaxWaitMillis());
             var future = broker.fetch(command, (value, error) -> {
-                if (call != null && call.isCancelled()) return;
+                if (cancellation.isCancelled() || call != null && call.isCancelled()) return;
                 if (error != null) { output.onError(status(error).asRuntimeException()); return; }
                 output.onNext(wire(value)); output.onCompleted();
-            });
-            if (call != null) { call.setOnCancelHandler(() -> future.cancel(false)); if (call.isCancelled()) future.cancel(false); }
+            }, cancellation);
+            pending.set(future);
+            if (cancellation.isCancelled() || call != null && call.isCancelled()) { cancellation.cancel(); future.cancel(false); }
         } catch (IllegalArgumentException e) { invalidMembership(output); }
     }
     @Override public void commit(CommitRequest request, StreamObserver<CommitResponse> output) {

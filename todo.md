@@ -3,7 +3,7 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-006**.
+Last updated: 2026-10-16. Current ticket: **none**. Latest completed: **KF-007**.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
@@ -13,7 +13,7 @@ Last updated: 2026-10-14. Current ticket: **none**. Latest completed: **KF-006**
 | KF-004 | Durable publication and crash recovery | DONE | KF-003 |
 | KF-005 | Leased groups and generation fencing | DONE | KF-004 |
 | KF-006 | Durable commits, immediate Fetch API, independent replay | DONE | KF-005 |
-| KF-007 | Asynchronous long polling and cancellation | READY | KF-006 |
+| KF-007 | Asynchronous long polling and cancellation | DONE | KF-006 |
 | KF-008 | Retention, deletion, overload, bounded shutdown | READY | KF-007 |
 | KF-009 | Operable release, Docker, metrics, measured benchmarks | READY | KF-008 |
 
@@ -671,12 +671,126 @@ No PR, merge or KF-007.
 KF-007 remains unstarted: bounded asynchronous waiters, lost-wakeup prevention, cancellation,
 leases/ownership revalidation and no read worker occupied while waiting.
 
+## KF-007 — Bounded asynchronous long polling and cancellation
+
+**Status:** DONE (2026-10-16), local validation and publication review passed. **Branch:** `codex/kf-007-long-polling`.
+**Base:** `09b42a45b056b842f3c3ee333a6faea4d549c885`, fetched origin/main, merge PR #6.
+Verified ancestry contains KF-006 `759f71d6a6ea0b2050a1221d5e33615c69ed9eaf`; identical tree.
+Clean checkout, no unrelated edits. Base manifest: ignored `build/kf007-evidence/`.
+**Publication:** User authorized commit/push and exact-SHA CI verification on 2026-10-16.
+No PR, merge or KF-008.
+**Design:** [bounded long polling](docs/design/kf-007-long-polling.md).
+
+### Scope, decisions and acceptance
+
+Extend unary Fetch with additive wait field; zero remains immediate. Park only at the
+published end, holding bounded metadata and completion capacity, no reader/handle/buffer.
+Coordinator owns indexed waiters, publication notifications and removable timer slots.
+Fair bounded notification batches; activation rejects overload explicitly. Reserve full
+read charge before snapshot acquisition; keep charges through actual work and delivery.
+No persistence-format change, subscriptions, minimum batch, public test endpoint or retention.
+
+Stages: KF-007.1 state machine/limits/registry; KF-007.2 coordinator/transport cancellation;
+KF-007.3 deterministic/network tests, packaged observability and final source-only validation.
+
+- [x] Preserve immediate Fetch, committed progress, membership and durability guarantees.
+- [x] Add bounded immutable wait options, indexed metadata/timer/notification limits.
+- [x] Prevent lost wakeups; coalesce publications and process fair bounded batches.
+- [x] Admission/activation/response fencing; deadlines, expiry, barriers, cancellation/close.
+- [x] Retain actual read and response ownership; zero read resources while parked.
+- [x] Deterministic races, independent groups, every resource bound and repeated cleanup tests.
+- [x] Real gRPC wait/publication/expiry/cancellation/fencing tests.
+- [x] Packaged registered-wait proof and exact bytes, preserving two-group crash/restart smoke.
+- [x] Clean build/package, separate full suite, original and durable smokes; actual evidence.
+- [x] Final diff review, no unrelated/generated/credential changes; KF-008 handoff only.
+
+### Evidence and next action
+
+Read KF-004/005/006 designs, validation records and current coordinator/storage/membership/
+transport. Recomputed retained final KF-006 CI XML: 326 tests, 34 classes, 0 failures/errors/skips.
+[Run 38506949852](https://github.com/Biswas57/kaflow/actions/runs/38506949852) was independently
+verified for `759f71d6a6ea0b2050a1221d5e33615c69ed9eaf` in this chat; build, tests, both smokes
+and upload succeeded. This is inherited evidence, not a KF-007 run. Preserve the strengthened
+response-reservation test: result visibility does not imply delivery accounting has released.
+
+Validation: Java 17 and wrapper; `./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon`,
+`./gradlew :app:test --rerun-tasks --no-daemon`, `python3 scripts/smoke_bootjar.py`,
+`python3 scripts/smoke_durable.py`. Use a fresh source-only candidate and bounded runners.
+Implemented immutable wait limits/cancellation flag, indexed removable waiter registry,
+coalesced fair partition notifications, elapsed wait deadlines, activation/read accounting,
+barrier markers and early transport cancellation. Initial compilation passed (11.45 s);
+inherited full suite passed: 326 tests, zero failures/errors/skips (38.75 s).
+First deterministic polling/resource/registry suite passed: 38 tests (12.61 s); raw XML retained in
+`build/kf007-evidence/polling-tests-1/`. Covers ordered registration/publication, timeout ties,
+clock wrap, membership/barriers, every admission dimension, cancellation phases, saturation,
+64 parked/no-reader requests and repeated cleanup. Six actual gRPC tests passed (18.22 s).
+Additional coordination/schema checks plus packaging passed: nine tests (8.20 s), covering
+resolved barriers/late reads, full ingress cancellation and hot/quiet/control progress.
+Extended durable development smoke passed (9.98 s): preserved two-group crash/restart checks
+plus independently observed parked Fetch from production classes extracted from the actual JAR.
+Final source-only candidate `/private/tmp/kaflow-kf007-final-wd7pwr_g/candidate` contains
+226 inputs, 142 Java files/two schemas. Clean build/package passed (9.17 s); separate full
+suite passed (56.11 s): recomputed **378 tests, 39 classes, zero failures/errors/skips**.
+Original smoke passed (2.46 s). First final durable smoke passed (10.02 s) with one benign
+Spring logging-property warning. Selected the appropriate property per fixture, then reran
+the affected durable smoke: passed (10.09 s), zero WARN/ERROR entries in accepted smoke logs.
+No command/client/test-child/shutdown timeout. No production/test/schema/build changes after
+full validation; updated smoke script matches its accepted run. Final evidence edits are docs only.
+
+Prototype health/admin/shutdown passed. Durable groups resumed at 2/1 after SIGKILL, then
+committed 4/3; four exact records matched the external acknowledgement witness. Separate
+Spring fixture from that same JAR proved one parked Fetch and zero readers before Append,
+exact returned bytes/identity/offset/timestamp, unchanged committed position 0 and complete
+cleanup. All listeners closed. [Full validation record](docs/baseline/kf-007.md) contains
+commands, ports, shutdown times, JAR hash and report locations. Ignored evidence lives in
+`build/kf007-evidence/final/` and adjacent development/command-log directories.
+
+Final review covers all 22 changed/new files: lost wakeups, coalescing, timer/queue bounds,
+current ownership/transient barriers, cancellation, late completion and reservation lifetime.
+No unresolved blocker, unrelated edits, credential-pattern matches or generated artifacts.
+Dependencies/wrapper/workflow and original smoke unchanged; executable inputs match the
+validated manifest. Local environment: macOS 26.6.2 arm64/APFS, Temurin 17.0.20.1+1, wrapper 8.5.
+No KF-007 Linux CI execution claimed. Existing CI would run build/package, tests, both smokes
+and report upload after authorized publication; nothing was committed, pushed or published.
+
+Logical budgets exclude caller memory, transport buffers after handoff and total heap.
+Read-capacity overload rejects explicitly; no exact wall-clock timeout or scalability claim.
+File/directory force, atomic replacement and honored device flushes remain assumptions;
+macOS process-kill evidence is not physical power-loss proof. Catalog V3 downgrade remains
+unsupported; no format/migration or durability guarantee was added.
+
+### Authorized publication review — 2026-10-16
+
+Re-fetched origin/main: unchanged `09b42a45b056b842f3c3ee333a6faea4d549c885`.
+Verified KF-006 ancestry and identical merged tree. All 226 source-manifest entries are
+present, with no new unrelated files; executable contents and modes match the accepted
+candidate. Differences are evidence documents only. Recomputed retained XML: 378 tests,
+39 classes, zero failures/errors/skips. Verified command logs/exit JSON, both smoke results,
+exact two-group resume/commit confirmations, one parked/zero-reader delivery proof and JAR hash.
+No affected executable input or incomplete evidence required a repeat build/test/smoke run.
+
+Reviewed registration/publication ordering, cancellation/deadline and single-response paths,
+current ownership and transient barriers, all queue/timer bounds, actual-work plus delivery
+release, no parked read ownership, and degradation/close cleanup. No blocker or code fix.
+Preserved all assertions. Staged review checks exact reviewed paths and manifest hashes,
+whitespace, credentials, generated artifacts and unrelated changes. Raw publication audit:
+`build/kf007-evidence/publication/`; local results remain distinct from subsequent CI.
+
+At this prepublication checkpoint the next action is the authorized commit/push followed by
+verification of Actions for that exact SHA. Configured CI includes clean compilation/package,
+full tests, both smoke scripts (including parked delivery), and always-uploaded reports.
+Record actual run/job outcomes after execution; a configured step is not a passing check.
+
+### Handoff
+
+KF-007 is approved for the requested publication; exact-SHA CI verification follows the push.
+KF-008 remains unstarted: retention boundaries, out-of-range semantics, segment pinning,
+crash-safe deletion, quotas, overload and bounded shutdown under load.
+
 ## Remaining ticket acceptance outlines
 
 Expand the next eligible ticket into scope, decisions, steps, evidence, and handoff.
 
-- **KF-007:** bounded waiter registry; lost-wakeup, cancellation, deadline, ownership
-  and lifecycle tests; many waiters without one worker per waiter.
 - **KF-008:** retention boundaries, out-of-range errors, segment pinning, crash-safe
   deletion, quotas, degraded behaviour, bounded shutdown; preserve offset identity.
 - **KF-009:** loopback defaults, Docker persistent volume demo, readiness/metrics,

@@ -74,6 +74,7 @@ message FetchRequest {
   int64 start_offset = 4;
   int32 max_records = 5;
   int64 max_bytes = 6; // Key plus payload; zero is valid.
+  int64 max_wait_millis = 7; // Zero is immediate; positive waits only at the published end.
 }
 message Record {
   TopicPartition partition = 1;
