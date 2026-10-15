@@ -42,7 +42,7 @@ def main():
                 if not destination.is_relative_to(extracted):
                     raise ValueError('Unsafe JAR entry')
                 jar.extract(entry, extracted)
-    # Standalone fixtures do not run Spring's logging initialization. Keep protocol DATA
+    # Support both standalone and Spring fixtures. Keep protocol DATA
     # frames (which contain session credentials) out of DEBUG logs and stdout confirmations.
     client_logging = extracted / 'client-logback.xml'
     client_logging.write_text('''<configuration>
@@ -57,7 +57,10 @@ def main():
               'claim': 'real network acknowledgement and process restart; not physical power-loss proof'}
 
     def fixture(*arguments):
-        command = [java, f'-Dlogback.configurationFile={client_logging}', '-cp', classpath, 'kaflow.storage.DurableSmokeClient', *map(str, arguments)]
+        client = 'LongPollSmokeClient' if arguments[0] == 'long-poll' else 'DurableSmokeClient'
+        logging_property = 'logging.config' if arguments[0] == 'long-poll' else 'logback.configurationFile'
+        command = [java, f'-D{logging_property}={client_logging}',
+                   '-cp', classpath, 'kaflow.storage.' + client, *map(str, arguments)]
         completed = subprocess.run(command, capture_output=True, text=True, timeout=30)
         (run / ('client-' + arguments[0] + '-' + str(len(result['phases'])) + '.log')).write_text(completed.stdout+completed.stderr)
         if completed.returncode:
@@ -120,11 +123,23 @@ def main():
                     if process.returncode not in allowed or not outcome['listeners_closed']:
                         result['errors'].append('Unexpected shutdown result')
         result['inspection'] = fixture('inspect', data, witness)
+        # Separate Spring-runtime fixture against the same extracted JAR, with internal
+        # bounded registration observation. The two java -jar restart phases stay intact.
+        confirmation = fixture('long-poll', run/'long-poll-data', run/'long-poll.json')
+        if confirmation != 'LONG_POLL registered=1 readers=0 exact_record=0 progress=0 cleanup=0':
+            raise RuntimeError('Missing exact parked long-poll confirmation')
+        result['long_poll'] = json.loads((run/'long-poll.json').read_text())
+        result['long_poll']['runtime'] = 'Spring fixture using production classes and dependencies extracted from the same bootJar'
+        if not (result['long_poll']['passed'] and result['long_poll']['parked_before_append'] == 1
+                and result['long_poll']['readers_before_append'] == 0
+                and result['long_poll']['remaining_waiters'] == 0 and result['long_poll']['listeners_closed']):
+            raise RuntimeError('Long-poll runtime checks failed')
     except (Exception, KeyboardInterrupt) as error:
         result['errors'].append(f'{type(error).__name__}: {error}')
     finally:
         shutil.rmtree(extracted)  # Only this invocation's extracted dependency scratch.
     result['passed'] = (not result['errors'] and result.get('inspection') == 'VERIFIED 4 acknowledged records'
+                        and result.get('long_poll', {}).get('passed', False)
                         and len(result['phases']) == 2
                         and all(p.get('consumer', '').startswith('CONSUMED two independent groups;') for p in result['phases']))
     (args.output/'result.json').write_text(json.dumps(result, indent=2)+'\n')

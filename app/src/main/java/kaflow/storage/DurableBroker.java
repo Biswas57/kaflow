@@ -44,6 +44,16 @@ public final class DurableBroker implements AutoCloseable {
     public record MembershipDiagnostics(int groups, int members, int timerEntries, int admittedControls,
                                         long admittedBytes, int pendingJoins, int queuedControls) { }
     private final ConsumerOptions consumerOptions;
+    private final WaitOptions waitOptions;
+    private final FetchWaiters<ConsumerCall<?>> waiters = new FetchWaiters<>();
+    private final Map<SessionIdentity, Integer> waitSessions = new HashMap<>();
+    private final Map<TopicPartition, Integer> waitPartitions = new HashMap<>();
+    private int admittedWaits;
+    private long waitCharge;
+    public record WaitDiagnostics(int admitted, long metadataBytes, int parked, int timers,
+                                  int sessions, int partitions, int notifications) { }
+    private volatile WaitDiagnostics waitView = new WaitDiagnostics(0, 0, 0, 0, 0, 0, 0);
+    private enum FetchPhase { ADMITTED, WAITING, RUNNABLE, READING, RESPONDING, TERMINAL }
     private final ArrayBlockingQueue<ConsumerCall<?>> consumers;
     private final ArrayBlockingQueue<ReadDone> readCompletions;
     private final ThreadPoolExecutor readers, consumerResponses;
@@ -96,7 +106,12 @@ public final class DurableBroker implements AutoCloseable {
     }
 
     public static DurableBroker open(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers, Clock clock) throws IOException {
-        DurableBroker broker = start(directory, options, groups, consumers, clock, System::nanoTime, new Persistence(), event -> { });
+        return open(directory, options, groups, consumers, WaitOptions.defaults(), clock);
+    }
+
+    public static DurableBroker open(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers,
+                                     WaitOptions waits, Clock clock) throws IOException {
+        DurableBroker broker = start(directory, options, groups, consumers, waits, clock, System::nanoTime, new Persistence(), event -> { });
         try { broker.initialized.get(30, TimeUnit.SECONDS); return broker; }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt(); broker.requestClose(); throw new IOException("durable initialization interrupted; cleanup pending", e);
@@ -117,13 +132,19 @@ public final class DurableBroker implements AutoCloseable {
 
     static DurableBroker start(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers,
                                Clock clock, LongSupplier nanos, Persistence disk, Consumer<String> observer) {
-        return new DurableBroker(directory, options, groups, consumers, clock, nanos, disk, observer);
+        return start(directory, options, groups, consumers, WaitOptions.defaults(), clock, nanos, disk, observer);
     }
 
-    private DurableBroker(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumerOptions, Clock clock, LongSupplier nanos,
+    static DurableBroker start(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers,
+                               WaitOptions waits, Clock clock, LongSupplier nanos, Persistence disk, Consumer<String> observer) {
+        return new DurableBroker(directory, options, groups, consumers, waits, clock, nanos, disk, observer);
+    }
+
+    private DurableBroker(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumerOptions, WaitOptions waitOptions, Clock clock, LongSupplier nanos,
                           Persistence disk, Consumer<String> observer) {
         this.consumerOptions = Objects.requireNonNull(consumerOptions); this.disk = disk;
-        int consumerCalls = consumerOptions.maxReads() + consumerOptions.maxProgressCalls();
+        this.waitOptions = Objects.requireNonNull(waitOptions);
+        int consumerCalls = consumerOptions.maxReads() + consumerOptions.maxProgressCalls() + waitOptions.maxRequests();
         consumers = new ArrayBlockingQueue<>(consumerCalls); readCompletions = new ArrayBlockingQueue<>(consumerOptions.maxReads());
         readers = new ThreadPoolExecutor(consumerOptions.readWorkers(), consumerOptions.readWorkers(), 0, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(consumerOptions.maxReads()), r -> thread("kaflow-reader", r));
@@ -211,7 +232,7 @@ public final class DurableBroker implements AutoCloseable {
     void awaitIdle(Duration timeout) throws InterruptedException, TimeoutException {
         long start = System.nanoTime(), budget = timeout.toNanos();
         synchronized (gate) {
-            while (admittedCalls != 0 || admittedControls != 0 || admittedReads != 0 || admittedProgress != 0) {
+            while (admittedCalls != 0 || admittedControls != 0 || admittedReads != 0 || admittedProgress != 0 || admittedWaits != 0) {
                 long remaining = budget - (System.nanoTime() - start);
                 if (remaining <= 0) throw new TimeoutException("broker work still admitted");
                 TimeUnit.NANOSECONDS.timedWait(gate, remaining);
@@ -247,9 +268,10 @@ public final class DurableBroker implements AutoCloseable {
                 if (initializing) initialized.completeExceptionally(new DurableException(UNAVAILABLE));
                 if (active != null) respond(active, null, new DurableException(UNAVAILABLE), false);
             }
+            serviceWaiters();
             if (state == State.DEGRADED || state == State.CLOSING) rejectQueued();
             if (!initializing && active == null) {
-                if (state == State.CLOSING && !closeDispatched && controls.isEmpty() && consumers.isEmpty() && reading.isEmpty()) {
+                if (state == State.CLOSING && !closeDispatched && controls.isEmpty() && consumers.isEmpty() && reading.isEmpty() && waiters.size() == 0) {
                     closeDispatched = true;
                     dispatch(new Work<>(-1, Kind.CLOSE, null, 0, null, null, 0, 0, null));
                 } else if (state == State.READY) {
@@ -365,6 +387,7 @@ public final class DurableBroker implements AutoCloseable {
                 DurableReceipt receipt = (DurableReceipt) done.value;
                 if (!receipt.partition().equals(work.partition) || receipt.offset() != published.get(work.partition)) throw new IllegalStateException("publication ordering invariant");
                 published.put(work.partition, receipt.offset() + 1);
+                waiters.published(work.partition);
                 if (work.unkeyed) { var topic = topics.get(work.topic); topic.roundRobin = (topic.roundRobin + 1) % topic.count; }
             }
             publishedView = Map.copyOf(published);
@@ -599,15 +622,23 @@ public final class DurableBroker implements AutoCloseable {
     public CompletableFuture<FetchResult> fetch(FetchCommand command) { return fetch(command, null); }
     /** Delivery callback executes within the reservation, including serialization and transport handoff. */
     public CompletableFuture<FetchResult> fetch(FetchCommand command, BiConsumer<FetchResult, Throwable> delivery) {
-        Objects.requireNonNull(command);
-        if (command.generation() < 1 || command.startOffset() < 0 || command.maxRecords() < 1
+        return fetch(command, delivery, new FetchCancellation());
+    }
+    /** The transport installs cancellation before calling this method, including before waiter admission. */
+    public CompletableFuture<FetchResult> fetch(FetchCommand command, BiConsumer<FetchResult, Throwable> delivery,
+                                                 FetchCancellation cancellation) {
+        Objects.requireNonNull(command); Objects.requireNonNull(cancellation);
+        if (command.maxWaitMillis() < 0 || command.maxWaitMillis() > waitOptions.maxWaitMillis()
+                || command.generation() < 1 || command.startOffset() < 0 || command.maxRecords() < 1
                 || command.maxRecords() > options.storage().maxReadRecords() || command.maxBytes() < 0
                 || command.maxBytes() > options.storage().maxReadBytes()) return rejectedConsumer(INVALID_ARGUMENT, delivery);
         long charge = 3 * command.maxBytes() + 512L * command.maxRecords() + 1024
                 + 3L * (36L + options.storage().maxKeyBytes() + options.storage().maxPayloadBytes())
                 + 64L * options.storage().maxSegments();
-        return submitConsumer(new ConsumerCall<>(command.session(), command.generation(), command.session().group(),
-                command.partition(), command.startOffset(), command.maxRecords(), command.maxBytes(), false, true, charge, delivery));
+        ConsumerCall<FetchResult> call = new ConsumerCall<>(command.session(), command.generation(), command.session().group(),
+                command.partition(), command.startOffset(), command.maxRecords(), command.maxBytes(), false, true, charge, delivery);
+        call.waitNanos = TimeUnit.MILLISECONDS.toNanos(command.maxWaitMillis()); call.cancellation = cancellation;
+        return submitConsumer(call);
     }
     public CompletableFuture<Long> commit(CommitCommand command) {
         Objects.requireNonNull(command);
@@ -633,14 +664,19 @@ public final class DurableBroker implements AutoCloseable {
         DurableException.Code rejection;
         synchronized (gate) {
             if (state != State.READY || closeRequested) rejection = UNAVAILABLE;
-            else if (sequence == Long.MAX_VALUE || (call.read ? admittedReads == consumerOptions.maxReads()
-                    || call.charge > consumerOptions.maxReadCharge() - readCharge
+            else if (sequence == Long.MAX_VALUE || (call.waitNanos > 0 ? waitFull(call)
+                    : call.read ? readFull(call)
                     : admittedProgress == consumerOptions.maxProgressCalls() || call.charge > consumerOptions.maxProgressCharge() - progressCharge))
                 rejection = RESOURCE_EXHAUSTED;
             else {
                 call.id = ++sequence;
-                if (call.read) { admittedReads++; readCharge += call.charge; }
+                call.admittedAt = nanos.getAsLong();
+                if (call.waitNanos > 0) {
+                    call.waitReserved = true; admittedWaits++; waitCharge += WaitOptions.METADATA_CHARGE;
+                    waitSessions.merge(call.identity, 1, Integer::sum); waitPartitions.merge(call.partition, 1, Integer::sum);
+                } else if (call.read) reserveRead(call);
                 else { admittedProgress++; progressCharge += call.charge; }
+                call.future.whenComplete((value, error) -> signal());
                 if (!consumers.offer(call)) throw new IllegalStateException("consumer admission invariant");
                 signal(); return call.future;
             }
@@ -653,9 +689,10 @@ public final class DurableBroker implements AutoCloseable {
     }
     private void validateConsumer(ConsumerCall<?> call) {
         if (state != State.READY || closeRequested) throw new DurableException(UNAVAILABLE);
-        if (call.future.isCancelled()) throw new DurableException(UNAVAILABLE);
+        if (call.cancelled()) throw new DurableException(UNAVAILABLE);
         if (call.reset) membership.inactive(call.group, call.partition, nanos.getAsLong());
         else membership.validate(call.identity, call.generation, call.partition, nanos.getAsLong());
+        if (call.barrier != null && call.barrier != membership.barrier(call.group)) throw new DurableException(UNAVAILABLE);
         Long end = published.get(call.partition);
         if (end == null) throw new DurableException(FENCED);
         if (call.offset > end) throw new DurableException(OUT_OF_RANGE);
@@ -671,26 +708,118 @@ public final class DurableBroker implements AutoCloseable {
                     if (!requests.offer(work)) throw new IllegalStateException("progress queue invariant");
                     observer.accept("progress-queued"); return;
                 }
-                ReadSnapshot snapshot = snapshots.get(call.partition);
-                if (snapshot.end != published.get(call.partition)) throw new IllegalStateException("read publication invariant");
-                var handle = snapshot.acquire(); call.boundary = snapshot.end; call.started = nanos.getAsLong();
-                reading.put(call.id, call);
-                readers.execute(() -> {
-                    Object result = null; Throwable error = null;
-                    try (handle) {
-                        disk.event("fetch-read-started");
-                        if (!call.future.isCancelled()) {
-                            var batch = handle.read(call.offset, call.count, call.bytes);
-                            result = new FetchResult(batch.records(), batch.nextOffset(), call.boundary);
+                if (call.waitNanos > 0) {
+                    call.barrier = membership.barrier(call.group);
+                    observer.accept("fetch-registering");
+                    if (call.offset == published.get(call.partition)) {
+                        if (expired(call)) emptyWait(call);
+                        else {
+                            call.phase = FetchPhase.WAITING;
+                            waiters.add(call.id, call.partition, call.identity, call);
+                            observer.accept("fetch-parked");
                         }
-                        disk.event("fetch-read-complete");
-                    } catch (Throwable failure) { error = failure; }
-                    if (!readCompletions.offer(new ReadDone(call, result, error))) throw new IllegalStateException("read completion invariant");
-                    signal();
-                });
+                        return;
+                    }
+                }
+                dispatchRead(call);
             }
         } catch (DurableException error) { respondConsumer(call, null, error, true); }
     }
+    private boolean waitFull(ConsumerCall<?> call) {
+        return admittedWaits == waitOptions.maxRequests() || WaitOptions.METADATA_CHARGE > waitOptions.maxMetadataBytes() - waitCharge
+                || waitSessions.getOrDefault(call.identity, 0) >= waitOptions.maxPerSession()
+                || waitPartitions.getOrDefault(call.partition, 0) >= waitOptions.maxPerPartition();
+    }
+    private boolean readFull(ConsumerCall<?> call) {
+        return admittedReads == consumerOptions.maxReads() || call.charge > consumerOptions.maxReadCharge() - readCharge;
+    }
+    private void reserveRead(ConsumerCall<?> call) {
+        call.readReserved = true; admittedReads++; readCharge += call.charge;
+    }
+    private boolean expired(ConsumerCall<?> call) { return nanos.getAsLong() - call.admittedAt >= call.waitNanos; }
+
+    private void dispatchRead(ConsumerCall<?> call) {
+        call.phase = FetchPhase.RUNNABLE;
+        validateConsumer(call);
+        if (!call.readReserved) {
+            if (readFull(call)) throw new DurableException(RESOURCE_EXHAUSTED);
+            reserveRead(call);
+        }
+        ReadSnapshot snapshot = snapshots.get(call.partition);
+        if (snapshot.end != published.get(call.partition)) throw new IllegalStateException("read publication invariant");
+        var handle = snapshot.acquire(); call.boundary = snapshot.end; call.started = nanos.getAsLong();
+        call.phase = FetchPhase.READING; reading.put(call.id, call);
+        readers.execute(() -> {
+            Object result = null; Throwable error = null;
+            try (handle) {
+                disk.event("fetch-read-started");
+                if (!call.cancelled()) {
+                    var batch = handle.read(call.offset, call.count, call.bytes);
+                    result = new FetchResult(batch.records(), batch.nextOffset(), call.boundary);
+                }
+                disk.event("fetch-read-complete");
+            } catch (Throwable failure) { error = failure; }
+            if (!readCompletions.offer(new ReadDone(call, result, error))) throw new IllegalStateException("read completion invariant");
+            signal();
+        });
+        observer.accept("fetch-dispatched");
+    }
+    private void emptyWait(ConsumerCall<?> call) {
+        validateConsumer(call); observer.accept("fetch-authorized");
+        respondConsumer(call, new FetchResult(List.of(), call.offset, published.get(call.partition)), null, true);
+    }
+    private void activateWait(ConsumerCall<?> call) {
+        waiters.remove(call.id);
+        try { observer.accept("fetch-waking"); dispatchRead(call); }
+        catch (DurableException error) { respondConsumer(call, null, error, true); }
+    }
+    private void serviceWaiters() {
+        synchronized (gate) {
+            // Removable timer slots also bound cancellation, expiry and lifecycle cleanup.
+            int count = Math.min(waitOptions.batch(), waiters.size());
+            for (int i = 0; i < count; i++) {
+                var entry = waiters.maintenance(); if (entry == null) break;
+                var call = entry.value();
+                try {
+                    validateConsumer(call);
+                    if (expired(call)) {
+                        if (call.offset < published.get(call.partition)) activateWait(call);
+                        else { waiters.remove(call.id); emptyWait(call); }
+                    }
+                } catch (DurableException error) { waiters.remove(call.id); respondConsumer(call, null, error, true); }
+            }
+            for (int i = 0; i < waitOptions.batch(); i++) {
+                var entry = waiters.notified(); if (entry == null) break;
+                var call = entry.value();
+                if (call.offset < published.get(call.partition)) activateWait(call);
+                var next = waiters.first(call.partition);
+                if (next != null && next.value().offset < published.get(call.partition)) waiters.published(call.partition);
+            }
+            waitView = new WaitDiagnostics(admittedWaits, waitCharge, waiters.size(), waiters.size(),
+                    waiters.sessions(), waiters.partitions(), waiters.notifications());
+            gate.notifyAll();
+        }
+    }
+    public WaitDiagnostics waitDiagnostics() {
+        synchronized (gate) {
+            var view = waitView;
+            return new WaitDiagnostics(admittedWaits, waitCharge, view.parked(), view.timers(),
+                    view.sessions(), view.partitions(), view.notifications());
+        }
+    }
+    /** Bounded package-private fixture observation, no public transport endpoint. */
+    void awaitParked(int count, Duration timeout) throws InterruptedException, TimeoutException {
+        if (count < 0 || count > waitOptions.maxRequests() || timeout.isNegative()) throw new IllegalArgumentException("wait observation bounds");
+        long start = System.nanoTime(), budget = timeout.toNanos();
+        synchronized (gate) {
+            while (waitView.parked() != count) {
+                long remaining = budget - (System.nanoTime() - start);
+                if (remaining <= 0) throw new TimeoutException("waiter observation timed out");
+                TimeUnit.NANOSECONDS.timedWait(gate, remaining);
+            }
+        }
+    }
+
     private void finishRead(ReadDone done) {
         var call = done.call;
         reading.remove(call.id);
@@ -713,11 +842,12 @@ public final class DurableBroker implements AutoCloseable {
             if (resolved) call.resolved = true;
             releaseConsumer(call);
             if (call.responseScheduled) return;
-            call.responseScheduled = true;
+            call.responseScheduled = true; call.phase = FetchPhase.RESPONDING;
         }
         consumerResponses.execute(() -> {
             try {
-                if (!call.future.isCancelled()) {
+                if (call.cancelled()) call.future.cancel(false);
+                else {
                     if (call.delivery != null) call.delivery.accept((T) value, error);
                     if (error == null) call.future.complete((T) value); else call.future.completeExceptionally(error);
                 }
@@ -727,18 +857,30 @@ public final class DurableBroker implements AutoCloseable {
     }
     private void releaseConsumer(ConsumerCall<?> call) {
         if (call.resolved && call.delivered && !call.released) {
-            call.released = true;
-            if (call.read) { admittedReads--; readCharge -= call.charge; }
-            else { admittedProgress--; progressCharge -= call.charge; }
+            call.released = true; call.phase = FetchPhase.TERMINAL;
+            if (call.readReserved) { admittedReads--; readCharge -= call.charge; }
+            if (!call.read) { admittedProgress--; progressCharge -= call.charge; }
+            if (call.waitReserved) {
+                admittedWaits--; waitCharge -= WaitOptions.METADATA_CHARGE;
+                decrement(waitSessions, call.identity); decrement(waitPartitions, call.partition);
+            }
             gate.notifyAll(); signal();
         }
+    }
+    private static <K> void decrement(Map<K, Integer> counts, K key) {
+        int value = counts.get(key); if (value == 1) counts.remove(key); else counts.put(key, value - 1);
     }
     private static final class ConsumerCall<T> {
         final SessionIdentity identity; final GroupId group; final TopicPartition partition;
         final long generation, offset, bytes, charge; final int count; final boolean reset, read;
         final BiConsumer<T, Throwable> delivery;
         final CompletableFuture<T> future = new CompletableFuture<>();
-        long id, boundary, started; boolean resolved, delivered, released, responseScheduled;
+        long id, boundary, started, admittedAt, waitNanos;
+        boolean resolved, delivered, released, responseScheduled, readReserved, waitReserved;
+        Object barrier;
+        FetchPhase phase = FetchPhase.ADMITTED;
+        FetchCancellation cancellation;
+        boolean cancelled() { return future.isCancelled() || cancellation != null && cancellation.isCancelled(); }
         ConsumerCall(SessionIdentity identity, long generation, GroupId group, TopicPartition partition,
                      long offset, int count, long bytes, boolean reset, boolean read, long charge, BiConsumer<T, Throwable> delivery) {
             this.identity = identity; this.generation = generation; this.group = group; this.partition = partition;

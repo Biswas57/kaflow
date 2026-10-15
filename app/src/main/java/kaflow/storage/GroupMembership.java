@@ -104,8 +104,10 @@ final class GroupMembership {
     void pin(GroupId id) {
         Group group = required(id);
         if (group.pinned) throw new IllegalStateException("duplicate group barrier");
-        group.pinned = true;
+        // Waiting/read work can detect a pin even when it resolves between coordinator checks.
+        group.pinned = true; group.barrier = new Object();
     }
+    Object barrier(GroupId id) { return required(id).barrier; }
     void resolve(GroupId id, long now) {
         Group group = required(id); expire(group, now); // Mark due expiry while still pinned.
         group.pinned = false;
@@ -153,7 +155,7 @@ final class GroupMembership {
     private static final class Group {
         final GroupId id; final TopicId topic; final int partitions;
         final Map<String, Member> live = new LinkedHashMap<>();
-        long generation; boolean exhausted, pinned;
+        long generation; boolean exhausted, pinned; Object barrier = new Object();
         Group(GroupId id, TopicId topic, int partitions) { this.id = id; this.topic = topic; this.partitions = partitions; }
     }
     private static final class Member {
