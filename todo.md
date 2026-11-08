@@ -917,3 +917,11 @@ The strengthened barrier-controlled test reproduces the old failure and passes w
 no assertion/time limit is relaxed. Fresh clean build, all460 tests and three packaged smokes
 pass. Preserve both CI outcomes and the failed reproduction; carry the production and test
 fix into dependent KF-009 and revalidate its affected inputs. See the KF-008 validation record.
+
+### KF-008 late-reset diagnostic correction
+
+The membership correction passed PR CI, but push CI exposed a stale progress-barrier count
+after a timed-out reset completed. Publish the resolved count before releasing its request.
+The controlled regression reproduces the old failure and preserves failed-write ownership
+and restart assertions. Fresh clean build, 460 tests and three packaged smokes passed.
+Failed evidence is retained; propagate this fix to KF-009 and verify exact pushed/PR SHAs.
