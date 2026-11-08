@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = 'Tributary-Cluster'
 include('app')
+include('clients')

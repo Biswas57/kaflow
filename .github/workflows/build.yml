@@ -32,6 +32,9 @@ jobs:
       - name: Run existing tests
         timeout-minutes: 10
         run: ./gradlew :app:test --rerun-tasks --no-daemon
+      - name: Build public V1 examples and run client tests
+        timeout-minutes: 4
+        run: ./gradlew :clients:installDist :clients:healthProbeJar :clients:test --rerun-tasks --no-daemon
       - name: Check packaged startup and shutdown
         timeout-minutes: 2
         run: python3 scripts/smoke_bootjar.py
@@ -41,6 +44,12 @@ jobs:
       - name: Check packaged retention and bounded shutdown
         timeout-minutes: 3
         run: python3 scripts/smoke_retention.py
+      - name: Check documented native operator path
+        timeout-minutes: 4
+        run: python3 scripts/smoke_release.py
+      - name: Check bounded benchmark correctness (no performance gate)
+        timeout-minutes: 6
+        run: python3 scripts/benchmark_release.py --mode correctness
       - name: Retain available test and smoke reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -52,5 +61,38 @@ jobs:
             app/build/reports/smoke/
             app/build/reports/durable-smoke/
             app/build/reports/retention-smoke/
+            app/build/reports/release-smoke/
+            app/build/reports/benchmarks/correctness/
+            clients/build/reports/tests/test/
+            clients/build/test-results/test/
+          if-no-files-found: warn
+          retention-days: 14
+
+  container:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up JDK 17 for the public clients
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build packaged clients from source
+        timeout-minutes: 5
+        run: ./gradlew :clients:installDist --no-daemon
+      - name: Build and check non-root Docker persistence and shutdown
+        timeout-minutes: 16
+        run: python3 scripts/smoke_container.py
+      - name: Retain container evidence including failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: container-reports
+          path: app/build/reports/container-smoke/
           if-no-files-found: warn
           retention-days: 14

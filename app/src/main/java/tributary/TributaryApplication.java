@@ -16,12 +16,14 @@ public class TributaryApplication {
     }
 
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "kaflow.durable.enabled", havingValue = "false", matchIfMissing = true)
     public TributaryCluster tributaryCluster() {
         return new TributaryCluster();
     }
 
     /** One controller is shared by this application's REST and gRPC adapters. */
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "kaflow.durable.enabled", havingValue = "false", matchIfMissing = true)
     public TributaryController tributaryController(TributaryCluster cluster) {
         return new TributaryController(cluster);
     }

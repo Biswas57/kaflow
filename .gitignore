@@ -15,3 +15,10 @@ app/bin/
 .idea/
 *.iml
 .DS_Store
+
+# Python release-check caches
+__pycache__/
+*.py[cod]
+
+# Local documented durable quickstart store
+/local-data/

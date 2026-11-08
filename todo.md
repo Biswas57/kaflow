@@ -3,7 +3,8 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-10-16. Current ticket: **none**. Latest completed: **KF-008**.
+Last updated: 2026-11-08. Current ticket: none. Latest completed: **KF-009**.
+KF-009 acceptance is complete, including the full Linux CI Docker gate. PR #9 remains draft; no merge or release is authorized.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
@@ -15,7 +16,7 @@ Last updated: 2026-10-16. Current ticket: **none**. Latest completed: **KF-008**
 | KF-006 | Durable commits, immediate Fetch API, independent replay | DONE | KF-005 |
 | KF-007 | Asynchronous long polling and cancellation | DONE | KF-006 |
 | KF-008 | Retention, deletion, overload, bounded shutdown | DONE | KF-007 |
-| KF-009 | Operable release, Docker, metrics, measured benchmarks | READY | KF-008 |
+| KF-009 | Operable release, Docker, metrics, measured benchmarks | DONE | KF-008 |
 
 READY means scoped backlog, not permission to bypass unfinished dependencies.
 Split large tickets into numbered child tickets before implementation when necessary.
@@ -882,13 +883,249 @@ KF-009 handoff only: operable release, loopback defaults, Docker persistent-volu
 readiness/metrics, producer/consumer examples, accurate documentation and measured benchmarks.
 KF-009 remains unstarted. Branch remains uncommitted; no push, PR or merge.
 
-## Remaining ticket acceptance outlines
+## KF-009 — Operable release, Docker persistence, observability and measurements
 
-Expand the next eligible ticket into scope, decisions, steps, evidence, and handoff.
+**Status:** DONE (2026-11-08): corrected final inputs passed native and complete Docker acceptance in Linux CI. Earlier blocked checkpoints below are retained history; see the final CI evidence section. User confirmed implementation after refinement.
+**Branch:** `codex/kf-009-operable-release`, created from the completed uncommitted KF-008 state
+at `3d9cdda18c616636edd411e6c470f01a046729a6`; freshly fetched origin/main is unchanged.
+Implementation-entry manifest preserves 243 inputs under `build/kf009-evidence/entry/`.
+No commit, push, PR, merge, release or image publication is authorized.
+**Design:** [implementation plan](docs/design/kf-009-operable-release.md).
+**Evidence:** [planning/validation record](docs/baseline/kf-009.md).
 
-- **KF-009:** loopback defaults, Docker persistent volume demo, readiness/metrics,
-  producer/consumer example, accurate README and actual CI results; publish only
-  measured benchmarks with hardware/workload/durability details.
+### Working state and provenance
+
+Planning-entry branch `codex/kf-008-retention-lifecycle`, HEAD/fetched `origin/main`
+`3d9cdda18c616636edd411e6c470f01a046729a6` (KF-007 merge), with verified ancestor
+`05248c86f4e7293810cc28c14ec12c26b4d60fbc`. KF-008 remains uncommitted: 36 changed/new
+paths, none staged, before KF-009 documentation edits. Preserve all inherited work.
+Retained XML independently recounted at planning: **460 tests, 44 classes, zero
+failures/errors/skips**. All three retained packaged smoke result files report success.
+All current executable input hashes/modes match KF-008's final source manifest; only
+`docs/baseline/kf-008.md`, `docs/design/kf-008-retention-lifecycle.md`,
+`docs/development.md` and `todo.md` differ, matching its final evidence-only updates.
+This is inspection of prior local evidence, not new execution or KF-008 CI evidence.
+
+Pre-edit inherited manifest: ignored `build/kf009-evidence/planning/inherited-manifest.json`,
+241 files, SHA-256 `fc42b2ff5cb70e5e88a82e56e220c5c6e80521d350300324daf8b66baad0d1bc`.
+Includes hashes/modes, status and staged/unstaged diff hashes. Retained smoke summaries are
+adjacent. At implementation start, refresh this inventory and remote state. If KF-008 has
+merged, branch from verified main containing it; otherwise create
+`codex/kf-009-operable-release` carrying the inherited working state, without silently
+committing it. Then mark IN_PROGRESS before executable changes. No commit, push, PR, merge,
+release or image publication is authorized.
+
+### Decisions and staged work
+
+1. At implementation entry inspect usable Java 17/wrapper, Docker CLI/Compose and reachable
+   engine (client/server versions, context, OS/architecture, native/VM/remote location).
+   Inspection does not install software, switch contexts or start services. Record exact
+   missing capabilities/setup and continue independent work; no native substitute for Docker.
+   Typed configuration mapped to existing bounded option records; loopback HTTP/gRPC
+   defaults, explicit durable directory, isolated prototype/durable adapters and one total
+   configurable shutdown budget. Durable is the primary documented path, prototype remains
+   a clearly named compatibility mode. No fallback on configuration/recovery failure.
+2. Bounded startup provisioning, with an internal idempotent ensure-topic operation using
+   the existing durable writer/catalog protocol. Same fixed count succeeds, conflict fails;
+   provisioning precedes V1 listener/readiness. Validate syntax/duplicates/local bounds before
+   storage open; after recovery preflight the entire list's existing definitions and aggregate
+   capacity before creating anything. Known late conflicts/capacity failures create no prefix.
+   Keep strict create semantics; I/O failure can still leave a nontransactional durable prefix
+   completed idempotently at restart. No network administration/reset API.
+3. Separate Actuator liveness/readiness and bounded Micrometer outcomes, timers and owner
+   snapshot gauges. Fixed labels only; no disk scan, coordinator blocking or change to
+   cancellation/late-completion reservation lifetime. Quota rejection is not storage degradation.
+4. Small installable `clients` module generated from canonical V1 schema: producer, consumer
+   with independent Heartbeat, two-group/replay/explicit retention-choice demo. No storage/test
+   dependencies, hidden fixtures, automatic ambiguous Append retries or general-purpose SDK.
+   Each batch captures original session/incarnation/generation/qualified partition; Heartbeat
+   publishes only a bounded thread-safe latest membership view. Check assignment before
+   processing and Commit only with original batch credentials. A rebalance during processing
+   cannot undo side effects; fenced/ambiguous Commit requires recovery and may duplicate work.
+5. Java 17 wrapper-built non-root image and Compose named volume, host ports published only
+   on loopback, bounded health probe and aligned signal/shutdown budget. Execute replacement
+   and exact data/progress checks; ordinary shutdown never removes the data volume.
+6. Public-gRPC bounded harness for durable Append, batch Fetch, consumer plus durable Commit,
+   and proven parked delivery. Correctness mode separate from 10s warmup/30s measured runs,
+   three repetitions per fixed workload. Bound histograms/receipts/workers; report all outcomes,
+   environment and variation; verify acknowledged records/progress outside timing. Isolated
+   long-poll setup observes aggregate parked count zero then one, with Fetch still outstanding,
+   before Append dispatch. Bound setup at 2s with a 10s wait; observation stays outside timing.
+   Failed setup never contributes parked-delivery latency. No test-only public endpoint.
+   Fixed-size payloads encode unique run/sequence IDs; bound a ledger of exact acknowledged
+   bytes/key presence/partition/offset/timestamp, reserving space before issuance. Stop issuance
+   at cutoff, report in-flight work, separately drain for at most 15s and report resolved versus
+   unresolved/ambiguous outcomes. Drain completions never inflate in-window throughput.
+   Verify every acknowledgement including drain receipts; do not assume errors imply no write.
+   Setup/receipt-cap/quota-cap/drain/verification failures remain explicit, incomplete runs
+   cannot be successful validated benchmarks, and no throughput targets are invented.
+7. Accurate README/architecture, configuration/API/operations/examples/benchmark references,
+   tested closed-store backup/restore, compatibility limitations, bounded Linux CI jobs and
+   final source-only acceptance evidence. No authentication/replication/exactly-once claims.
+
+### Acceptance checklist
+
+- [x] Branch/input provenance and inherited delta recorded; existing assertions preserved.
+- [x] Entry inspection proves usable Java 17/wrapper and records actual Docker availability.
+  At local entry CLI/Compose/engine were absent; the final Linux CI evidence records actual versions/context/location.
+- [x] Native listener addresses verified at runtime, including no default wildcard listener.
+- [x] Supported config precedence/defaults/ranges/restart semantics tested; bad config fails.
+- [x] Durable/prototype application service separation and inherited standard gRPC services and recovery/provisioning gate verified.
+- [x] Idempotent topic provisioning, conflicting definitions, bounds and failure cleanup tested.
+- [x] Whole-list recovered-state preflight rejects a conflict late in the list without creating
+  an earlier missing topic; aggregate capacity checks count only missing additions. Injected I/O
+  failure may leave a prefix and restart completes it idempotently.
+- [x] Liveness/readiness distinguish startup, ready, quota rejection, degradation and closing.
+- [x] Real RPC outcomes/latency, admission/queues/bytes, reads/waits/members, storage/quota/pins,
+  watchdog/lifecycle metrics verified; fixed cardinality, documented snapshot/omission semantics.
+- [x] Client deadlines, independent Heartbeat, generation/expiry/overload handling, bounded
+  teardown and ambiguous outcomes tested; two groups/replay/retention choice use public APIs.
+- [x] Deterministic ownership changes before processing, during processing, before Commit and
+  heartbeat/shutdown races preserve immutable batch identity and original Commit credentials;
+  stale unprocessed batches are discarded and possible duplicate side effects reported.
+- [x] Fresh native quickstart uses packaged artifacts with no fixtures or metadata edits.
+- [x] Real container source build, non-root ownership, loopback host publishing, readiness,
+  persistent replacement and parked-request SIGTERM cleanup verified on final source.
+- [x] Closed-store backup/restore procedure tested; exact format/upgrade/rollback limits documented.
+- [x] Bounded harness correctness and all four repeated measured scenarios executed separately;
+  receipts/progress verified, every failure/rejection/timeout and limitation reported.
+- [x] Parked benchmark observes zero then one on the aggregate gauge with outstanding Fetch
+  and bounded setup; Append-dispatch-to-Fetch-completion timing excludes metrics observations.
+  Setup/expiry/error paths do not become successful parked-delivery samples.
+- [x] Unique run/sequence payloads retain exact configured size; count/byte-bounded ledger
+  reserves for in-flight acknowledgements and verifies exact bytes/key presence/identity/time.
+- [x] Cutoff/drain races and denominators tested: no post-window throughput credit, separate
+  drain outcomes/latencies, unresolved/ambiguous writes explicit. Setup/cap/quota/drain/verification
+  failure paths retain evidence; incomplete verification never receives a successful validity flag.
+- [x] Clean source-only build/package, actual full test counts and all three inherited smokes pass.
+- [x] CI includes appropriate native/container checks, bounded durations and failure uploads;
+  authored workflow distinguished from actually executed exact-revision CI.
+- [x] Final executable manifest/package correspondence, diff/secrets/generated-file/scope review,
+  README usability and final evidence reviewed; required unavailable checks explicitly BLOCKED.
+
+Validation retains `./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon`,
+separate `./gradlew :app:test --rerun-tasks --no-daemon`, and
+`python3 scripts/smoke_bootjar.py`, `python3 scripts/smoke_durable.py`,
+`python3 scripts/smoke_retention.py`. Planned additional commands:
+`./gradlew :clients:installDist --no-daemon`, `./gradlew :clients:test --rerun-tasks --no-daemon`,
+`python3 scripts/smoke_release.py`, `python3 scripts/smoke_container.py`,
+`python3 scripts/benchmark_release.py --mode correctness`, and
+`python3 scripts/benchmark_release.py --mode measured --config benchmarks/release.json`.
+These command specifications are now implemented; actual final execution is recorded below. Retain failures and
+fresh XML counts; do not assume the final count remains 460. CI throughput is not a pass gate.
+
+### Historical planning findings and implementation progress
+
+Existing dependencies already supply Actuator/Micrometer. Current resource properties omit
+bind addresses; only a subset of option limits is configurable. Legacy adapters are currently
+also registered in durable mode; provisioning still needs internal/test fixtures. README is
+historical. No Docker/Compose or standalone V1 client distribution exists in the checkout.
+
+Java's system launcher reports no installed runtime; the prior temporary Java 17 home is
+absent. Docker CLI is absent from PATH and checked common locations. These are validation
+prerequisites, not failed KF-009 test runs. Planning leaves READY; after implementation,
+missing required execution must leave BLOCKED with exact pending commands. No new CI run.
+
+These environment findings are the original planning observations, not fresh entry checks.
+All added parked-observation, consumer-race, provisioning-preflight and benchmark-accounting
+checks above are **planned, not executed**. Historical KF-008 results remain unchanged.
+
+Implementation entry: system Java launchers exist but no usable JDK is installed; prior temporary
+JDK/cache is gone. Docker CLI/Compose and common local engine sockets are absent, so server
+version/context/OS/architecture cannot be obtained. Host is macOS 26.6.2 arm64. Container
+execution requires a working Docker engine and Compose; no container result is claimed.
+Proceed with an isolated Java 17 toolchain and native work; Docker execution remains pending.
+At implementation entry the next action was typed configuration, provisioning, readiness and lifecycle integration.
+
+Implementation progress: typed startup properties and loopback defaults, durable/prototype adapter
+separation, whole-list coordinator preflight plus idempotent ensure-topic, configured shared
+shutdown budget, readiness gate and fixed-cardinality metrics are implemented. Focused tests
+cover defaults/syntax, late conflicts/capacity/restart and actual V1/health/metrics behaviour.
+Initial compile/test-compilation passed (52s); focused execution is next, not yet acceptance.
+Isolated Temurin 17.0.20.1+1 verified against official SHA256; wrapper 8.5 verified. Initial
+wrapper failed TLS validation on managed GitHub redirects. Restored the exact previously
+verified Cisco root from its official PEM (same fingerprint) only to task-local JDK trust;
+verification stayed enabled. Successful wrapper retry 23.54s. Logs include the failure under
+`build/kf009-evidence/commands/`. No system Java change or Docker installation/service start.
+
+Focused stage 1 checks passed (8 tests, 8.63s): provisioning/strict-create/restart/capacity,
+configuration mapping/syntax and real Spring listeners/readiness/metrics. Added a caller-created
+immutable bounded provisioning plan so metadata copies are outside broker admission and shared
+safely after reservation. Client module now generates only canonical V1, packages an executable
+example and JDK-only health probe; four deterministic consumer identity/rebalance/close tests
+passed (11s). No benchmark/container/final acceptance results yet. Next: bounded benchmark
+ledger/accounting, native release/container scripts and operator docs, then full final validation.
+
+KF-009 native implementation progress (2026-11-08): release smoke passed in 29.16s,
+including actual default loopback sockets, V1-only durable composition, bad configuration,
+file/environment/CLI precedence, two-group replacement, binary receipt correspondence,
+JSON processing with independent heartbeat, explicit retention skip and closed-store restore.
+Benchmark correctness passed all six scenarios plus deliberate setup/cap failure classification
+in 65.36s. These are development runs, superseded by final-candidate execution below.
+
+Final review tightened whole-list catalog/segment/quota preflight on the existing storage
+owner (bounded metadata only, no disk I/O), and client recovery now waits for an earlier
+heartbeat before asking for fresh progress. Added durable-prefix I/O failure/restart,
+watchdog/late-failure metrics, ambiguous Commit recovery and Fetch-close tests. Retained two
+focused development failures: a test cleanup compile error (Micrometer registry is not
+AutoCloseable in this version), then an incorrect test expectation of UNAVAILABLE where an
+ordinary injected I/O completion correctly maps to INTERNAL. Fixed the test to assert the
+actual established contract, including degradation and durable-prefix recovery; no production
+error mapping or existing assertion was weakened. Focused rerun passed (7.23s).
+
+README is now durable-first; configuration, operations, examples and measurement references
+are written. Original README is preserved as explicitly historical. Dockerfile, Compose and
+isolated acceptance script are implemented; official base manifests inspected, no image built.
+Final Docker prerequisite command exits2/BLOCKED (0.18s): CLI, Compose and reachable engine
+unavailable. No native check substitutes for container execution.
+
+Frozen source-only candidate: 276 inputs, manifest SHA256
+`785879f09c3b1235f47194a0bda6e7434dd4c70347994f83610672c166a4a910`,
+`build/kf009-evidence/final/source-manifest.json`. Fresh clean compilation/package and client
+installation/health-probe JAR passed in9.75s. Separate full app/client suites are running.
+Next: final three inherited smokes, native operator smoke, benchmark correctness, then isolated
+repeated measured runs. Record actual counts/results and final package/source correspondence.
+
+### Final native evidence and blocked handoff (historical)
+
+Source manifest remains `785879f09c3b1235f47194a0bda6e7434dd4c70347994f83610672c166a4a910`
+(276 inputs). Final clean build/package/client distribution: exit 0,9.75s. Separate full tests:
+**472 server +11 client =483**,50 classes, no failures/errors/skips; exit 0,82.90s.
+Original smoke 2.14s, durable crash/restart8.45s, retention4.03s, native release27.65s and
+benchmark correctness61.05s all passed with no timeouts. Additional packaged service inventory
+passed 3.20s, confirming inherited standard health/reflection plus V1 and no prototype service.
+HTTP readiness is broker-aware; standard gRPC health is not.
+
+All 18 measured trials passed in 881.36s. Three10s warmup/30s measured runs per scenario on
+Apple M4 Pro,24GiB, macOS 26.6.2/APFS, shared-host Java 17. Median rates: Append 52.9/55.0 ops/s
+(1/4 callers), warm-page Fetch 2146.0/5355.9 ops/s (1/4), consumer 33.4 Append–Fetch–Commit cycles/s.
+Proven-parked delivery p99 upper bounds20.97–23.07ms.691476 measured operations:691443 in-window
+successes,33 separately counted drain successes, no failed/rejected/timed-out or unresolved work.
+All 29079 acknowledged records (including seed/warmup) matched exact bytes/key/identity/time;
+consumer durable progress verified. Complete ranges/latencies and limitations are in
+[the validation record](docs/baseline/kf-009.md) and [benchmark guide](docs/benchmarks.md).
+
+Retained final XML/HTML, all smoke/measurement reports, exact receipt ledgers, command outcomes,
+source/package correspondence, review and environment metadata: `build/kf009-evidence/final/`;
+failed attempts remain under `build/kf009-evidence/commands/` and `focused-failure/`. The macOS
+directory-path disk probe failed; a retained device query independently confirmed APFS/internal
+solid-state storage. No silent replacement of failed evidence.
+
+Final executable hashes/modes match the frozen inputs; only documentation/evidence changed
+afterward.262 server and 116 client packaged classes exactly match separate test recompilation.
+Whitespace/link/scope/secrets/generated-file review passed; no generated source/artifact added,
+no unrelated edits discarded, index empty. All inherited KF-008 work remains uncommitted.
+
+**Remaining gate:** Docker preflight exit 2/BLOCKED,0.18s. Provide Docker CLI, Compose and a
+reachable engine, then run `./gradlew :clients:installDist --no-daemon` and
+`python3 scripts/smoke_container.py`. Record context/engine versions/OS/architecture/location,
+image build/UID/volume/listeners/readiness/replacement/SIGTERM evidence, fix failures and rerun
+affected checks before DONE. Container execution was not replaced by native results.
+
+Linux native/container CI is authored but not executed; local repeated measurements and
+supplemental service inventory are not CI steps. No pushed SHA/CI URL exists for KF-009.
+Branch remains `codex/kf-009-operable-release` at base `3d9cdda18c616636edd411e6c470f01a046729a6`.
+No commit, push, PR, merge, release/image publication or dependent ticket started.
 
 ## Publication authorization — 2026-11-08
 
@@ -909,6 +1146,18 @@ limit. No production or Docker change. Fresh clean build, all 460 tests and thre
 smokes passed; see [follow-up evidence](docs/baseline/kf-008.md#ci-cancellation-regression-follow-up--2026-11-08).
 This test-only change is included in dependent KF-009; exact follow-up CI is still pending.
 
+### KF-009 dependent publication checkpoint
+
+User-authorized draft PR targets KF-008 branch at `5cc116336ec4b57db69245c49af2c777ecaca50a`
+([dependency #8](https://github.com/Biswas57/kaflow/pull/8)). Production/build/script/schema/
+benchmark hashes and modes match the validated 276-input manifest; the inherited network
+cancellation test correction is the only executable-input exception, with separate validation.
+Publication documentation is distinguished from measured/tested inputs. Native historical
+evidence: 483 tests (472 server + 11 client), four packaged smokes, correctness and 18 measured
+trials / 29,079 verified acknowledgements. **KF-009 stays BLOCKED** until the complete
+`python3 scripts/smoke_container.py` gate runs successfully locally or in equivalent Linux CI.
+No release, image publication or merge is included. Retarget and recheck after KF-008 merges.
+
 ### KF-008 rejected-control diagnostic correction
 
 The corrected cancellation head passed push CI but failed PR merge-result CI on a stale
@@ -925,3 +1174,25 @@ after a timed-out reset completed. Publish the resolved count before releasing i
 The controlled regression reproduces the old failure and preserves failed-write ownership
 and restart assertions. Fresh clean build, 460 tests and three packaged smokes passed.
 Failed evidence is retained; propagate this fix to KF-009 and verify exact pushed/PR SHAs.
+
+### KF-009 inherited fixes revalidated
+
+Merged all KF-008 corrections through `9492137` without rewriting published history.
+Fresh clean build, 472 server +11 client tests, all four packaged smokes and benchmark
+correctness passed. Four executable inputs differ from the historical manifest; all are
+explicitly recorded and revalidated. KF-008 push and PR merge-result CI both passed.
+KF-009 remains BLOCKED pending final corrected-tree container evidence; no merge or image
+publication is authorized.
+
+### Final KF-009 CI acceptance — 2026-11-08
+
+**DONE:** corrected executable tree `e80f3b867f8bbc38eff4a2d768b191480853347f` passed
+[branch-head CI](https://github.com/Biswas57/kaflow/actions/runs/42460855669) and
+[PR merge-result CI](https://github.com/Biswas57/kaflow/actions/runs/42460858854), including
+all 483 tests, four smokes, benchmark correctness and the complete source-build/container
+acceptance gate. This actual Linux Docker execution resolves the local engine blocker;
+earlier blocked records remain historical. See the final KF-009 validation section for
+checkout revisions, engine/context/image, persisted data, ownership and shutdown evidence.
+Current documentation changes do not alter tested executable inputs. PR #9 stays draft,
+dependent on #8; no merge, release or image publication. After #8 merges, retarget #9 to
+main and recheck its diff/CI. Original work and failed evidence remain privately backed up.

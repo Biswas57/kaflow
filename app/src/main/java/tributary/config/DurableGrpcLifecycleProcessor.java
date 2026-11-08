@@ -19,7 +19,7 @@ final class DurableGrpcLifecycleProcessor implements DestructionAwareBeanPostPro
     @Override public Object postProcessAfterInitialization(Object bean, String name) {
         if (!(bean instanceof GrpcServerLifecycle)) return bean;
         if (lifecycle != null) throw new IllegalStateException("multiple durable gRPC lifecycle owners");
-        lifecycle = new DurableGrpcLifecycle(context.getBean(GrpcServerFactory.class), context, context.getBean(DurableBroker.class));
+        lifecycle = new DurableGrpcLifecycle(context.getBean(GrpcServerFactory.class), context, context.getBean(DurableBroker.class), context.getBean(DurableProperties.class).shutdownTimeout(), context.getBean(BrokerMetrics.class));
         context.addApplicationListener(lifecycle);
         return lifecycle;
     }

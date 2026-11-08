@@ -26,6 +26,7 @@ import tributary.core.tributaryObject.Partition;
  * gRPC.
  */
 @GrpcService
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "kaflow.durable.enabled", havingValue = "false", matchIfMissing = true)
 public class TributaryStreamImpl extends TributaryStreamGrpc.TributaryStreamImplBase {
 
     private static final Logger logger = Logger.getLogger(TributaryStreamImpl.class.getName());

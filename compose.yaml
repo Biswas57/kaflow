@@ -1,0 +1,17 @@
+services:
+  broker:
+    build: .
+    image: kaflow:local
+    ports:
+      - "127.0.0.1:${KAFLOW_HTTP_PORT:-8080}:8080"
+      - "127.0.0.1:${KAFLOW_GRPC_PORT:-9090}:9090"
+    volumes:
+      - broker-data:/var/lib/kaflow
+    stop_grace_period: 15s
+    # The image's exec-form JVM entrypoint receives SIGTERM directly; its total budget is 10s.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  broker-data:

@@ -39,13 +39,14 @@ public final class DurableBroker implements AutoCloseable {
     public record Diagnostics(State state, boolean ready, int admittedCalls, long admittedBytes,
                               int queuedCalls, long activeOperation, boolean watchdogExpired,
                               Map<TopicPartition, Long> published) { }
-    private enum Kind { CREATE, APPEND, INSPECT, GROUP, COMMIT, RESET, MAINTAIN, CLOSE }
+    private enum Kind { CREATE, ENSURE, PREFLIGHT, APPEND, INSPECT, GROUP, COMMIT, RESET, MAINTAIN, CLOSE }
     private enum ControlKind { JOIN, HEARTBEAT, LEAVE, VALIDATE }
     public record MembershipDiagnostics(int groups, int members, int timerEntries, int admittedControls,
                                         long admittedBytes, int pendingJoins, int queuedControls) { }
     private final LifecycleOptions lifecycle;
     private volatile StorageQuota quota;
     private volatile ThreadPoolExecutor transport;
+    private volatile Duration shutdownTimeout = Duration.ofSeconds(10);
     private Runnable stopTransport = () -> { };
     private java.util.function.BooleanSupplier transportQuiesced = () -> true;
     private volatile Map<TopicPartition, ReadSnapshot> snapshotView = Map.of();
@@ -100,6 +101,7 @@ public final class DurableBroker implements AutoCloseable {
     private volatile State state = State.INITIALIZING;
     private volatile boolean closeRequested, watchdogExpired, readWatchdogExpired;
     private volatile long activeId;
+    private volatile long storageFailures, watchdogEvents;
     private int admittedCalls;
     private long admittedBytes, sequence, maintenanceSequence = -1;
     private Work<?> active;
@@ -197,6 +199,25 @@ public final class DurableBroker implements AutoCloseable {
         return submit(Kind.CREATE, topic, count, null, null, 0, 0, 0);
     }
 
+    /** Startup administration; all checks run on coordination, with no filesystem access. */
+    public CompletableFuture<Void> preflightTopics(ProvisioningPlan plan) {
+        var requested = Objects.requireNonNull(plan).topics();
+        if (requested.size() > options.maxTopics()) return rejected(RESOURCE_EXHAUSTED);
+        for (var count : requested.values()) if (count > options.maxPartitionsPerTopic()) return rejected(INVALID_ARGUMENT);
+        // Plan bytes are immutable caller-owned metadata; this call charges one admission slot.
+        return submit(Kind.PREFLIGHT, null, 0, null, null, 0, 0, 0, requested);
+    }
+
+    /** Existing equal definitions are idempotent; strict createTopic remains strict. */
+    public CompletableFuture<Void> ensureTopic(TopicId topic, int count) {
+        Objects.requireNonNull(topic);
+        try {
+            LogFormat.topicBytes(new TopicPartition(topic, 0));
+            if (count < 1 || count > options.maxPartitionsPerTopic()) return rejected(INVALID_ARGUMENT);
+        } catch (StorageException e) { return rejected(INVALID_ARGUMENT); }
+        return submit(Kind.ENSURE, topic, count, null, null, 0, 0, 0);
+    }
+
     public CompletableFuture<DurableReceipt> append(AppendCommand command) {
         Objects.requireNonNull(command);
         long bytes = (long) command.payload().length() + command.key().map(ImmutableBytes::length).orElse(0);
@@ -216,12 +237,19 @@ public final class DurableBroker implements AutoCloseable {
 
     private <T> CompletableFuture<T> submit(Kind kind, TopicId topic, int count, AppendCommand command,
                                            TopicPartition partition, long start, long readBytes, long charge) {
+        return submit(kind, topic, count, command, partition, start, readBytes, charge, Map.of());
+    }
+
+    private <T> CompletableFuture<T> submit(Kind kind, TopicId topic, int count, AppendCommand command,
+                                           TopicPartition partition, long start, long readBytes, long charge,
+                                           Map<TopicId, Integer> definitions) {
         synchronized (gate) {
             if (state != State.READY || closeRequested) return rejected(UNAVAILABLE);
             if (admittedCalls == options.maxCalls() || charge > options.maxBytes() - admittedBytes
                     || sequence == Long.MAX_VALUE) return rejected(RESOURCE_EXHAUSTED);
             Reservation reservation = new Reservation(charge);
             Work<T> work = new Work<>(++sequence, kind, topic, count, command, partition, start, readBytes, reservation);
+            work.definitions = definitions;
             admittedCalls++; admittedBytes += charge;
             if (!requests.offer(work)) throw new IllegalStateException("admission queue invariant");
             signal(); return work.future;
@@ -273,7 +301,7 @@ public final class DurableBroker implements AutoCloseable {
             for (int i = 0; i < 8; i++) { ReadDone read = readCompletions.poll(); if (read == null) break; finishRead(read); }
             for (int i = 0; i < 8; i++) { var call = consumers.poll(); if (call == null) break; applyConsumer(call); }
             for (var call : reading.values()) if (!call.responseScheduled && nanos.getAsLong() - call.started >= options.watchdog().toNanos()) {
-                readWatchdogExpired = true;
+                readWatchdogExpired = true; watchdogEvents++;
                 if (state != State.CLOSING) transition(State.DEGRADED);
                 respondConsumer(call, null, new DurableException(UNAVAILABLE), false);
             }
@@ -286,7 +314,7 @@ public final class DurableBroker implements AutoCloseable {
             groupCount = membership.groupCount(); memberCount = membership.memberCount();
             if ((initializing || active != null && active.kind != Kind.CLOSE) && !watchdogExpired
                     && nanos.getAsLong() - started >= options.watchdog().toNanos()) {
-                watchdogExpired = true;
+                watchdogExpired = true; watchdogEvents++;
                 if (state != State.CLOSING) transition(State.DEGRADED);
                 if (initializing) initialized.completeExceptionally(new DurableException(UNAVAILABLE));
                 if (active != null) respond(active, null, new DurableException(UNAVAILABLE), false);
@@ -319,7 +347,7 @@ public final class DurableBroker implements AutoCloseable {
             if (work == null) return;
             DurableException invalid = prepare(work);
             if (invalid != null) respond(work, null, invalid, true);
-            else if (work.noWrite) respond(work, work.start, null, true);
+            else if (work.noWrite) respond(work, work.consumer == null ? null : work.start, null, true);
             else dispatch(work);
         }
     }
@@ -335,6 +363,16 @@ public final class DurableBroker implements AutoCloseable {
                 return null;
             } catch (DurableException e) { return e; }
         }
+        if (work.kind == Kind.PREFLIGHT) {
+            int topicCount = topics.size(), partitionCount = published.size();
+            for (var entry : work.definitions.entrySet()) {
+                var existing = topics.get(entry.getKey());
+                if (existing != null && existing.count != entry.getValue()) return new DurableException(ALREADY_EXISTS);
+                if (existing == null) { topicCount++; partitionCount += entry.getValue(); }
+            }
+            if (topicCount > options.maxTopics() || partitionCount > options.maxPartitions()) return new DurableException(RESOURCE_EXHAUSTED);
+            return null; // Storage owner also preflights catalog/frame/quota bounds without I/O.
+        }
         TopicState topic = topics.get(work.topic);
         if (work.kind == Kind.GROUP) {
             if (topic == null) return new DurableException(NOT_FOUND);
@@ -342,8 +380,11 @@ public final class DurableBroker implements AutoCloseable {
             catch (DurableException e) { return e; }
             return null;
         }
-        if (work.kind == Kind.CREATE) {
-            if (topic != null) return new DurableException(ALREADY_EXISTS);
+        if (work.kind == Kind.CREATE || work.kind == Kind.ENSURE) {
+            if (topic != null) {
+                if (work.kind == Kind.ENSURE && topic.count == work.count) { work.noWrite = true; return null; }
+                return new DurableException(ALREADY_EXISTS);
+            }
             if (topics.size() == options.maxTopics() || published.size() + work.count > options.maxPartitions()) return new DurableException(RESOURCE_EXHAUSTED);
         } else {
             if (topic == null) return new DurableException(NOT_FOUND);
@@ -383,6 +424,7 @@ public final class DurableBroker implements AutoCloseable {
         if (initializing) {
             initializing = false;
             if (done.error != null) {
+                storageFailures++;
                 initialized.completeExceptionally(done.error);
                 finishStorageClose(done.error); return;
             }
@@ -399,6 +441,7 @@ public final class DurableBroker implements AutoCloseable {
         }
         Work<?> work = active; active = null; activeId = 0;
         if (work.kind == Kind.CLOSE) {
+            if (done.error != null) storageFailures++;
             snapshots.clear(); progress.clear(); membership.closed(); barriers = 0;
             finishStorageClose(done.error);
             return;
@@ -418,7 +461,7 @@ public final class DurableBroker implements AutoCloseable {
                 membership.define(join.group(), join.topic(), topics.get(join.topic()).count);
                 progress.putIfAbsent(join.group(), java.util.Collections.nCopies(topics.get(join.topic()).count, 0L));
                 groupCount = membership.groupCount();
-            } else if (work.kind == Kind.CREATE) {
+            } else if (work.kind == Kind.CREATE || work.kind == Kind.ENSURE) {
                 topics.put(work.topic, new TopicState(work.count, 0));
                 for (int p = 0; p < work.count; p++) published.put(new TopicPartition(work.topic, p), 0L);
             } else if (work.kind == Kind.APPEND) {
@@ -431,6 +474,7 @@ public final class DurableBroker implements AutoCloseable {
             publishedView = Map.copyOf(published);
             observer.accept(work.kind == Kind.INSPECT ? "inspection-complete" : "published");
         } else if (!safeRejection(done.error)) {
+            storageFailures++;
             if (state != State.CLOSING) transition(State.DEGRADED);
         }
         if (done.error != null && work.pinned && safeRejection(done.error)) membership.resolve(work.consumer.group, nanos.getAsLong());
@@ -499,7 +543,8 @@ public final class DurableBroker implements AutoCloseable {
             Object value = null; Throwable error = null; Map<TopicPartition, ReadSnapshot> views = Map.of();
             try {
                 switch (work.kind) {
-                    case CREATE -> store.createTopic(work.topic, work.count);
+                    case CREATE, ENSURE -> store.createTopic(work.topic, work.count);
+                    case PREFLIGHT -> store.preflightTopics(work.definitions);
                     case GROUP -> store.createGroup(work.control.join.group(), work.topic);
                     case APPEND -> value = store.append(work.partition, work.command.key(), work.command.payload(), work.unkeyed);
                     case INSPECT -> value = store.inspect(work.partition, work.start, work.count, work.readBytes);
@@ -507,7 +552,7 @@ public final class DurableBroker implements AutoCloseable {
                     case MAINTAIN -> value = store.maintain(work.partition);
                     case CLOSE -> store.close();
                 }
-                if (work.kind == Kind.CREATE) views = store.snapshots();
+                if (work.kind == Kind.CREATE || work.kind == Kind.ENSURE) views = store.snapshots();
                 else if (work.kind == Kind.MAINTAIN) views = Map.of(work.partition, ((DurableStore.Maintenance) value).snapshot());
                 else if (work.kind == Kind.APPEND) views = Map.of(work.partition, store.snapshot(work.partition));
             } catch (Throwable failure) { error = failure; }
@@ -546,11 +591,35 @@ public final class DurableBroker implements AutoCloseable {
         return new LifecycleDiagnostics(state, v.accountedBytes(), v.metadataBudget(), v.reservedBytes(), v.pendingDeletion(), pins, Map.copyOf(starts));
     }
 
+    public record StorageMetrics(long dataBytes, long metadataBudget, long reservedBytes, long quotaBytes,
+                                 long availableBytes, int pendingDeletion, int pins) { }
+    /** Bounded aggregate only: no identity maps, disk scans or coordinator request. */
+    public StorageMetrics storageMetrics() {
+        var q = quota; var v = q == null ? new StorageQuota.View(0, 0, 0, 0) : q.view();
+        int pins = 0; for (var snapshot : snapshotView.values()) pins += snapshot.pins.count();
+        return new StorageMetrics(v.accountedBytes() - v.metadataBudget(), v.metadataBudget(), v.reservedBytes(),
+                lifecycle.maxStorageBytes(), Math.max(0, lifecycle.maxStorageBytes() - v.accountedBytes() - v.reservedBytes()), v.pendingDeletion(), pins);
+    }
+    public record ExecutorMetrics(int writerQueue, int readerQueue, int responseQueue, int responseActive,
+                                  int transportQueue, int transportActive) { }
+    public ExecutorMetrics executorMetrics() {
+        var t = transport;
+        return new ExecutorMetrics(writerQueue.size(), readers.getQueue().size(),
+                responses.getQueue().size() + controlResponses.getQueue().size() + consumerResponses.getQueue().size(),
+                responses.getActiveCount() + controlResponses.getActiveCount() + consumerResponses.getActiveCount(),
+                t == null ? 0 : t.getQueue().size(), t == null ? 0 : t.getActiveCount());
+    }
+    public long storageFailureCount() { return storageFailures; }
+    public long watchdogCount() { return watchdogEvents; }
+
     /** Composition-root ownership: included in this broker's single shutdown deadline. */
-    public void ownTransportExecutor(ThreadPoolExecutor executor) {
+    public void ownTransportExecutor(ThreadPoolExecutor executor) { ownTransportExecutor(executor, Duration.ofSeconds(10)); }
+    public void ownTransportExecutor(ThreadPoolExecutor executor, Duration timeout) {
+        if (timeout == null || timeout.isNegative() || timeout.isZero() || timeout.compareTo(Duration.ofMinutes(5)) > 0)
+            throw new IllegalArgumentException("shutdown timeout");
         synchronized (gate) {
             if (transport != null || closeRequested) throw new IllegalStateException("transport ownership already established or closing");
-            transport = Objects.requireNonNull(executor);
+            transport = Objects.requireNonNull(executor); shutdownTimeout = timeout;
         }
     }
     /** Nonblocking listener stop and in-memory termination observation, supplied by the composition root. */
@@ -587,7 +656,7 @@ public final class DurableBroker implements AutoCloseable {
     }
 
     @Override public void close() throws IOException {
-        try { if (!shutdown(Duration.ofSeconds(10))) throw new IOException("durable shutdown incomplete; writer retains ownership until resolved"); }
+        try { if (!shutdown(shutdownTimeout)) throw new IOException("durable shutdown incomplete; writer retains ownership until resolved"); }
         catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IOException("shutdown wait interrupted; ownership retained", e); }
     }
 
@@ -939,7 +1008,7 @@ public final class DurableBroker implements AutoCloseable {
         if (lifecycle.retentionBytes() > 0) dirty.add(call.partition);
         Throwable error = done.error;
         if (error != null) {
-            if (!safeRejection(error) && state != State.CLOSING) transition(State.DEGRADED);
+            if (!safeRejection(error)) { storageFailures++; if (state != State.CLOSING) transition(State.DEGRADED); }
             error = mapped(error);
         }
         synchronized (gate) {
@@ -1026,6 +1095,7 @@ public final class DurableBroker implements AutoCloseable {
         final CompletableFuture<T> future = new CompletableFuture<>();
         boolean unkeyed, responseScheduled, noWrite, pinned;
         ConsumerCall<?> consumer;
+        Map<TopicId, Integer> definitions = Map.of();
         Control<?> control;
         Work(long id, Kind kind, TopicId topic, int count, AppendCommand command, TopicPartition partition,
              long start, long readBytes, Reservation reservation) {

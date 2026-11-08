@@ -12,10 +12,7 @@ repositories {
     mavenCentral()
 }
 
-ext {
-    grpcVersion = '1.63.0'
-    protobufVersion = '3.25.3'
-}
+apply from: rootProject.file('gradle/dependency-versions.gradle')
 
 dependencies {
     /* gRPC runtime */
@@ -114,9 +111,9 @@ jacocoTestCoverageVerification {
 }
 
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:3.25.3" }
+    protoc { artifact = "com.google.protobuf:protoc:${protobufVersion}" }
     plugins {
-        grpc { artifact = "io.grpc:protoc-gen-grpc-java:1.63.0" }
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
     }
     generateProtoTasks {
         all().each { task ->
