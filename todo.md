@@ -1,9 +1,10 @@
 # Kaflow ticket board and working paper
 
-Last updated: 2026-11-09. Current ticket: **none**; a post-merge KF-010 documentation
-correction is in progress. PR #10 is merged to `main`. KF-010 remains DONE under the user's
+Last updated: 2026-11-09. Current ticket: **none**. KF-010 PR #10 is merged to `main`; its
+post-merge Mermaid rendering correction is complete; see
+[PR #11](https://github.com/Biswas57/kaflow/pull/11). KF-010 remains DONE under the user's
 explicit waiver of Docker validation; the container smoke was not run and is not reported as
-passed. A Mermaid rendering correction is in progress on `codex/fix-mermaid-rendering`.
+passed.
 
 | Ticket | Scope | Status | Evidence |
 | --- | --- | --- | --- |
@@ -206,8 +207,8 @@ request.
 ### Post-merge Mermaid rendering correction
 
 GitHub reported parser errors in two architecture sequence diagrams after PR #10 merged.
-Semicolon-separated message and note text is rewritten with commas, conjunctions, or sentence
-breaks without changing meaning. `git diff --check` passes. No local Mermaid renderer (`mmdc`)
-is installed, so GitHub rendering is the verification step. Follow-up branch
-`codex/fix-mermaid-rendering` is based on `d85f23a`; next action is to publish the correction
-and confirm the diagrams render.
+Semicolon-separated message and note text was rewritten with commas, conjunctions, or sentence
+breaks without changing meaning. `git diff --check` and the three-block/no-semicolon structure
+check pass. No local Mermaid renderer (`mmdc`) is installed. GitHub's preview of
+`docs/architecture.md` at `6077c4a` rendered all three diagrams without parser errors. The
+correction is on `codex/fix-mermaid-rendering` as open PR #11; no behavior or protocol changed.
