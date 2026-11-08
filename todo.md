@@ -1,8 +1,10 @@
 # Kaflow ticket board and working paper
 
-Last updated: 2026-11-09. Current ticket: **KF-010**. The user authorized commit, push, and
-PR creation on 2026-11-09; merging is not authorized. KF-010 is DONE under the user's explicit
-waiver of Docker validation; the container smoke was not run and is not reported as passed.
+Last updated: 2026-11-09. Current ticket: **none**. KF-010 PR #10 is merged to `main`; its
+post-merge Mermaid rendering correction is complete; see
+[PR #11](https://github.com/Biswas57/kaflow/pull/11). KF-010 remains DONE under the user's
+explicit waiver of Docker validation; the container smoke was not run and is not reported as
+passed.
 
 | Ticket | Scope | Status | Evidence |
 | --- | --- | --- | --- |
@@ -193,10 +195,20 @@ and is not evidence for KF-010. The user waived container validation; no contain
 is claimed. Prior KF-009 exact-tree CI is recorded in
 [its archive](docs/history/implementation/kf-009.md).
 
-### Blocker and handoff
+### Completion and handoff
 
 KF-010 is **DONE under the user's explicit waiver** of Docker validation on 2026-11-09. The
 container command was not run after the waiver; an earlier environment preflight exited 2
 before image construction. No Docker execution, Linux container behavior, or volume acceptance
 is claimed. The candidate context manifest remains available if the user later requests that
-validation. Do not begin KF-011 without a separate request. No commit, push, PR, or merge.
+validation. PR #10 was merged to `main` at `d85f23a`. Do not begin KF-011 without a separate
+request.
+
+### Post-merge Mermaid rendering correction
+
+GitHub reported parser errors in two architecture sequence diagrams after PR #10 merged.
+Semicolon-separated message and note text was rewritten with commas, conjunctions, or sentence
+breaks without changing meaning. `git diff --check` and the three-block/no-semicolon structure
+check pass. No local Mermaid renderer (`mmdc`) is installed. GitHub's preview of
+`docs/architecture.md` at `6077c4a` rendered all three diagrams without parser errors. The
+correction is on `codex/fix-mermaid-rendering` as open PR #11; no behavior or protocol changed.
