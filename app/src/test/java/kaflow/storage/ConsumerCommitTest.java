@@ -134,14 +134,25 @@ class ConsumerCommitTest {
     @ParameterizedTest @ValueSource(strings={"success","failure"})
     void uncertainResetPreventsActivationAndPublishesOnlyActualLateOutcome(String outcome) throws Exception {
         Events disk=new Events();AtomicLong time=new AtomicLong();
-        try(var broker=ConsumerTestSupport.start(directory,time,disk)) {
-            await(broker.createTopic(TOPIC,1));await(broker.append(command()));var member=await(broker.join(JOIN));await(broker.commit(commit(member,1)));await(broker.leave(member.identity()));
+        CountDownLatch resolved=new CountDownLatch(1),resume=new CountDownLatch(1);
+        var pause=new java.util.concurrent.atomic.AtomicBoolean();
+        try(var broker=DurableBroker.start(directory,OPTIONS,GroupMembershipTest.OPTIONS,ConsumerOptions.defaults(),CLOCK,time::get,disk,event->{
+            if(pause.get() && event.equals("progress-resolved")) {
+                resolved.countDown();try{barrier(resume);}catch(IOException e){throw new RuntimeException(e);}
+            }
+        })) {
+            broker.awaitReady(WAIT);await(broker.createTopic(TOPIC,1));await(broker.append(command()));var member=await(broker.join(JOIN));await(broker.commit(commit(member,1)));await(broker.leave(member.identity()));
             disk.pause="commit-forced";if(outcome.equals("failure"))disk.fail="commit-forced";var reset=broker.reset(GROUP,PART,0);
             assertTrue(disk.entered.await(5,TimeUnit.SECONDS));time.set(Duration.ofSeconds(31).toNanos());broker.pulse();failure(UNAVAILABLE,reset);
             failure(UNAVAILABLE,broker.join(JOIN));assertEquals(1,broker.consumerDiagnostics().progressCalls());
-            disk.proceed.countDown();broker.awaitIdle(WAIT);failure(UNAVAILABLE,broker.join(JOIN));
-            assertEquals(outcome.equals("success")?0:1,broker.consumerDiagnostics().barriers());
-        } finally {disk.proceed.countDown();}
+            pause.set(true);disk.proceed.countDown();
+            try {
+                assertTrue(resolved.await(5,TimeUnit.SECONDS));broker.awaitIdle(WAIT);
+                failure(UNAVAILABLE,broker.join(JOIN));
+                // Observe completion before the coordinator's next diagnostic refresh.
+                assertEquals(outcome.equals("success")?0:1,broker.consumerDiagnostics().barriers());
+            } finally {resume.countDown();}
+        } finally {disk.proceed.countDown();resume.countDown();}
         try(var broker=ConsumerTestSupport.start(directory,new AtomicLong(),new Persistence())) {assertEquals(List.of(outcome.equals("success")?0L:1L),await(broker.join(JOIN)).committedOffsets());}
     }
     @Test void qualifiedPartitionsPersistIndependentPositionsAndAssignmentOrder() throws Exception {

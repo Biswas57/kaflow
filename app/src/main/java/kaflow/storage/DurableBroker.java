@@ -481,6 +481,7 @@ public final class DurableBroker implements AutoCloseable {
         if (work.kind == Kind.MAINTAIN) return;
         if (work.kind == Kind.APPEND && lifecycle.retentionBytes() > 0) dirty.add(work.partition);
         respond(work, done.value, done.error == null ? null : mapped(done.error), true);
+        if (work.consumer != null) observer.accept("progress-resolved");
     }
 
     private static boolean safeRejection(Throwable error) {
@@ -1021,6 +1022,9 @@ public final class DurableBroker implements AutoCloseable {
     @SuppressWarnings("unchecked")
     private <T> void respondConsumer(ConsumerCall<T> call, Object value, Throwable error, boolean resolved) {
         synchronized (gate) {
+            // Late completion can release an already-delivered call immediately. Publish
+            // the real barrier state before idle observers can see that release.
+            barriers = membership.barriers();
             if (resolved) call.resolved = true;
             releaseConsumer(call);
             if (call.responseScheduled) return;
