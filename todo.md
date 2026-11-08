@@ -3,8 +3,8 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-11-08. Current ticket: **KF-009**. Latest completed: **KF-008**.
-KF-009 native implementation and validation are complete; required Docker execution is BLOCKED.
+Last updated: 2026-11-08. Current ticket: none. Latest completed: **KF-009**.
+KF-009 acceptance is complete, including the full Linux CI Docker gate. PR #9 remains draft; no merge or release is authorized.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
@@ -16,7 +16,7 @@ KF-009 native implementation and validation are complete; required Docker execut
 | KF-006 | Durable commits, immediate Fetch API, independent replay | DONE | KF-005 |
 | KF-007 | Asynchronous long polling and cancellation | DONE | KF-006 |
 | KF-008 | Retention, deletion, overload, bounded shutdown | DONE | KF-007 |
-| KF-009 | Operable release, Docker, metrics, measured benchmarks | BLOCKED | KF-008 |
+| KF-009 | Operable release, Docker, metrics, measured benchmarks | DONE | KF-008 |
 
 READY means scoped backlog, not permission to bypass unfinished dependencies.
 Split large tickets into numbered child tickets before implementation when necessary.
@@ -885,7 +885,7 @@ KF-009 remains unstarted. Branch remains uncommitted; no push, PR or merge.
 
 ## KF-009 — Operable release, Docker persistence, observability and measurements
 
-**Status:** BLOCKED (2026-11-08): native implementation/validation complete; Docker acceptance awaits CLI/Compose/engine access. User confirmed implementation after refinement.
+**Status:** DONE (2026-11-08): corrected final inputs passed native and complete Docker acceptance in Linux CI. Earlier blocked checkpoints below are retained history; see the final CI evidence section. User confirmed implementation after refinement.
 **Branch:** `codex/kf-009-operable-release`, created from the completed uncommitted KF-008 state
 at `3d9cdda18c616636edd411e6c470f01a046729a6`; freshly fetched origin/main is unchanged.
 Implementation-entry manifest preserves 243 inputs under `build/kf009-evidence/entry/`.
@@ -967,7 +967,7 @@ release or image publication is authorized.
 
 - [x] Branch/input provenance and inherited delta recorded; existing assertions preserved.
 - [x] Entry inspection proves usable Java 17/wrapper and records actual Docker availability.
-  CLI/Compose/engine are absent; engine versions/context/location remain explicitly unavailable.
+  At local entry CLI/Compose/engine were absent; the final Linux CI evidence records actual versions/context/location.
 - [x] Native listener addresses verified at runtime, including no default wildcard listener.
 - [x] Supported config precedence/defaults/ranges/restart semantics tested; bad config fails.
 - [x] Durable/prototype application service separation and inherited standard gRPC services and recovery/provisioning gate verified.
@@ -984,7 +984,7 @@ release or image publication is authorized.
   heartbeat/shutdown races preserve immutable batch identity and original Commit credentials;
   stale unprocessed batches are discarded and possible duplicate side effects reported.
 - [x] Fresh native quickstart uses packaged artifacts with no fixtures or metadata edits.
-- [ ] Real container source build, non-root ownership, loopback host publishing, readiness,
+- [x] Real container source build, non-root ownership, loopback host publishing, readiness,
   persistent replacement and parked-request SIGTERM cleanup verified on final source.
 - [x] Closed-store backup/restore procedure tested; exact format/upgrade/rollback limits documented.
 - [x] Bounded harness correctness and all four repeated measured scenarios executed separately;
@@ -1086,7 +1086,7 @@ installation/health-probe JAR passed in9.75s. Separate full app/client suites ar
 Next: final three inherited smokes, native operator smoke, benchmark correctness, then isolated
 repeated measured runs. Record actual counts/results and final package/source correspondence.
 
-### Final native evidence and blocked handoff
+### Final native evidence and blocked handoff (historical)
 
 Source manifest remains `785879f09c3b1235f47194a0bda6e7434dd4c70347994f83610672c166a4a910`
 (276 inputs). Final clean build/package/client distribution: exit 0,9.75s. Separate full tests:
@@ -1183,3 +1183,16 @@ correctness passed. Four executable inputs differ from the historical manifest; 
 explicitly recorded and revalidated. KF-008 push and PR merge-result CI both passed.
 KF-009 remains BLOCKED pending final corrected-tree container evidence; no merge or image
 publication is authorized.
+
+### Final KF-009 CI acceptance — 2026-11-08
+
+**DONE:** corrected executable tree `e80f3b867f8bbc38eff4a2d768b191480853347f` passed
+[branch-head CI](https://github.com/Biswas57/kaflow/actions/runs/42460855669) and
+[PR merge-result CI](https://github.com/Biswas57/kaflow/actions/runs/42460858854), including
+all 483 tests, four smokes, benchmark correctness and the complete source-build/container
+acceptance gate. This actual Linux Docker execution resolves the local engine blocker;
+earlier blocked records remain historical. See the final KF-009 validation section for
+checkout revisions, engine/context/image, persisted data, ownership and shutdown evidence.
+Current documentation changes do not alter tested executable inputs. PR #9 stays draft,
+dependent on #8; no merge, release or image publication. After #8 merges, retarget #9 to
+main and recheck its diff/CI. Original work and failed evidence remain privately backed up.

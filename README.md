@@ -61,9 +61,10 @@ See [examples](docs/examples.md) for deadlines, replay, rebalance and out-of-ran
 
 ## Docker workflow
 
-The Dockerfile and Compose workflow are implemented, but **container execution is blocked in
-the current validation environment** because Docker/Compose and an engine are absent. These
-commands require their own acceptance run; native results do not validate the image.
+The Dockerfile and Compose workflow passed the complete Linux CI container acceptance gate,
+including non-root ownership, persistent replacement and parked-request shutdown. See the
+[exact-revision evidence](docs/baseline/kf-009.md#final-linux-container-acceptance--2026-11-08).
+A local Docker engine and Compose are still required to run these commands.
 
 ```sh
 docker compose up --build -d
