@@ -1157,3 +1157,12 @@ evidence: 483 tests (472 server + 11 client), four packaged smokes, correctness 
 trials / 29,079 verified acknowledgements. **KF-009 stays BLOCKED** until the complete
 `python3 scripts/smoke_container.py` gate runs successfully locally or in equivalent Linux CI.
 No release, image publication or merge is included. Retarget and recheck after KF-008 merges.
+
+### KF-008 rejected-control diagnostic correction
+
+The corrected cancellation head passed push CI but failed PR merge-result CI on a stale
+member/timer count after an expired heartbeat. Refresh the count before publishing rejection.
+The strengthened barrier-controlled test reproduces the old failure and passes with the fix;
+no assertion/time limit is relaxed. Fresh clean build, all460 tests and three packaged smokes
+pass. Preserve both CI outcomes and the failed reproduction; carry the production and test
+fix into dependent KF-009 and revalidate its affected inputs. See the KF-008 validation record.

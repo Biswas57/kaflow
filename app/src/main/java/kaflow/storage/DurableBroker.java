@@ -731,7 +731,13 @@ public final class DurableBroker implements AutoCloseable {
                 memberCount = membership.memberCount();
                 respondControl(control, result, null, true);
             }
-        } catch (DurableException error) { respondControl(control, null, error, true); }
+        } catch (DurableException error) {
+            // Validation may expire membership before rejecting; publish its resulting size
+            // before the error becomes observable, just as on the successful control path.
+            synchronized (gate) { memberCount = membership.memberCount(); }
+            respondControl(control, null, error, true);
+            observer.accept("control-rejected");
+        }
     }
 
     @SuppressWarnings("unchecked")
