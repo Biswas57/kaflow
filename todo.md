@@ -899,3 +899,12 @@ isolated checkout; executable hashes/modes match its final validated inputs. Pub
 are documentation only. Original combined work and raw evidence are fully snapshotted and
 untouched. See [publication provenance](docs/baseline/kf-008.md#authorized-independent-publication--2026-11-08).
 Exact pushed-SHA CI results will be reported separately from historical local validation.
+
+### KF-008 publication CI correction
+
+Initial push and PR CI failed the network cancellation case (460 tests, one failure).
+Retained both failures and reproduced the test defect locally. Corrected gRPC future
+cancellation to `cancel(true)` and separated its RPC deadline from the unchanged cleanup
+limit. No production or Docker change. Fresh clean build, all 460 tests and three packaged
+smokes passed; see [follow-up evidence](docs/baseline/kf-008.md#ci-cancellation-regression-follow-up--2026-11-08).
+This test-only change is included in dependent KF-009; exact follow-up CI is still pending.
