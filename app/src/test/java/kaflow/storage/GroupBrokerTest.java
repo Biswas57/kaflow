@@ -196,11 +196,27 @@ class GroupBrokerTest {
             public ZoneId getZone(){return ZoneId.of("UTC");}public Clock withZone(ZoneId z){return this;}
             public Instant instant(){return Instant.ofEpochMilli(wall.get());}
         };
-        try(var broker=DurableBroker.start(directory,OPTIONS,GroupMembershipTest.OPTIONS,clock,time::get,new Persistence(),e->{})) {
+        CountDownLatch published=new CountDownLatch(1),releasePublished=new CountDownLatch(1);
+        CountDownLatch rejected=new CountDownLatch(1),releaseRejected=new CountDownLatch(1);
+        var pause=new java.util.concurrent.atomic.AtomicBoolean();
+        try(var broker=DurableBroker.start(directory,OPTIONS,GroupMembershipTest.OPTIONS,clock,time::get,new Persistence(),event->{
+            if(pause.get() && (event.equals("published") || event.equals("control-rejected"))) {
+                var entered=event.equals("published")?published:rejected;
+                var release=event.equals("published")?releasePublished:releaseRejected;
+                entered.countDown();try{barrier(release);}catch(IOException e){throw new RuntimeException(e);}
+            }
+        })) {
             broker.awaitReady(WAIT);await(broker.createTopic(TOPIC,1));var a=await(broker.join(JOIN));
             for(int i=0;i<200;i++) {wall.set(i%2==0?Long.MAX_VALUE:Long.MIN_VALUE);assertEquals(1,await(broker.heartbeat(a.identity())).generation());}
-            assertEquals(1,broker.membershipDiagnostics().timerEntries());time.set(100_000_000);
-            failure(FENCED,broker.heartbeat(a.identity()));broker.awaitIdle(WAIT);assertEquals(0,broker.membershipDiagnostics().timerEntries());
-        }
+            broker.awaitIdle(WAIT);assertEquals(1,broker.membershipDiagnostics().timerEntries());
+            pause.set(true);var append=broker.append(command());assertTrue(published.await(5,TimeUnit.SECONDS));
+            // Queue the expired control before coordination resumes, then stop before its next loop.
+            time.set(100_000_000);var heartbeat=broker.heartbeat(a.identity());releasePublished.countDown();
+            try {
+                assertTrue(rejected.await(5,TimeUnit.SECONDS));await(append);failure(FENCED,heartbeat);
+                broker.awaitIdle(WAIT);assertEquals(0,broker.membershipDiagnostics().timerEntries());
+                assertEquals(0,broker.membershipDiagnostics().members());
+            } finally {releaseRejected.countDown();}
+        } finally {releasePublished.countDown();releaseRejected.countDown();}
     }
 }

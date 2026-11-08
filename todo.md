@@ -908,3 +908,12 @@ cancellation to `cancel(true)` and separated its RPC deadline from the unchanged
 limit. No production or Docker change. Fresh clean build, all 460 tests and three packaged
 smokes passed; see [follow-up evidence](docs/baseline/kf-008.md#ci-cancellation-regression-follow-up--2026-11-08).
 This test-only change is included in dependent KF-009; exact follow-up CI is still pending.
+
+### KF-008 rejected-control diagnostic correction
+
+The corrected cancellation head passed push CI but failed PR merge-result CI on a stale
+member/timer count after an expired heartbeat. Refresh the count before publishing rejection.
+The strengthened barrier-controlled test reproduces the old failure and passes with the fix;
+no assertion/time limit is relaxed. Fresh clean build, all460 tests and three packaged smokes
+pass. Preserve both CI outcomes and the failed reproduction; carry the production and test
+fix into dependent KF-009 and revalidate its affected inputs. See the KF-008 validation record.
