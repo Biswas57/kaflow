@@ -123,11 +123,11 @@ sequenceDiagram
   N->>A: decoded Protobuf request
   A->>A: validate envelope and create immutable byte values
   A->>C: append command
-  C->>C: reserve admission; validate and select qualified partition
+  C->>C: reserve admission, validate and select qualified partition
   C->>W: bounded writer work
   W->>D: append frame and derived index entry
-  W->>D: force log; sync partition directory
-  W->>D: force checkpoint temporary; atomic replace; sync topic directory
+  W->>D: force log and sync partition directory
+  W->>D: force checkpoint temporary, atomically replace it, and sync topic directory
   D-->>W: durable publication completion
   W-->>C: completion with actual offset and timestamp
   C->>C: publish end and routing state
@@ -187,7 +187,7 @@ sequenceDiagram
     opt Client requests Fetch
       App->>N: Fetch(start offset, bounds, optional wait)
       N->>S: FetchRequest
-      S->>C: reserve; validate session/generation/partition
+      S->>C: reserve and validate session/generation/partition
       alt Records are immediately available
         C->>Q: enqueue bounded read with snapshot and pins
       else No records and positive wait
@@ -200,7 +200,7 @@ sequenceDiagram
       D-->>F: records and next offset
       F-->>C: read completion
       C->>C: recheck cancellation, generation, assignment, lifecycle, and group barrier
-      C-->>N: schedule FetchResponse; committed progress is unchanged
+      C-->>N: schedule FetchResponse while committed progress stays unchanged
       N-->>App: FetchResponse
       Note over C,N: Internal response callback releases reservations and pins only after delivery cleanup unwinds
     end
@@ -218,7 +218,7 @@ sequenceDiagram
       end
     end
   end
-  Note over C: Lease expiry, Leave, and reassignment remain internal broker actions; an applying barrier holds ownership until real durable completion
+  Note over C: Lease expiry, Leave, and reassignment remain internal broker actions. An applying barrier holds ownership until real durable completion
 ```
 
 Join allocates a new leased session; group definitions and progress are durable, while
