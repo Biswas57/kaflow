@@ -7,7 +7,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -66,17 +65,67 @@ class GroupBrokerTest {
     }
 
     @Test void cancellationDuringCreationKeepsReservationAndLostSessionConsumesCapacity() throws Exception {
-        Events disk=new Events();var opts=GroupMembershipTest.options(8,1,1,1,4,65536,131072);AtomicLong time=new AtomicLong();
-        try(var broker=start(opts,time,disk)) {
-            await(broker.createTopic(TOPIC,1));disk.pause="group-catalog-synced";
-            var join=broker.join(JOIN);assertTrue(disk.entered.await(5,TimeUnit.SECONDS));assertTrue(join.cancel(false));
-            assertEquals(1,broker.membershipDiagnostics().pendingJoins());assertEquals(1,broker.membershipDiagnostics().admittedControls());
-            failure(RESOURCE_EXHAUSTED,broker.join(JOIN));assertThrows(IOException.class,()->DurableStore.open(directory,OPTIONS,CLOCK,new Persistence()));
-            disk.proceed.countDown();broker.awaitIdle(WAIT);assertTrue(join.isCancelled());
-            assertEquals(1,broker.membershipDiagnostics().members());failure(RESOURCE_EXHAUSTED,broker.join(JOIN));
-            time.set(100_000_000);var next=await(broker.join(JOIN));assertEquals(3,next.generation());
-            assertEquals(1,broker.membershipDiagnostics().members());
-        } finally {disk.proceed.countDown();}
+        Events disk = new Events();
+        var opts = GroupMembershipTest.options(8, 1, 1, 1, 4, 65536, 131072);
+        AtomicLong time = new AtomicLong();
+        var pausePublication = new java.util.concurrent.atomic.AtomicBoolean();
+        CountDownLatch published = new CountDownLatch(1), resumePublication = new CountDownLatch(1);
+        CountDownLatch delivering = new CountDownLatch(1), finishDelivery = new CountDownLatch(1);
+        try (var broker = DurableBroker.start(directory, OPTIONS, opts, CLOCK, time::get, disk, event -> {
+            if (pausePublication.get() && event.equals("published")) {
+                published.countDown();
+                try { barrier(resumePublication); } catch (IOException e) { throw new RuntimeException(e); }
+            }
+        })) {
+            broker.awaitReady(WAIT);
+            try {
+                await(broker.createTopic(TOPIC, 1));
+                disk.pause = "group-catalog-synced";
+                var join = broker.join(JOIN);
+                assertTrue(disk.entered.await(5, TimeUnit.SECONDS));
+                assertTrue(join.cancel(false));
+                assertEquals(1, broker.membershipDiagnostics().pendingJoins());
+                assertEquals(1, broker.membershipDiagnostics().admittedControls());
+                failure(RESOURCE_EXHAUSTED, broker.join(JOIN));
+                assertThrows(IOException.class, () -> DurableStore.open(directory, OPTIONS, CLOCK, new Persistence()));
+                disk.proceed.countDown(); broker.awaitIdle(WAIT);
+                assertTrue(join.isCancelled());
+                assertEquals(1, broker.membershipDiagnostics().members());
+
+                // Install the callback before the coordinator can reject this admitted Join.
+                pausePublication.set(true);
+                var append = broker.append(command());
+                assertTrue(published.await(5, TimeUnit.SECONDS));
+                var rejectedJoin = broker.join(JOIN);
+                rejectedJoin.whenComplete((value, error) -> {
+                    delivering.countDown();
+                    try { barrier(finishDelivery); } catch (IOException e) { throw new RuntimeException(e); }
+                });
+                resumePublication.countDown(); await(append);
+                assertTrue(delivering.await(5, TimeUnit.SECONDS));
+                failure(RESOURCE_EXHAUSTED, rejectedJoin);
+                assertTrue(rejectedJoin.isDone());
+                assertEquals(1, broker.membershipDiagnostics().pendingJoins());
+                assertEquals(1, broker.membershipDiagnostics().admittedControls());
+                assertTrue(broker.membershipDiagnostics().admittedBytes() > 0);
+                // A full slot remains full until this call's response callback actually unwinds.
+                failure(RESOURCE_EXHAUSTED, broker.join(JOIN));
+                assertThrows(java.util.concurrent.TimeoutException.class,
+                        () -> broker.awaitControlCleanup(Duration.ZERO));
+                finishDelivery.countDown();
+                broker.awaitControlCleanup(WAIT);
+                assertEquals(0, broker.membershipDiagnostics().pendingJoins());
+                assertEquals(0, broker.membershipDiagnostics().admittedControls());
+                assertEquals(0, broker.membershipDiagnostics().admittedBytes());
+                // Only after actual callback cleanup may expiry and the next Join be tested.
+                time.set(100_000_000);
+                var next = await(broker.join(JOIN));
+                assertEquals(3, next.generation());
+                assertEquals(1, broker.membershipDiagnostics().members());
+            } finally {
+                disk.proceed.countDown(); resumePublication.countDown(); finishDelivery.countDown();
+            }
+        }
     }
 
     @ParameterizedTest @ValueSource(strings={"joins","controls","bytes"})

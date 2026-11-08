@@ -3,7 +3,6 @@ package kaflow.storage;
 import kaflow.broker.AppendCommand;
 import kaflow.broker.ImmutableBytes;
 import kaflow.broker.TopicId;
-import kaflow.broker.TopicPartition;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;

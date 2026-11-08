@@ -8,15 +8,42 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
-from smoke_bootjar import executable_jars, listener_open
+import zipfile
 
 HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+
+def executable_jars():
+    for path in sorted(Path('app/build/libs').glob('*.jar')):
+        with zipfile.ZipFile(path) as jar:
+            manifest = jar.read('META-INF/MANIFEST.MF')
+            if b'Start-Class: tributary.TributaryApplication' in manifest:
+                yield path
+
+
+def listener_open(port):
+    try:
+        with socket.create_connection(('127.0.0.1', port), timeout=0.5):
+            return True
+    except OSError:
+        return False
 
 
 def ports():
     with socket.socket() as first, socket.socket() as second:
         first.bind(('127.0.0.1', 0)); second.bind(('127.0.0.1', 0))
         return first.getsockname()[1], second.getsockname()[1]
+
+
+def extract_boot_jar(jar_path, destination):
+    destination = Path(destination).resolve()
+    with zipfile.ZipFile(jar_path) as archive:
+        for entry in archive.infolist():
+            if entry.filename.startswith(('BOOT-INF/classes/', 'BOOT-INF/lib/')):
+                target = (destination / entry.filename).resolve()
+                if not target.is_relative_to(destination):
+                    raise ValueError('Unsafe JAR entry')
+                archive.extract(entry, destination)
 
 
 def get(url):

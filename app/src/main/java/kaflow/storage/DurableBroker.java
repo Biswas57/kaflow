@@ -287,6 +287,19 @@ public final class DurableBroker implements AutoCloseable {
         }
     }
 
+    /** Bounded fixture observation: a completed control future can still own response capacity. */
+    void awaitControlCleanup(Duration timeout) throws InterruptedException, TimeoutException {
+        if (timeout.isNegative()) throw new IllegalArgumentException("control cleanup timeout");
+        long start = System.nanoTime(), budget = timeout.toNanos();
+        synchronized (gate) {
+            while (admittedControls != 0) {
+                long remaining = budget - (System.nanoTime() - start);
+                if (remaining <= 0) throw new TimeoutException("control responses still admitted");
+                TimeUnit.NANOSECONDS.timedWait(gate, remaining);
+            }
+        }
+    }
+
     private void coordinate() {
         while (state != State.CLOSED) {
             Completion done = completion.getAndSet(null);

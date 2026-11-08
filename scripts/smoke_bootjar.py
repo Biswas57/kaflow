@@ -9,28 +9,11 @@ import argparse
 import json
 import os
 from pathlib import Path
-import socket
 import subprocess
 import time
 import urllib.error
 import urllib.request
-import zipfile
-
-
-def executable_jars():
-    for path in sorted(Path("app/build/libs").glob("*.jar")):
-        with zipfile.ZipFile(path) as jar:
-            manifest = jar.read("META-INF/MANIFEST.MF")
-            if b"Start-Class: tributary.TributaryApplication" in manifest:
-                yield path
-
-
-def listener_open(port):
-    try:
-        with socket.create_connection(("127.0.0.1", port), timeout=0.5):
-            return True
-    except OSError:
-        return False
+from release_support import executable_jars, listener_open, ports
 
 
 def main():
@@ -50,11 +33,7 @@ def main():
               "shutdown_timeout_seconds": 20, "errors": []}
     # Reserve two different ports together. A bind race after release is possible;
     # such a conflict is a failed smoke run, retained in the application log.
-    with socket.socket() as http_socket, socket.socket() as grpc_socket:
-        http_socket.bind(("127.0.0.1", 0))
-        grpc_socket.bind(("127.0.0.1", 0))
-        http_port = http_socket.getsockname()[1]
-        grpc_port = grpc_socket.getsockname()[1]
+    http_port, grpc_port = ports()
     result.update(http_port=http_port, grpc_port=grpc_port)
     command = [java, "-jar", str(jars[0]), "--server.address=127.0.0.1",
                f"--server.port={http_port}", "--grpc.server.address=127.0.0.1",

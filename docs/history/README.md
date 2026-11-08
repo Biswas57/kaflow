@@ -1,17 +1,19 @@
-# Historical material
+# Historical material index
 
-These files preserve context; they are not the current implementation plan or
-evidence of a successful build. Use the root `todo.md` and `docs/development.md`.
+These files preserve earlier context. The current source of truth is the root
+[ticket board](../../todo.md), [architecture](../architecture.md), and
+[operations](../operations.md); this index is not a current implementation guide.
 
+- `implementation/kf-001.md` through `implementation/kf-010.md`: compact per-ticket
+  implementation decisions and validation evidence. KF-010's container validation was
+  explicitly waived by the user and is not claimed as passed; see the ticket board.
 - `prototype-todo.md`: byte-for-byte `Todo.md` from commit
   `a3b9026a8c39fd7b8edd47992467d576eb72ee62`, before the ticket board replaced it.
-- `imported-baseline-working-paper.md`: byte-for-byte working paper supplied in
-  this macOS checkout before KF-001 implementation. It describes a separate Linux
-  workspace whose uncommitted implementation was not present here. Its branch,
-  environment, file-change, and validation statements are historical claims from
-  that workspace, not results observed in this checkout.
-- `editor-build/`: byte-for-byte configuration formerly tracked under
-  `app/bin/default/`: `build.gradle`, `.classpath`, `.project`, and
-  `.settings/org.eclipse.buildship.core.prefs`. These obsolete build/editor files
-  were preserved because they are configuration, unlike the adjacent compiled
-  classes. They are not included by the active Gradle build.
+- `prototype-readme.md`: preserved earlier README. Its old development/baseline links are
+  historical references; use the five current guides for present behavior.
+- `imported-baseline-working-paper.md`: preserved working paper supplied before KF-001.
+  It describes a separate Linux workspace and is not evidence for this checkout.
+- `editor-build/`: preserved `build.gradle` and Eclipse configuration formerly tracked under
+  `app/bin/default/`. Those files are not used by the active Gradle build.
+- User-authored `Blogging&Design/`, `Engineering_Requirements.md`, `messageConfigs/`, and
+  other historical artifacts remain at their original repository paths.

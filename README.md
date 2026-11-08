@@ -1,96 +1,65 @@
 # Kaflow
 
-Kaflow is a lightweight, single-node durable partitioned event-log broker with a custom
-gRPC API. Producers send opaque bytes; consumer groups Fetch records and explicitly Commit
-the next offset. Topics have fixed partition counts. It supports deterministic routing,
-durable Append acknowledgements, conservative recovery, leased membership and generation
-fencing, asynchronous long polling, independent group progress, opt-in retention and quotas.
+Kaflow is a lightweight, single-node durable partitioned event-log broker with a custom,
+versioned gRPC API. Producers send opaque application bytes; consumers Fetch records and
+explicitly Commit their next offsets. Topics have fixed partition counts, and durable
+consumer groups use leased membership and generation fencing.
 
-```mermaid
-flowchart LR
-    P[Producer: application bytes] --> G[Versioned gRPC API]
-    C[Consumer: Fetch / Commit] <--> G
-    G <--> Q[Bounded coordinator]
-    Q <--> W[Single storage writer]
-    Q <--> R[Bounded readers and segment pins]
-    W --> D[(Local partition logs / checkpoints / group progress)]
-    D --> R
-    H[Loopback HTTP: health / metrics] --> Q
-```
+Kaflow is not Kafka wire/client compatible. It does not provide replication, failover,
+transactions, producer deduplication, or exactly-once processing. An Append timeout or lost
+response can follow a durable write, so a retry may create a duplicate. Commit does not prove
+application processing. Process-restart tests do not prove physical power-loss behavior.
 
-This is not Kafka wire/client compatible. There is no replication, automatic failover,
-transaction protocol or exactly-once processing. An ambiguous Append retry can duplicate a
-record; Commit does not prove application processing. The supplied clients and listeners use
-plaintext without authentication. Keep this quickstart on a trusted local machine. Passing
-checks are not a production-readiness or physical power-loss guarantee.
+## Quickstart
 
-## Native quickstart
-
-Use JDK 17, Python 3 and the checked-in Gradle wrapper. Run from the repository root:
+Use Java 17 and Python 3. Build the server and client, then run the separate server/client
+test suites:
 
 ```sh
 ./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon
 ./gradlew :clients:installDist :clients:healthProbeJar --no-daemon
 ./gradlew :app:test :clients:test --rerun-tasks --no-daemon
-java -Xms64m -Xmx512m -jar app/build/libs/app.jar \
+```
+
+Start an explicitly durable broker with a dedicated fresh directory and one fixed-partition
+topic:
+
+```sh
+java -jar app/build/libs/app.jar \
   --kaflow.durable.enabled=true \
   --kaflow.durable.directory="$PWD/local-data" \
   '--kaflow.durable.topics[0].name=orders' \
-  '--kaflow.durable.topics[0].partitions=1' \
-  '--kaflow.durable.topics[1].name=json-orders' \
-  '--kaflow.durable.topics[1].partitions=1'
+  '--kaflow.durable.topics[0].partitions=1'
 ```
 
-The selected directory must be dedicated to this broker; use a fresh path for the demo.
-Recovery and idempotent startup provisioning finish before readiness. A mismatched partition
-count fails startup. There is no volatile fallback. In another terminal:
+In another terminal, check broker-aware readiness and use the public example client:
 
 ```sh
 curl --fail http://127.0.0.1:8080/actuator/health/readiness
 clients/build/install/kaflow-client/bin/kaflow-client demo
-clients/build/install/kaflow-client/bin/kaflow-client produce --topic json-orders --key-hex ''
-clients/build/install/kaflow-client/bin/kaflow-client consume --topic json-orders --group json-example
-curl --fail http://127.0.0.1:8080/actuator/metrics/kaflow.rpc.outcomes
 ```
 
-On the fresh `orders` topic, demo reports `committedA: 2`, `committedB: 1` and
-`replayUnchanged: true`. Stop the foreground broker with Ctrl-C, wait for its exit, then run
-the identical startup and demo commands. They resume at A=2/B=1 and finish at A=4/B=2.
-The JSON example logs receipt and processed-offset metadata, not payloads or session tokens.
-See [examples](docs/examples.md) for deadlines, replay, rebalance and out-of-range handling.
+The demo appends binary records and commits two independent groups. Stop with Ctrl-C and
+wait for exit before restarting against the same directory. Full configuration, client
+examples, Docker workflow, health and metrics, storage recovery, backups, and benchmark
+methodology are in the [operations guide](docs/operations.md).
 
-## Docker workflow
+## Project references
 
-The Dockerfile and Compose workflow passed the complete Linux CI container acceptance gate,
-including non-root ownership, persistent replacement and parked-request shutdown. See the
-[exact-revision evidence](docs/baseline/kf-009.md#final-linux-container-acceptance--2026-11-08).
-A local Docker engine and Compose are still required to run these commands.
+- [Architecture](docs/architecture.md): ownership, thread and storage boundaries, V1 flow,
+  durable publication, consumer fencing, formats, and compatibility.
+- [Operations](docs/operations.md): setup, configuration, clients, Docker, recovery,
+  shutdown, validation smokes, and benchmark commands.
+- [Ticket board and evidence index](todo.md): status, active blocker, cleanup dispositions,
+  and implementation archive links.
+- [V1 Protobuf schema](app/src/main/proto/kaflow/v1/broker.proto): canonical wire fields.
+- [Prototype historical README](docs/history/prototype-readme.md): context for the earlier
+  volatile Tributary prototype; it is not the durable V1 operating guide.
 
-```sh
-docker compose up --build -d
-curl --fail http://127.0.0.1:8080/actuator/health/readiness
-clients/build/install/kaflow-client/bin/kaflow-client demo
-docker compose stop
-docker compose rm -f
-docker compose up -d
-clients/build/install/kaflow-client/bin/kaflow-client demo
-docker compose down
-```
+The durable V1 runtime is opt-in with `kaflow.durable.enabled=true`; it has no volatile
+fallback. Default startup remains an isolated in-memory prototype with its legacy REST and
+streaming gRPC surface. `InMemoryBroker` is a separate contract core and is not registered
+as a network service. The two runtimes do not share or dual-write state.
 
-The named volume survives these commands. Do not add `--volumes` to ordinary shutdown.
-Container listeners bind `0.0.0.0`; Compose publishes only on host `127.0.0.1`. The runtime
-uses UID/GID 10001, a dedicated volume, direct JVM signal delivery and a 15s stop grace for
-its 10s shutdown budget. See [operations](docs/operations.md) for ownership and image policy.
-
-## Operator and validation references
-
-- [Configuration](docs/configuration.md): defaults, bounds, precedence and endpoint surfaces.
-- [Operations](docs/operations.md): health/metrics, retention, quotas, recovery, backup and shutdown.
-- [V1 schema](app/src/main/proto/kaflow/v1/broker.proto) and [contracts](docs/design/kf-009-operable-release.md).
-- [Benchmarks](docs/benchmarks.md): reproducible workloads, measurement rules and actual results.
-- [Development checks](docs/development.md), [KF-009 evidence](docs/baseline/kf-009.md), [ticket board](todo.md).
-
-The default launch without durable opt-in remains the isolated, volatile prototype with its
-legacy REST/gRPC surface; V1 is absent there. Its [historical README](docs/history/prototype-readme.md)
-and design/blog material are separate from the durable release. No remote topic/reset service
-is added. Authentication/TLS deployment, replication and other distributed features remain deferred.
+The supplied client and examples use plaintext without authentication. Keep the default
+loopback setup local or add independently managed network protection before remote access.

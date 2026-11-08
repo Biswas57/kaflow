@@ -8,8 +8,7 @@ import shutil
 import subprocess
 import tempfile
 import time
-import zipfile
-from smoke_bootjar import executable_jars
+from release_support import executable_jars, extract_boot_jar
 
 
 def main():
@@ -30,12 +29,7 @@ def main():
     result = {'jar': str(jars[0]), 'run_directory': str(run), 'phases': [], 'errors': [],
               'claim': 'separate JVMs using production classes/dependencies from bootJar; process restart, not power-loss proof'}
     try:
-        with zipfile.ZipFile(jars[0]) as jar:
-            for entry in jar.infolist():
-                if entry.filename.startswith(('BOOT-INF/classes/', 'BOOT-INF/lib/')):
-                    if not (extracted / entry.filename).resolve().is_relative_to(extracted):
-                        raise ValueError('Unsafe JAR entry')
-                    jar.extract(entry, extracted)
+        extract_boot_jar(jars[0], extracted)
         logging = extracted / 'client-logback.xml'
         logging.write_text('''<configuration><appender name="stderr" class="ch.qos.logback.core.ConsoleAppender">
           <target>System.err</target><encoder><pattern>%level %logger - %msg%n</pattern></encoder></appender>
