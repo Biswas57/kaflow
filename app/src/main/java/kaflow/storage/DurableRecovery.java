@@ -36,21 +36,31 @@ final class DurableRecovery {
             if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) throw LogFormat.corrupt("nonregular partition entry");
             String name = path.getFileName().toString();
             if (name.equals(".kaflow.lock")) continue;
-            if (name.equals(".index-rebuild.tmp")) { remove.add(path); continue; }
+            if (name.equals(".index-rebuild.tmp")) {
+                long maximum = LogFormat.INDEX_HEADER + LogFormat.INDEX_ENTRY * (1 + options.segmentBytes() / LogFormat.FRAME_OVERHEAD / options.indexInterval());
+                if (Files.size(path) > maximum) throw LogFormat.corrupt("index scratch exceeds envelope");
+                remove.add(path); continue;
+            }
             if (!name.matches("[0-9]{20}\\.(log|idx)")) throw LogFormat.corrupt("unexpected partition entry");
             long base = base(path);
             if (name.endsWith(".log")) {
                 if (logs.size() == options.maxSegments()) throw new StorageException(LIMIT, "segment bound");
                 logs.add(path);
-            } else if (base > checkpoint.base()) remove.add(path);
+            } else if (base > checkpoint.base() || base < checkpoint.start()) remove.add(path);
         }
         byte[] topic = LogFormat.topicBytes(id);
-        long next = 0; Path last = null;
+        long next = checkpoint.start(); Path last = null;
         for (Path path : logs) {
             long base = base(path);
             try (StorageIo.File file = disk.io.open(path, StorageIo.Mode.READ)) {
                 long size = file.size();
                 if (size > options.segmentBytes()) throw new StorageException(LIMIT, "segment too large");
+                if (base < checkpoint.start()) {
+                    DurableMetadata.checkVersion(path, LogFormat.SEGMENT_MAGIC, disk, options);
+                    LogFormat.readHeader(file, id, topic, base, size, options);
+                    scanTailVersions(file, 32 + topic.length, size, options);
+                    remove.add(path); continue;
+                }
                 if (base > checkpoint.base()) {
                     if (base < checkpoint.end()) throw LogFormat.corrupt("segment overlaps published range");
                     DurableMetadata.checkVersion(path, LogFormat.SEGMENT_MAGIC, disk, options);

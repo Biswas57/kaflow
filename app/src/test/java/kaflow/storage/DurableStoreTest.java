@@ -156,7 +156,7 @@ class DurableStoreTest {
         try (var store = DurableStore.open(directory, OPTIONS, CLOCK, new Persistence())) { store.createTopic(TOPIC, 2); }
         Files.write(log(directory), new byte[]{1,2,3}, StandardOpenOption.APPEND);
         Path second = directory.resolve("t-00000000/p-00000001.pub");
-        byte[] bad = Files.readAllBytes(second); ByteBuffer.wrap(bad).putShort(4, (short) 2); Files.write(second, StorageTestSupport.crc(bad));
+        byte[] bad = Files.readAllBytes(second); ByteBuffer.wrap(bad).putShort(4, (short) 3); Files.write(second, StorageTestSupport.crc(bad));
         byte[] before = Files.readAllBytes(log(directory));
         var error = assertThrows(StorageException.class, () -> DurableStore.open(directory, OPTIONS, CLOCK, new Persistence()));
         assertEquals(StorageException.Code.UNSUPPORTED_VERSION, error.code());

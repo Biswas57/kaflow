@@ -34,6 +34,8 @@ final class DurableStore implements AutoCloseable {
     private final GroupOptions groupOptions;
     private final Persistence disk;
     private final Clock clock;
+    private final LifecycleOptions lifecycle;
+    final StorageQuota quota;
     private final Map<TopicPartition, PartitionLog> logs = new LinkedHashMap<>();
     private final Map<TopicPartition, DurableMetadata.Checkpoint> checkpoints = new HashMap<>();
     private DurableMetadata.Catalog catalog;
@@ -45,21 +47,31 @@ final class DurableStore implements AutoCloseable {
     }
 
     static DurableStore open(Path requested, DurableOptions options, GroupOptions groups, Clock clock, Persistence disk) throws IOException {
+        return open(requested, options, groups, LifecycleOptions.defaults(), clock, disk);
+    }
+    static DurableStore open(Path requested, DurableOptions options, GroupOptions groups, LifecycleOptions lifecycle,
+                             Clock clock, Persistence disk) throws IOException {
+        lifecycle.validate(options, groups);
         Path absolute = requested.toAbsolutePath();
         if (!Files.exists(absolute)) {
             if (!Files.isDirectory(absolute.getParent())) throw new IOException("data directory parent must exist");
             Files.createDirectory(absolute); disk.syncDirectory(absolute.getParent());
         }
         DirectoryLease lease = DirectoryLease.acquire(absolute);
-        DurableStore store = new DurableStore(lease, options, groups, clock, disk);
-        try { disk.checkEnvironment(lease.directory); store.initialize(); return store; }
+        DurableStore store = new DurableStore(lease, options, groups, lifecycle, clock, disk);
+        try { disk.checkEnvironment(lease.directory); store.initialize();
+            for (var entry : store.logs.entrySet()) store.quota.update(entry.getKey(), entry.getValue().managedBytes());
+            store.quota.validateRecovered();
+            if (lifecycle.retentionBytes() > 0) store.enableRetention();
+            return store; }
         catch (IOException | RuntimeException | Error primary) {
             try { store.close(); } catch (IOException cleanup) { primary.addSuppressed(cleanup); }
             throw primary;
         }
     }
 
-    private DurableStore(DirectoryLease lease, DurableOptions options, GroupOptions groups, Clock clock, Persistence disk) {
+    private DurableStore(DirectoryLease lease, DurableOptions options, GroupOptions groups, LifecycleOptions lifecycle, Clock clock, Persistence disk) {
+        this.lifecycle = lifecycle; this.quota = new StorageQuota(lifecycle, lifecycle.metadataBudget(options, groups));
         this.lease = lease; this.options = options; this.groupOptions = groups; this.clock = clock; this.disk = disk;
     }
 
@@ -86,7 +98,7 @@ final class DurableStore implements AutoCloseable {
             if (name.equals(".kaflow.lock") || name.equals("catalog")) continue;
             if (name.equals("progress") && Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) continue;
             if (name.equals("catalog.tmp")) {
-                regular(path); DurableMetadata.checkVersion(path, DurableMetadata.CATALOG, disk, options.storage()); scratch.add(path); continue;
+                boundedFile(path, groupOptions.maxCatalogBytes()); DurableMetadata.checkVersion(path, DurableMetadata.CATALOG, disk, options.storage()); scratch.add(path); continue;
             }
             if (!name.matches("t-[0-9]{8}") || !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) throw LogFormat.corrupt("unexpected root entry");
             int slot = Integer.parseInt(name.substring(2));
@@ -106,7 +118,7 @@ final class DurableStore implements AutoCloseable {
                     int partition = Integer.parseInt(name.substring(2, 10));
                     if (partition >= topic.partitions()) throw LogFormat.corrupt("unknown partition");
                     if (name.endsWith(".tmp")) {
-                        regular(path); DurableMetadata.checkVersion(path, DurableMetadata.CHECKPOINT, disk, options.storage()); scratch.add(path);
+                        boundedFile(path, 347); DurableMetadata.checkVersion(path, DurableMetadata.CHECKPOINT, disk, options.storage()); scratch.add(path);
                     }
                 }
                 for (int p = 0; p < topic.partitions(); p++) {
@@ -115,12 +127,29 @@ final class DurableStore implements AutoCloseable {
                     if (!Files.isDirectory(part, LinkOption.NOFOLLOW_LINKS)) throw LogFormat.corrupt("missing published partition");
                     regular(publication);
                     var checkpoint = DurableMetadata.readCheckpoint(publication, catalog.store(), topic, p, disk, options.storage());
+                    if (catalog.retention() && !checkpoint.retention() || !catalog.retention() && checkpoint.start() != 0)
+                        throw LogFormat.corrupt("checkpoint retention authority mismatch");
                     owned.put(id, DirectoryLease.acquire(part));
+                    owned.get(id).requireEmpty();
                     checkpoints.put(id, checkpoint);
                     plans.put(id, DurableRecovery.validate(part, id, checkpoint, disk, options.storage()));
+                    long physical = 0;
+                    for (Path file : DurableRecovery.entries(part, 2 * options.storage().maxSegments() + 2)) {
+                        String name = file.getFileName().toString();
+                        if (name.endsWith(".log") || name.endsWith(".idx")) physical = Math.addExact(physical, Files.size(file));
+                    }
+                    quota.update(id, physical);
                 }
             }
+            long orphanBytes = 0;
+            for (Path path : orphanEntries) if (path.getFileName().toString().matches("[0-9]{20}\\.(log|idx)"))
+                orphanBytes = Math.addExact(orphanBytes, Files.size(path));
+            quota.update(null, orphanBytes);
             List<Path> progressScratch = validateProgress();
+            long indexScratch = orphanEntries.stream().filter(p -> p.getFileName().toString().equals(".index-rebuild.tmp")).count();
+            for (var plan : plans.values()) indexScratch += plan.remove().stream().filter(p -> p.getFileName().toString().equals(".index-rebuild.tmp")).count();
+            if (indexScratch > 1) throw LogFormat.corrupt("multiple index rebuild scratch files contradict single writer");
+            quota.validateRecovered();
             // All authoritative metadata and published log prefixes validated before any repair.
             disk.syncDirectory(root); // Unsupported directory force cannot silently become ready.
             for (Path path : progressScratch) { disk.delete(path); disk.syncDirectory(path.getParent()); }
@@ -128,9 +157,10 @@ final class DurableStore implements AutoCloseable {
             for (Path path : scratch) { disk.delete(path); disk.syncDirectory(path.getParent()); }
             for (Path path : orphanEntries) disk.delete(path);
             if (orphan != null) { disk.delete(orphan); disk.syncDirectory(root); }
+            quota.update(null, 0);
             for (var id : plans.keySet()) {
                 DirectoryLease partLease = owned.remove(id); // openOwned consumes, including on failure.
-                logs.put(id, PartitionLog.openOwned(partLease, id, LogFormat.topicBytes(id), options.storage(), clock, disk.io));
+                logs.put(id, PartitionLog.openOwned(partLease, id, LogFormat.topicBytes(id), options.storage(), clock, disk.io, checkpoints.get(id).start()));
             }
         } catch (IOException | RuntimeException | Error primary) {
             for (DirectoryLease partLease : owned.values()) {
@@ -151,6 +181,9 @@ final class DurableStore implements AutoCloseable {
                 if (!Files.isDirectory(p, LinkOption.NOFOLLOW_LINKS)) throw LogFormat.corrupt("unsafe orphan partition");
                 for (Path child : DurableRecovery.entries(p, 2 * options.storage().maxSegments() + 2)) {
                     regular(child); String file = child.getFileName().toString();
+                    if (file.equals(".kaflow.lock") && Files.size(child) != 0) throw LogFormat.corrupt("orphan ownership marker");
+                    if ((file.endsWith(".idx") || file.equals(".index-rebuild.tmp")) && Files.size(child) > LogFormat.INDEX_HEADER)
+                        throw LogFormat.corrupt("uncatalogued topic contains index data");
                     if (!file.matches("[0-9]{20}\\.(log|idx)") && !file.equals(".kaflow.lock") && !file.equals(".index-rebuild.tmp")) throw LogFormat.corrupt("unsafe orphan file");
                     if (file.endsWith(".log")) {
                         DurableMetadata.checkVersion(child, LogFormat.SEGMENT_MAGIC, disk, options.storage());
@@ -173,12 +206,12 @@ final class DurableStore implements AutoCloseable {
             } else {
                 regular(p); DurableMetadata.checkVersion(p, DurableMetadata.CHECKPOINT, disk, options.storage());
                 try (StorageIo.File checkpoint = disk.io.open(p, StorageIo.Mode.READ)) {
-                    if (checkpoint.size() > 339) throw LogFormat.corrupt("orphan checkpoint size");
+                    if (checkpoint.size() > 347) throw LogFormat.corrupt("orphan checkpoint size");
                     if (checkpoint.size() >= 80) {
-                        ByteBuffer prefix = ByteBuffer.allocate(80);
+                        ByteBuffer prefix = ByteBuffer.allocate((int) Math.min(88, checkpoint.size()));
                         StorageIo.readFully(checkpoint, prefix, 0, options.storage().zeroProgressLimit());
                         if (prefix.getLong(40) != 0 || prefix.getLong(48) != 0 || prefix.getLong(56) != 0
-                                || prefix.getLong(72) != 0) throw LogFormat.corrupt("uncatalogued topic has publication evidence");
+                                || prefix.getLong(72) != 0 || prefix.getShort(4) == 2 && (prefix.limit() < 88 || prefix.getLong(80) != 0)) throw LogFormat.corrupt("uncatalogued topic has publication evidence");
                     }
                 }
             }
@@ -212,8 +245,10 @@ final class DurableStore implements AutoCloseable {
         if (32L + LogFormat.topicBytes(new TopicPartition(id, 0)).length + LogFormat.FRAME_OVERHEAD > options.storage().segmentBytes()) throw new StorageException(INVALID_ARGUMENT, "identity exceeds segment capacity");
         var topic = new DurableMetadata.Topic(catalog.topics().size(), id, count);
         List<DurableMetadata.Topic> nextTopics = new ArrayList<>(catalog.topics()); nextTopics.add(topic);
-        var next = new DurableMetadata.Catalog(catalog.store(), nextTopics, catalog.groups(), catalog.progress());
+        var next = new DurableMetadata.Catalog(catalog.store(), nextTopics, catalog.groups(), catalog.progress(), catalog.retention());
         ByteBuffer metadata = catalogBytes(next);
+        long growth = count * (32L + LogFormat.topicBytes(new TopicPartition(id, 0)).length + LogFormat.INDEX_HEADER);
+        quota.reserve(null, growth);
         try {
             Files.createDirectory(topicDirectory(topic.slot()));
             for (int p = 0; p < count; p++) {
@@ -221,14 +256,16 @@ final class DurableStore implements AutoCloseable {
                 PartitionLog log = PartitionLog.open(partitionDirectory(topic.slot(), p), part, options.storage(), clock, disk.io);
                 logs.put(part, log); log.forceWritten(); disk.event("topic-data-forced");
                 disk.syncDirectory(partitionDirectory(topic.slot(), p));
-                var pos = log.writtenPosition(); var cp = new DurableMetadata.Checkpoint(0, 0, pos.bytes(), 0);
+                var pos = log.writtenPosition(); var cp = new DurableMetadata.Checkpoint(0, 0, pos.bytes(), 0, 0, catalog.retention());
                 disk.atomic(publication(topic.slot(), p), DurableMetadata.checkpoint(catalog.store(), topic, p, cp), "initial-checkpoint", options.storage().zeroProgressLimit());
                 checkpoints.put(part, cp);
             }
             disk.syncDirectory(topicDirectory(topic.slot())); disk.syncDirectory(lease.directory); disk.event("topic-directories-synced");
             disk.atomic(lease.directory.resolve("catalog"), metadata, "catalog", options.storage().zeroProgressLimit());
             catalog = next;
-        } catch (IOException | RuntimeException e) { failed = true; throw e; }
+            for (int p = 0; p < count; p++) { var part = new TopicPartition(id, p); quota.update(part, logs.get(part).managedBytes()); }
+        } catch (IOException | RuntimeException e) { failed = true; quota.uncertain(null, growth); throw e; }
+        finally { quota.release(growth); }
     }
 
     void createGroup(GroupId id, TopicId topic) throws IOException {
@@ -241,7 +278,7 @@ final class DurableStore implements AutoCloseable {
         }
         if (catalog.groups().size() >= groupOptions.maxGroups()) throw new StorageException(LIMIT, "group count");
         var groups = new ArrayList<>(catalog.groups()); groups.add(new DurableMetadata.Group(id, topic));
-        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), groups, catalog.progress());
+        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), groups, catalog.progress(), catalog.retention());
         ByteBuffer metadata = catalogBytes(next);
         try {
             var binding = catalog.topics().stream().filter(t -> t.id().equals(topic)).findFirst().orElseThrow();
@@ -263,20 +300,23 @@ final class DurableStore implements AutoCloseable {
         ensureOpen(); PartitionLog log = logs.get(id);
         if (log == null) throw new StorageException(INVALID_ARGUMENT, "unknown partition");
         var topic = catalog.topics().stream().filter(t -> t.id().equals(id.topic())).findFirst().orElseThrow();
+        long growth = log.appendGrowth(key, payload); quota.reserve(id, growth);
         try {
             var written = log.append(key, payload); disk.event("data-written");
             log.forceWritten(); disk.event("data-forced");
             disk.syncDirectory(partitionDirectory(topic.slot(), id.partition())); disk.event("segment-directory-synced");
             var position = log.writtenPosition();
             var cp = new DurableMetadata.Checkpoint(position.end(), position.base(), position.bytes(),
-                    Math.addExact(checkpoints.get(id).unkeyed(), unkeyed ? 1 : 0));
+                    Math.addExact(checkpoints.get(id).unkeyed(), unkeyed ? 1 : 0), checkpoints.get(id).start(), catalog.retention() || checkpoints.get(id).retention());
             disk.atomic(publication(topic.slot(), id.partition()), DurableMetadata.checkpoint(catalog.store(), topic, id.partition(), cp), "checkpoint", options.storage().zeroProgressLimit());
             checkpoints.put(id, cp); disk.event("durable-complete");
+            quota.update(id, log.managedBytes());
             return new DurableReceipt(id, written.offset(), written.timestampMillis());
         } catch (StorageException e) {
-            if (e.code() != INVALID_ARGUMENT && e.code() != LIMIT) failed = true;
+            if (e.code() != INVALID_ARGUMENT && e.code() != LIMIT) { failed = true; quota.uncertain(id, growth); }
             throw e;
-        } catch (IOException | RuntimeException e) { failed = true; throw e; }
+        } catch (IOException | RuntimeException e) { failed = true; quota.uncertain(id, growth); throw e; }
+        finally { quota.release(growth); }
     }
 
     List<StoredRecord> inspect(TopicPartition id, long start, int count, long bytes) throws IOException {
@@ -319,6 +359,7 @@ final class DurableStore implements AutoCloseable {
             int slot = Integer.parseInt(name.substring(2, 10));
             if (slot > catalog.groups().size()) throw LogFormat.corrupt("progress slot");
             if (name.endsWith(".tmp")) {
+                boundedFile(path, 52L + 8L * options.maxPartitionsPerTopic());
                 DurableMetadata.checkVersion(path, ConsumerProgress.MAGIC, disk, options.storage()); scratch.add(path); continue;
             }
             if (catalog.progress() && slot < catalog.groups().size()) continue;
@@ -346,7 +387,7 @@ final class DurableStore implements AutoCloseable {
             disk.atomic(progressFile(i), ConsumerProgress.encode(catalog.store(), i, topic.slot(), progress.get(group.id())),
                     "progress-initial", options.storage().zeroProgressLimit());
         }
-        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), catalog.groups(), true);
+        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), catalog.groups(), true, catalog.retention());
         disk.atomic(lease.directory.resolve("catalog"), catalogBytes(next), "progress-catalog", options.storage().zeroProgressLimit());
         catalog = next;
     }
@@ -358,7 +399,9 @@ final class DurableStore implements AutoCloseable {
         if (slot < 0 || !catalog.groups().get(slot).topic().equals(partition.topic()) || !checkpoints.containsKey(partition)
                 || target < 0 || target > checkpoints.get(partition).end()) throw new StorageException(INVALID_ARGUMENT, "progress bounds");
         var old = progress.get(group); long previous = old.offsets().get(partition.partition());
+        if (reset && target < checkpoints.get(partition).start()) throw new StorageException(OUT_OF_RANGE, "reset outside retained range");
         if (target == previous || !reset && target < previous) return previous;
+        if (target < checkpoints.get(partition).start()) throw new StorageException(OUT_OF_RANGE, "commit outside retained range");
         var next = old.update(partition.partition(), target); // Overflow rejects before I/O.
         try {
             enableProgress();
@@ -368,9 +411,48 @@ final class DurableStore implements AutoCloseable {
         } catch (IOException | RuntimeException e) { failed = true; throw e; }
     }
 
+    private void enableRetention() throws IOException {
+        if (catalog.retention()) return;
+        for (var topic : catalog.topics()) for (int p = 0; p < topic.partitions(); p++) {
+            var id = new TopicPartition(topic.id(), p); var old = checkpoints.get(id);
+            var cp = new DurableMetadata.Checkpoint(old.end(), old.base(), old.bytes(), old.unkeyed(), 0, true);
+            disk.atomic(publication(topic.slot(), p), DurableMetadata.checkpoint(catalog.store(), topic, p, cp),
+                    "retention-upgrade", options.storage().zeroProgressLimit());
+            checkpoints.put(id, cp);
+        }
+        var next = new DurableMetadata.Catalog(catalog.store(), catalog.topics(), catalog.groups(), catalog.progress(), true);
+        disk.atomic(lease.directory.resolve("catalog"), catalogBytes(next), "retention-catalog", options.storage().zeroProgressLimit());
+        catalog = next;
+    }
+
+    record Maintenance(ReadSnapshot snapshot, boolean again) { }
+    Maintenance maintain(TopicPartition id) throws IOException {
+        ensureOpen(); var log = logs.get(id);
+        try {
+            var old = checkpoints.get(id); long start = log.retentionCandidate(lifecycle.retentionBytes());
+            if (start > old.start()) {
+                if (!catalog.retention()) throw new IllegalStateException("missing retention authority");
+                var topic = catalog.topics().stream().filter(t -> t.id().equals(id.topic())).findFirst().orElseThrow();
+                var cp = new DurableMetadata.Checkpoint(old.end(), old.base(), old.bytes(), old.unkeyed(), start, true);
+                disk.atomic(publication(topic.slot(), id.partition()), DurableMetadata.checkpoint(catalog.store(), topic, id.partition(), cp),
+                        "retention", options.storage().zeroProgressLimit());
+                checkpoints.put(id, cp); log.retire(start);
+                quota.pending(logs.values().stream().mapToInt(PartitionLog::pendingDeletion).sum());
+                disk.event("retention-published");
+            }
+            boolean again = log.deleteRetired(disk, 4);
+            quota.update(id, log.managedBytes());
+            quota.pending(logs.values().stream().mapToInt(PartitionLog::pendingDeletion).sum());
+            return new Maintenance(log.snapshot(), again);
+        } catch (IOException | RuntimeException e) { failed = true; throw e; }
+    }
+
     private Path topicDirectory(int slot) { return lease.directory.resolve(String.format(Locale.ROOT, "t-%08d", slot)); }
     private Path partitionDirectory(int slot, int partition) { return topicDirectory(slot).resolve(String.format(Locale.ROOT, "p-%08d", partition)); }
     private Path publication(int slot, int partition) { return topicDirectory(slot).resolve(String.format(Locale.ROOT, "p-%08d.pub", partition)); }
+    private static void boundedFile(Path path, long maximum) throws IOException {
+        regular(path); if (Files.size(path) > maximum) throw LogFormat.corrupt("scratch exceeds metadata envelope");
+    }
     private static void regular(Path path) throws IOException {
         if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) throw LogFormat.corrupt("missing/nonregular metadata file");
     }

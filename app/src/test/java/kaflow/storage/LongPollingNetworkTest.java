@@ -80,10 +80,14 @@ class LongPollingNetworkTest {
     void transportTerminationAndOwnershipLossCannotBecomeSuccessfulExpiry(String action) throws Exception {
         try (var h = new Harness()) {
             var member = h.sync.join(JOIN);
-            var read = (action.equals("deadline") ? h.async.withDeadlineAfter(2, TimeUnit.SECONDS) : h.async).fetch(request(member, 10000));
+            var stub = action.equals("deadline") ? h.async.withDeadlineAfter(2, TimeUnit.SECONDS)
+                    : action.equals("cancel") ? h.async.withDeadlineAfter(1, TimeUnit.MINUTES) : h.async;
+            // Cancellation must drain without relying on the RPC deadline or fake-clock expiry.
+            var read = stub.fetch(request(member, 10000));
             h.broker.awaitParked(1, WAIT); assertFalse(read.isDone());
             switch (action) {
-                case "cancel" -> assertTrue(read.cancel(false));
+                // gRPC's future cancels its ClientCall from interruptTask only for cancel(true).
+                case "cancel" -> assertTrue(read.cancel(true));
                 case "join" -> h.sync.join(JOIN);
                 case "leave" -> h.sync.leave(LeaveRequest.newBuilder().setSession(member.getSession()).build());
             }

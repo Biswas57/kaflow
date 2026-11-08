@@ -73,6 +73,10 @@ final class DirectoryLease implements AutoCloseable {
         return true;
     }
 
+    void requireEmpty() throws IOException {
+        if (channel.size() != 0) throw LogFormat.corrupt("nonempty partition ownership marker");
+    }
+
     void markDurable() throws IOException {
         if (channel.size() != 0) throw LogFormat.corrupt("root marker already exists");
         transferMarker(ByteBuffer.wrap(DURABLE_MARKER), true);

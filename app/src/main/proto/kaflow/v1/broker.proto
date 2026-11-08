@@ -63,6 +63,9 @@ message MembershipResponse {
   repeated TopicPartition assignments = 4;
   // Same length/order as assignments; each value is the durable next offset.
   repeated int64 committed_next_offsets = 5;
+  // Parallel assignment vectors; committed progress may precede retained start.
+  repeated int64 retained_start_offsets = 6;
+  repeated int64 published_end_offsets = 7;
 }
 
 message LeaveResponse {}

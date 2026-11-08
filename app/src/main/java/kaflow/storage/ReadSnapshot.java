@@ -15,7 +15,8 @@ import kaflow.broker.TopicPartition;
 final class ReadSnapshot {
     record Segment(long base, long end, long bytes, int checksum) { }
     final TopicPartition partition;
-    final long end;
+    final long end, start;
+    final SegmentPins pins;
     private final Path directory;
     private final List<Segment> segments;
     private final StorageOptions options;
@@ -23,24 +24,40 @@ final class ReadSnapshot {
 
     ReadSnapshot(TopicPartition partition, long end, Path directory, List<Segment> segments,
                  StorageOptions options, StorageIo io) {
-        this.partition = partition; this.end = end; this.directory = directory;
+        this(partition, end, directory, segments, options, io, new SegmentPins(segments.get(0).base()));
+    }
+    ReadSnapshot(TopicPartition partition, long end, Path directory, List<Segment> segments,
+                 StorageOptions options, StorageIo io, SegmentPins pins) {
+        this.partition = partition; this.end = end; this.start = segments.get(0).base(); this.pins = pins; this.directory = directory;
         this.segments = List.copyOf(segments); this.options = options; this.io = io;
     }
-    Handle acquire() { return new Handle(this); }
+    Handle acquire() { var bases = segments.stream().map(Segment::base).toList(); pins.acquire(start, bases); return new Handle(this, bases, start, end); }
+    Handle acquire(long offset, int count) {
+        long limit = offset + Math.min((long) count, end - offset);
+        var bases = segments.stream().filter(s -> s.end > offset && s.base < limit).map(Segment::base).toList();
+        pins.acquire(offset, bases);
+        return new Handle(this, bases, offset, limit);
+    }
 
     static final class Handle implements AutoCloseable {
         private ReadSnapshot snapshot;
-        Handle(ReadSnapshot snapshot) { this.snapshot = snapshot; }
+        final List<Long> bases;
+        final long lower, upper;
+        Handle(ReadSnapshot snapshot, List<Long> bases, long lower, long upper) {
+            this.snapshot = snapshot; this.bases = bases; this.lower = lower; this.upper = upper;
+        }
         PartitionLog.ReadBatch read(long start, int count, long budget) throws IOException {
             ReadSnapshot s = snapshot;
             if (s == null) throw new IllegalStateException("released read handle");
+            if (start < lower || start > upper || start + Math.min((long) count, s.end - start) > upper)
+                throw new IllegalArgumentException("read outside pinned range");
             return s.read(start, count, budget);
         }
-        @Override public void close() { snapshot = null; }
+        @Override public void close() { if (snapshot != null) { snapshot.pins.release(bases); snapshot = null; } }
     }
 
     private PartitionLog.ReadBatch read(long start, int count, long budget) throws IOException {
-        if (start < 0 || start > end || count < 1 || count > options.maxReadRecords()
+        if (start < this.start || start > end || count < 1 || count > options.maxReadRecords()
                 || budget < 0 || budget > options.maxReadBytes()) throw new StorageException(StorageException.Code.INVALID_ARGUMENT, "read bounds");
         if (start == end) return new PartitionLog.ReadBatch(List.of(), start);
         byte[] topic = LogFormat.topicBytes(partition);

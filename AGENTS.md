@@ -35,6 +35,9 @@ exactly-once processing, or unverified performance/durability.
 - KF-007 waiter ownership, deadlines and cancellation contracts are in
   `docs/design/kf-007-long-polling.md`.
 
+- KF-008 retention authority, segment pins, quotas and shutdown are specified in
+  `docs/design/kf-008-retention-lifecycle.md`.
+
 ## Ticket workflow
 
 1. Select the first eligible ticket whose dependencies are complete. Only one ticket
