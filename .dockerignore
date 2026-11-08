@@ -1,0 +1,21 @@
+# Allow only source/build inputs; never send credentials, caches, test evidence or Git history.
+**
+!Dockerfile
+!.dockerignore
+!gradlew
+!settings.gradle
+!gradle/
+!gradle/dependency-versions.gradle
+!gradle/wrapper/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!app/
+!app/build.gradle
+!app/src/
+!app/src/main/
+!app/src/main/**
+!clients/
+!clients/build.gradle
+!clients/src/
+!clients/src/main/
+!clients/src/main/**

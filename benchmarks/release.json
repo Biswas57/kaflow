@@ -1,0 +1,17 @@
+{
+  "warmupMillis": 10000,
+  "durationMillis": 30000,
+  "repetitions": 3,
+  "payloadBytes": 256,
+  "keyBytes": 16,
+  "partitions": 4,
+  "retentionBytes": 0,
+  "workloads": [
+    {"scenario": "append", "concurrency": 1},
+    {"scenario": "append", "concurrency": 4},
+    {"scenario": "fetch", "concurrency": 1},
+    {"scenario": "fetch", "concurrency": 4},
+    {"scenario": "consumer", "concurrency": 1},
+    {"scenario": "long-poll", "concurrency": 1}
+  ]
+}

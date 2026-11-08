@@ -16,14 +16,16 @@ import org.springframework.context.ApplicationListener;
 /** One application shutdown budget, shared by listener stop, broker drain and repeated destruction. */
 final class DurableGrpcLifecycle extends GrpcServerLifecycle implements ApplicationListener<GrpcServerStartedEvent>, DisposableBean {
     private static final Logger LOG = LoggerFactory.getLogger(DurableGrpcLifecycle.class);
-    private static final long BUDGET = Duration.ofSeconds(10).toNanos();
+    private final long budget;
     private final DurableBroker broker;
+    private final BrokerMetrics metrics;
+    private boolean outcomeReported;
     private Server server;
     private boolean stopping, complete;
     private long began;
 
-    DurableGrpcLifecycle(GrpcServerFactory factory, ApplicationEventPublisher publisher, DurableBroker broker) {
-        super(factory, Duration.ZERO, publisher); this.broker = broker;
+    DurableGrpcLifecycle(GrpcServerFactory factory, ApplicationEventPublisher publisher, DurableBroker broker, Duration timeout, BrokerMetrics metrics) {
+        super(factory, Duration.ZERO, publisher); this.broker = broker; this.budget = timeout.toNanos(); this.metrics = metrics;
     }
     @Override public void onApplicationEvent(GrpcServerStartedEvent event) {
         if (event.getSource() == this) { server = event.getServer(); broker.ownTransportLifecycle(server::shutdown, server::isTerminated); }
@@ -33,19 +35,22 @@ final class DurableGrpcLifecycle extends GrpcServerLifecycle implements Applicat
         if (!stopping) { stopping = true; began = System.nanoTime(); }
         if (server != null) server.shutdown(); // Stop new RPCs before draining the owned dispatch executor.
         broker.requestClose();
+        int outcome = 1;
         try {
             boolean brokerDone = broker.shutdown(Duration.ofNanos(remaining()));
             boolean networkDone = server == null || server.awaitTermination(remaining(), TimeUnit.NANOSECONDS);
             if (brokerDone && networkDone) {
-                super.stop(); complete = true;
+                super.stop(); complete = true; outcome = 0;
             } else LOG.warn("Durable shutdown incomplete; broker state={}, network terminated={}; live ownership is retained until actual work finishes",
                     broker.diagnostics().state(), networkDone);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); LOG.warn("Durable shutdown interrupted; cleanup remains pending");
+            outcome = 2; Thread.currentThread().interrupt(); LOG.warn("Durable shutdown interrupted; cleanup remains pending");
         } catch (java.io.IOException e) {
-            LOG.error("Durable shutdown failed", e);
+            outcome = 3; LOG.error("Durable shutdown failed", e);
+        } finally {
+            if (!outcomeReported) { outcomeReported = true; metrics.shutdown(outcome, System.nanoTime() - began); }
         }
     }
-    private long remaining() { return Math.max(0, BUDGET - (System.nanoTime() - began)); }
-    @Override public void destroy() { stop(); } // Never grants a second ten-second budget.
+    private long remaining() { return Math.max(0, budget - (System.nanoTime() - began)); }
+    @Override public void destroy() { stop(); } // Never grants a second shutdown budget.
 }

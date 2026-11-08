@@ -1,0 +1,3 @@
+// The broker and public clients generate the same V1 transport with the same pinned versions.
+ext.grpcVersion = '1.63.0'
+ext.protobufVersion = '3.25.3'

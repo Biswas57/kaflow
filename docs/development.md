@@ -1,5 +1,12 @@
 # Build and verify Kaflow
 
+The durable V1 [quickstart](../README.md), [configuration](configuration.md),
+[operator guide](operations.md) and [examples](examples.md) are the primary release path.
+See the [KF-009 contracts](design/kf-009-operable-release.md) and
+[validation record](baseline/kf-009.md) for actual results and the pending Docker gate.
+Build the public clients with `./gradlew :clients:installDist :clients:healthProbeJar --no-daemon`
+and run their separate tests with `./gradlew :clients:test --rerun-tasks --no-daemon`.
+
 The [KF-002 contract](design/kf-002-broker-contracts.md) separates the injected
 prototype runtime from the in-process V1 core. Default startup keeps the V1 service
 unregistered. The ordinary packaged smoke checks that prototype; focused tests

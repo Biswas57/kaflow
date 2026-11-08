@@ -290,6 +290,30 @@ final class DurableStore implements AutoCloseable {
         } catch (IOException | RuntimeException e) { failed = true; throw e; }
     }
 
+    /** Full-list, read-only preflight on the storage owner. No filesystem calls or publication. */
+    void preflightTopics(Map<TopicId, Integer> requested) throws IOException {
+        ensureOpen();
+        var next = new ArrayList<>(catalog.topics()); long growth = 0; int partitions = logs.size();
+        for (var entry : requested.entrySet()) {
+            var existing = next.stream().filter(t -> t.id().equals(entry.getKey())).findFirst();
+            if (existing.isPresent()) {
+                if (existing.get().partitions() != entry.getValue()) throw new StorageException(INVALID_ARGUMENT, "topic conflict");
+                continue;
+            }
+            int name = LogFormat.topicBytes(new TopicPartition(entry.getKey(), 0)).length;
+            if (32L + name + LogFormat.FRAME_OVERHEAD > options.storage().segmentBytes())
+                throw new StorageException(INVALID_ARGUMENT, "identity exceeds segment capacity");
+            partitions = Math.addExact(partitions, entry.getValue());
+            next.add(new DurableMetadata.Topic(next.size(), entry.getKey(), entry.getValue()));
+            growth = Math.addExact(growth, entry.getValue() * (32L + name + LogFormat.INDEX_HEADER));
+        }
+        if (next.size() > options.maxTopics() || partitions > options.maxPartitions()) throw new StorageException(LIMIT, "topic capacity");
+        catalogBytes(new DurableMetadata.Catalog(catalog.store(), next, catalog.groups(), catalog.progress(), catalog.retention()));
+        var view = quota.view();
+        if (growth > lifecycle.maxStorageBytes() - view.accountedBytes() - view.reservedBytes())
+            throw new StorageException(LIMIT, "provisioning storage quota");
+    }
+
     private ByteBuffer catalogBytes(DurableMetadata.Catalog value) throws IOException {
         ByteBuffer bytes = DurableMetadata.catalog(value);
         if (bytes.remaining() > groupOptions.maxCatalogBytes()) throw new StorageException(LIMIT, "catalog byte capacity");

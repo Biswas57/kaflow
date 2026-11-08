@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import tributary.api.dto.*;
 
 @RestController
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "kaflow.durable.enabled", havingValue = "false", matchIfMissing = true)
 @RequestMapping("/api")
 class TributaryAPI {
 

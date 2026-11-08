@@ -38,6 +38,10 @@ exactly-once processing, or unverified performance/durability.
 - KF-008 retention authority, segment pins, quotas and shutdown are specified in
   `docs/design/kf-008-retention-lifecycle.md`.
 
+- KF-009's operator experience, examples, metrics, container workflow and
+  measurement contracts are in `docs/design/kf-009-operable-release.md`; check `todo.md`
+  for actual native/container validation status.
+
 ## Ticket workflow
 
 1. Select the first eligible ticket whose dependencies are complete. Only one ticket
