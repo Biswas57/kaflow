@@ -338,3 +338,59 @@ crash/restart phases. No test endpoint or fixture is added to the executable JAR
 
 Full contract: [bounded asynchronous Fetch waiting](design/kf-007-long-polling.md).
 Executed checks and limitations: [KF-007 validation record](baseline/kf-007.md).
+
+KF-008 lifecycle work: [retention, quotas and shutdown design](design/kf-008-retention-lifecycle.md).
+Retention stays disabled by default; implementation/evidence status is in the working paper.
+
+## KF-008 retention, storage quotas and shutdown
+
+Retention is opt-in and independent of consumer commits. With durable mode enabled, set
+`--kaflow.durable.retention-bytes=<positive bytes>` to expire an oldest prefix of sealed
+segments in each partition. Zero (default) disables new expiration. The active segment always remains.
+The target counts log framing/headers and sparse index lengths, not just payload bytes.
+A lagging group retains its actual committed position and can receive OUT_OF_RANGE.
+Join/Heartbeat return parallel `retained_start_offsets` and `published_end_offsets` alongside
+assignments and committed positions. Choose an explicit valid Fetch offset or use internal
+inactive-group reset; no implicit skipping or progress rewriting occurs.
+
+Independent ceilings: `--kaflow.durable.max-storage-bytes` defaults to 8589934592 (8 GiB),
+`--kaflow.durable.max-partition-bytes` to 1073741824 (1 GiB of segment/index files per partition).
+`--kaflow.durable.segment-bytes` defaults to 16777216 and `--kaflow.durable.max-segments` to 1024.
+A frame must fit its segment. Constructors reject unsupported bounds and quotas too small
+for frame/rotation growth plus maintenance headroom. Metadata and temporary replacements
+have a permanent conservative quota charge; log/index lengths and pending growth are counted
+separately, including retired files until deletion and directory force complete. Filesystem
+allocation overhead/directories/unrelated files are excluded. Real disk exhaustion can still
+occur and degrades readiness. Ordinary quota exhaustion returns RESOURCE_EXHAUSTED; retry
+may succeed after confirmed reclamation. Quota pressure never enables retention.
+
+Already-admitted reads pin their captured segments until actual work/channel cleanup unwinds,
+including cancellation and watchdog timeout. Those reads may return the captured bytes after
+logical expiration if their membership/lifecycle checks still pass. New reads below the
+retained start reject. A stalled reader may prevent reclamation and exhaust quota or segment
+count; growth remains bounded. Parked requests hold no pins or read resources.
+
+Enabling retention upgrades catalog V1–V3 to V4 and publication checkpoints to V2 through
+forced, atomic replacements. V4 requires the retained boundary; missing/corrupt retained
+records or authority fail closed. Downgrade to older binaries is unsupported once upgrade
+begins. Reopening with retention disabled preserves prior expiration and completes its
+previously authorized cleanup. Copying arbitrary old metadata back is not a supported rollback.
+
+Durable application shutdown replaces the starter's separate gRPC grace wait with one
+ten-second monotonic budget shared by listener stop,
+actual broker work, transport and response delivery, storage close and repeated container
+cleanup. It rejects new/parked work, retains unknown-outcome writers and real readers, and
+releases directory ownership only after they and delivery have drained. Incomplete shutdown
+is reported; it never interrupts/replaces filesystem workers or claims CLOSED. Late completion
+continues cleanup, and explicit subsequent `shutdown(Duration)` calls can wait for it. A stuck
+process may require supervisor termination. The default prototype lifecycle is unchanged.
+
+After build/test compilation, run `python3 scripts/smoke_retention.py`. It launches two
+separate JVM fixtures using production classes/dependencies extracted from the executable
+JAR and real Spring/gRPC listeners. A 160-byte segment/200-byte retention target proves
+prefix expiration, public OUT_OF_RANGE, exact binary retained records, independent progress,
+restart and append at the original next offset. Each phase drains 16 proven parked requests
+with zero readers/pins and checks both listeners close. Reports/logs live under
+`app/build/reports/retention-smoke/`; children have 60-second limits and forced cleanup on
+failure. CI includes this third smoke and always-uploaded reports, but configuration alone
+is not evidence of an executed run. See [KF-008 validation](baseline/kf-008.md).

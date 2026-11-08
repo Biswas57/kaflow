@@ -3,7 +3,7 @@
 ## Board
 
 Status: READY, IN_PROGRESS, BLOCKED, DONE. One active ticket maximum.
-Last updated: 2026-10-16. Current ticket: **none**. Latest completed: **KF-007**.
+Last updated: 2026-10-16. Current ticket: **none**. Latest completed: **KF-008**.
 
 | Ticket | Scope | Status | Dependencies |
 | --- | --- | --- | --- |
@@ -14,7 +14,7 @@ Last updated: 2026-10-16. Current ticket: **none**. Latest completed: **KF-007**
 | KF-005 | Leased groups and generation fencing | DONE | KF-004 |
 | KF-006 | Durable commits, immediate Fetch API, independent replay | DONE | KF-005 |
 | KF-007 | Asynchronous long polling and cancellation | DONE | KF-006 |
-| KF-008 | Retention, deletion, overload, bounded shutdown | READY | KF-007 |
+| KF-008 | Retention, deletion, overload, bounded shutdown | DONE | KF-007 |
 | KF-009 | Operable release, Docker, metrics, measured benchmarks | READY | KF-008 |
 
 READY means scoped backlog, not permission to bypass unfinished dependencies.
@@ -787,12 +787,115 @@ KF-007 is approved for the requested publication; exact-SHA CI verification foll
 KF-008 remains unstarted: retention boundaries, out-of-range semantics, segment pinning,
 crash-safe deletion, quotas, overload and bounded shutdown under load.
 
+## KF-008 — Retention, crash-safe deletion, quotas and bounded shutdown
+
+**Status:** DONE (2026-10-16), local validation and final review passed. **Branch:** `codex/kf-008-retention-lifecycle`.
+**Base:** fetched `origin/main` at `3d9cdda18c616636edd411e6c470f01a046729a6`, merge PR #7.
+Verified KF-007 `05248c86f4e7293810cc28c14ec12c26b4d60fbc` ancestry and identical tree;
+checkout was clean, no unrelated edits. No commit, push, PR, merge or KF-009 authorized.
+**Design:** [retention lifecycle](docs/design/kf-008-retention-lifecycle.md), recorded before code.
+
+Inherited evidence rechecked: retained local/CI reports show 378 tests, 39 classes, zero
+failures/errors/skips. [KF-007 run 38823888697](https://github.com/Biswas57/kaflow/actions/runs/38823888697)
+executed on exact `05248c86f4e7293810cc28c14ec12c26b4d60fbc`: clean build/package, tests,
+original smoke, durable two-group restart/proven parked delivery and upload all succeeded.
+This run belongs to that commit, not the later merge. Raw evidence remains ignored under
+`build/kf007-evidence/publication/`; KF-008 has no CI execution.
+
+### Stages and acceptance
+
+1. Authority/configuration/quota design; V4 catalog/V2 checkpoints, crash-safe upgrade and
+   retained-prefix recovery, conservative metadata headroom and exact segment accounting.
+2. Shared segment pins, writer-owned bounded retention/deletion and coalesced scheduling;
+   retained range/progress diagnostics, apply-time bounds with existing membership barriers.
+3. Total-deadline shutdown, incomplete ownership and late completion; deterministic races,
+   failure/recovery/quota/overload tests and separate-process ownership proof.
+4. Packaged retention/restart/load checks, clean source-only build and separate full suite,
+   existing smokes, final diff review, actual validation record and KF-009 handoff only.
+
+- [x] Disabled default; explicit whole sealed-prefix retention, active segment preserved.
+- [x] Durable authority before deletion, identity/CRC/version validation and explicit upgrade.
+- [x] Stable next offsets/payloads; retained corruption fails closed; repeatable cleanup.
+- [x] Atomic pre-open pins retained through actual read unwind; no pinned unlink or parked pins.
+- [x] Bounded descriptors/deletion work; fair coalesced maintenance with responsive controls.
+- [x] Exact range Fetch/diagnostics; independent lagging progress; reset/Commit apply-time bounds.
+- [x] Total/per-partition quota, framing/index/rotation/temp/retired accounting and reserved headroom.
+- [x] Safe overload rejection, actual ENOSPC degradation and capacity only after confirmed reclaim.
+- [x] One total shutdown deadline, real-work/delivery drain, incomplete ownership and late cleanup.
+- [x] Deterministic failure/race tests and separate-process lock rejection during incomplete close.
+- [x] Clean source-only build/package, full suite, both inherited smokes and focused packaged checks.
+- [x] Source manifest/evidence, scope/secrets/generated-file review and honest limitations/handoff.
+
+Validation commands: Java 17 wrapper `./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon`,
+`./gradlew :app:test --rerun-tasks --no-daemon`, `python3 scripts/smoke_bootjar.py`,
+`python3 scripts/smoke_durable.py`, and added focused retention smoke. Use bounded runners,
+preserve failures, record actual counts rather than assuming 378. The initial planning checkpoint
+had no KF-008 executions; actual results follow.
+Stages 1–2 implemented: V4/V2 authority and explicit upgrade, retained-prefix recovery,
+shared pins, exact segment growth plus reserved metadata headroom, bounded writer maintenance,
+retained range/progress diagnostics and total-deadline cleanup including transport execution.
+Compilation passed (8.61 s). Initial inherited suite: 378 tests, five failures, no errors/skips
+(83.68 s): two newly-supported version literals and three expanded membership byte-budget
+expectations. Updated fixtures to still-unsupported versions and exact new byte allowance;
+kept their assertions. Affected/inherited plus retention authority tests passed (21.15 s).
+Quota, consumer/pin and shutdown suites passed (12.93 s), including separate-process lock
+probes while close is incomplete. Raw logs under `/private/tmp/kaflow-kf008-work/logs/`,
+retained XML under ignored `build/kf008-evidence/`. No command timeout.
+Expanded process/network/overload and shutdown evidence implemented. Development full suite
+passed: 454 tests, 44 classes, no failures/errors/skips (79.21 s). Retained failed development
+compilation (test brace) and smoke startup (lifecycle bean suppressed factory discovery), fixed
+both and reran. Packaged retention smoke then passed (5.35 s). Final review corrected aggregate
+orphan-topic quota accounting and tightened scratch bounds; regression checks are included below.
+
+### Final acceptance and handoff
+
+Fresh candidate `/private/tmp/kaflow-kf008-final-v17dh3u0/candidate`: 241 source inputs,
+154 Java sources/two schemas, no project outputs/caches. Java 17.0.20.1+1, wrapper 8.5,
+macOS 26.6.2 arm64/APFS. Clean source build/package passed (8.91 s); separate full task passed
+(80.96 s): **460 tests, 44 classes, zero failures/errors/skips**. Original packaged smoke
+passed (2.89 s), durable two-group crash/restart plus proven parked delivery passed (10.07 s),
+new retention/restart/load smoke passed (4.67 s). No final command/child/shutdown timeout.
+All accepted smoke logs have zero WARN/ERROR/SEVERE entries; both listeners closed.
+
+Durable groups resumed 2/1 after SIGKILL, then committed 4/3, with four exact acknowledged
+records. Retention's two separate JVMs preserved start 9 and end 10 then 11 after append at
+10; exact binary bytes/public OUT_OF_RANGE and lagging progress 0 verified. Each phase drained
+16 parked/zero-reader/zero-pin requests; normal shutdown 0.0426/0.0563 s. Tests additionally
+prove incomplete-close ownership with separate JVM lock contenders and safe late cleanup.
+
+Final 36-path review found no blocker, unrelated change, generated artifact, credential-pattern
+match or whitespace error. All executable input hashes/modes match the validated manifest;
+packaged production classes match the separately tested classes. Evidence-only docs updated
+last. [Full evidence and limitations](docs/baseline/kf-008.md); ignored raw reports/manifests
+under `build/kf008-evidence/final/`, all command logs (including failures) under
+`build/kf008-evidence/command-logs/`. No KF-008 CI execution is claimed; workflow now includes
+all three smokes and always-uploaded reports, pending a future authorized publication.
+
+Retention is disabled by default. Catalog V4/checkpoint V2 have no supported downgrade;
+retained corruption fails closed. Lagging progress is never rewritten. Quotas exclude allocation
+blocks/directories/unrelated files/OS caches; ENOSPC can still occur. A blocked reader/writer
+can prevent cleanup and require supervisor termination; no forced ownership release. Linux
+local storage remains reference, and process-halt tests do not establish physical power-loss
+safety. No compaction, replication, transactions, exactly-once or performance claim.
+
+KF-009 handoff only: operable release, loopback defaults, Docker persistent-volume demo,
+readiness/metrics, producer/consumer examples, accurate documentation and measured benchmarks.
+KF-009 remains unstarted. Branch remains uncommitted; no push, PR or merge.
+
 ## Remaining ticket acceptance outlines
 
 Expand the next eligible ticket into scope, decisions, steps, evidence, and handoff.
 
-- **KF-008:** retention boundaries, out-of-range errors, segment pinning, crash-safe
-  deletion, quotas, degraded behaviour, bounded shutdown; preserve offset identity.
 - **KF-009:** loopback defaults, Docker persistent volume demo, readiness/metrics,
   producer/consumer example, accurate README and actual CI results; publish only
   measured benchmarks with hardware/workload/durability details.
+
+## Publication authorization — 2026-11-08
+
+The user authorized independent KF-008 commit/push/PR and a dependent draft KF-009 PR,
+with no merge, releases or image publication. Historical restrictions above describe earlier
+checkpoints. KF-008 was recovered byte-for-byte from the 241-file inherited manifest in an
+isolated checkout; executable hashes/modes match its final validated inputs. Publication edits
+are documentation only. Original combined work and raw evidence are fully snapshotted and
+untouched. See [publication provenance](docs/baseline/kf-008.md#authorized-independent-publication--2026-11-08).
+Exact pushed-SHA CI results will be reported separately from historical local validation.

@@ -16,22 +16,25 @@ import java.util.UUID;
 
 import static kaflow.storage.StorageException.Code.*;
 
-/** Exact V1/V2 catalog and V1 checkpoint codecs. Metadata is bounded before allocation. */
+/** Exact V1–V4 catalog and V1/V2 checkpoint codecs. Metadata is bounded before allocation. */
 final class DurableMetadata {
     static final int CATALOG = 0x4b464341;
     static final int CHECKPOINT = 0x4b464350;
     record Topic(int slot, TopicId id, int partitions) { }
     record Group(GroupId id, TopicId topic) { }
-    record Catalog(UUID store, List<Topic> topics, List<Group> groups, boolean progress) {
+    record Catalog(UUID store, List<Topic> topics, List<Group> groups, boolean progress, boolean retention) {
+        Catalog(UUID store, List<Topic> topics, List<Group> groups, boolean progress) { this(store, topics, groups, progress, false); }
         Catalog(UUID store, List<Topic> topics, List<Group> groups) { this(store, topics, groups, false); }
         Catalog(UUID store, List<Topic> topics) { this(store, topics, List.of()); }
         Catalog { topics = List.copyOf(topics); groups = List.copyOf(groups); }
     }
-    record Checkpoint(long end, long base, long bytes, long unkeyed) { }
+    record Checkpoint(long end, long base, long bytes, long unkeyed, long start, boolean retention) {
+        Checkpoint(long end, long base, long bytes, long unkeyed) { this(end, base, bytes, unkeyed, 0, false); }
+    }
 
     static ByteBuffer catalog(Catalog value) throws IOException {
         List<byte[]> names = new ArrayList<>();
-        int length = value.groups.isEmpty() && !value.progress ? 44 : 48;
+        int length = value.groups.isEmpty() && !value.progress && !value.retention ? 44 : 48;
         for (Topic t : value.topics) {
             byte[] name = LogFormat.topicBytes(new TopicPartition(t.id, 0));
             names.add(name); length += 12 + name.length;
@@ -40,8 +43,9 @@ final class DurableMetadata {
         ByteBuffer b = prefix(CATALOG, length, value.store);
         if (!value.groups.isEmpty()) b.putShort(4, (short) 2);
         if (value.progress) b.putShort(4, (short) 3);
+        if (value.retention) { b.putShort(4, (short) 4); b.putShort(6, (short) (value.progress ? 1 : 0)); }
         b.putLong(value.topics.size() + value.groups.size()).putInt(value.topics.size());
-        if (!value.groups.isEmpty() || value.progress) b.putInt(value.groups.size());
+        if (!value.groups.isEmpty() || value.progress || value.retention) b.putInt(value.groups.size());
         for (int i = 0; i < value.topics.size(); i++) {
             Topic t = value.topics.get(i); byte[] name = names.get(i);
             b.putInt(t.slot).putInt(t.partitions).putInt(name.length).put(name);
@@ -65,7 +69,7 @@ final class DurableMetadata {
         int groupCount = 0;
         if (b.getShort(4) >= 2) {
             require(b, 4); groupCount = b.getInt();
-            if (groupCount < 1 || groupCount > groups.maxGroups()) throw LogFormat.corrupt("catalog group count");
+            if ((groupCount < 0 || groupCount == 0 && b.getShort(4) != 4) || groupCount > groups.maxGroups()) throw LogFormat.corrupt("catalog group count");
         }
         if (count < 0 || count > options.maxTopics() || generation != count + groupCount) throw LogFormat.corrupt("catalog count/generation");
         List<Topic> topics = new ArrayList<>(); HashSet<TopicId> names = new HashSet<>(); int total = 0;
@@ -92,32 +96,38 @@ final class DurableMetadata {
             }
         }
         if (b.remaining() != 4) throw LogFormat.corrupt("catalog trailing bytes");
-        return new Catalog(store, topics, definitions, b.getShort(4) == 3);
+        return new Catalog(store, topics, definitions, b.getShort(4) == 3 || b.getShort(6) == 1, b.getShort(4) == 4);
     }
 
     static ByteBuffer checkpoint(UUID store, Topic topic, int partition, Checkpoint value) throws IOException {
         byte[] name = LogFormat.topicBytes(new TopicPartition(topic.id, partition));
-        ByteBuffer b = prefix(CHECKPOINT, 84 + name.length, store);
+        ByteBuffer b = prefix(CHECKPOINT, (value.retention ? 92 : 84) + name.length, store);
+        if (value.retention) b.putShort(4, (short) 2);
         b.putInt(topic.slot).putInt(partition).putInt(name.length).putLong(value.end).putLong(value.end)
-                .putLong(value.base).putLong(value.bytes).putLong(value.unkeyed).put(name);
+                .putLong(value.base).putLong(value.bytes).putLong(value.unkeyed);
+        if (value.retention) b.putLong(value.start);
+        b.put(name);
         return finish(b);
     }
 
     static Checkpoint readCheckpoint(Path path, UUID store, Topic topic, int partition,
                                      Persistence disk, StorageOptions options) throws IOException {
-        ByteBuffer b = read(path, CHECKPOINT, 85, 339, disk, options);
+        ByteBuffer b = read(path, CHECKPOINT, 85, 347, disk, options);
         UUID found = new UUID(b.getLong(), b.getLong());
         int slot = b.getInt(); int part = b.getInt(); int topicLength = b.getInt();
         long generation = b.getLong(), end = b.getLong(), base = b.getLong(), bytes = b.getLong(), unkeyed = b.getLong();
+        boolean retention = b.getShort(4) == 2;
+        if (retention) require(b, 8);
+        long start = retention ? b.getLong() : 0;
         TopicId id = topic(b, topicLength);
         int header = 32 + LogFormat.topicBytes(new TopicPartition(topic.id, partition)).length;
         if (!store.equals(found) || slot != topic.slot || part != partition || !id.equals(topic.id)
                 || b.remaining() != 4 || end < 0 || generation != end || base < 0
                 || (end == 0 ? base != 0 || bytes != header : base >= end)
-                || bytes < header || bytes > options.segmentBytes() || unkeyed < 0 || unkeyed > end) {
+                || start < 0 || start > base || bytes < header || bytes > options.segmentBytes() || unkeyed < 0 || unkeyed > end) {
             throw LogFormat.corrupt("invalid publication checkpoint");
         }
-        return new Checkpoint(end, base, bytes, unkeyed);
+        return new Checkpoint(end, base, bytes, unkeyed, start, retention);
     }
 
     /** Inspect even discarded recognizable authoritative scratch versions before repair. */
@@ -131,7 +141,7 @@ final class DurableMetadata {
     }
 
     private static boolean supported(int magic, short version) {
-        return version == 1 || magic == CATALOG && (version == 2 || version == 3);
+        return version == 1 || magic == CHECKPOINT && version == 2 || magic == CATALOG && (version == 2 || version == 3 || version == 4);
     }
 
     private static ByteBuffer prefix(int magic, int length, UUID store) {
@@ -151,7 +161,8 @@ final class DurableMetadata {
             StorageIo.readFully(f, prefix, 0, options.zeroProgressLimit()); prefix.flip();
             if (prefix.getInt() != magic) throw LogFormat.corrupt("metadata magic");
             if (!supported(magic, prefix.getShort())) throw new StorageException(UNSUPPORTED_VERSION, "unsupported metadata version");
-            if (prefix.getShort() != 0 || prefix.getInt() != size) throw LogFormat.corrupt("metadata flags/length");
+            short flags = prefix.getShort();
+            if ((flags != 0 && !(magic == CATALOG && prefix.getShort(4) == 4 && flags == 1)) || prefix.getInt() != size) throw LogFormat.corrupt("metadata flags/length");
             ByteBuffer b = ByteBuffer.allocate((int) size); b.put(prefix.array());
             StorageIo.readFully(f, b, 12, options.zeroProgressLimit());
             if (b.getInt((int) size - 4) != LogFormat.checksum(b.array(), (int) size - 4)) throw LogFormat.corrupt("metadata checksum");

@@ -147,6 +147,8 @@ public final class DurableAppendService extends BrokerGrpc.BrokerImplBase {
         for (var p : view.assignments()) response.addAssignments(kaflow.v1.TopicPartition.newBuilder()
                 .setTopic(p.topic().value()).setPartition(p.partition()));
         response.addAllCommittedNextOffsets(view.committedOffsets());
+        response.addAllRetainedStartOffsets(view.retainedStarts());
+        response.addAllPublishedEndOffsets(view.publishedEnds());
         return response.build();
     }
     private static void invalidMembership(StreamObserver<?> output) {

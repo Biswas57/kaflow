@@ -81,12 +81,12 @@ class GroupBrokerTest {
 
     @ParameterizedTest @ValueSource(strings={"joins","controls","bytes"})
     void independentControlAdmissionLimitsRetainAndReleaseReservations(String resource) throws Exception {
-        // 7 group + 6 topic + 6 label + (512 + 8*(255+16)) response bytes = 2699.
-        var limits=limits(resource.equals("joins")?1:8,resource.equals("controls")?1:8,resource.equals("bytes")?2699:65536);
+        // 7 group + 6 topic + 6 label + (512 + 8*(255+48)) response bytes = 2955.
+        var limits=limits(resource.equals("joins")?1:8,resource.equals("controls")?1:8,resource.equals("bytes")?2955:65536);
         Events disk=new Events();
         try(var broker=start(limits,new AtomicLong(),disk)) {
             await(broker.createTopic(TOPIC,1));disk.pause="group-catalog-synced";
-            var first=broker.join(JOIN);assertTrue(disk.entered.await(5,TimeUnit.SECONDS));assertEquals(2699,broker.membershipDiagnostics().admittedBytes());
+            var first=broker.join(JOIN);assertTrue(disk.entered.await(5,TimeUnit.SECONDS));assertEquals(2955,broker.membershipDiagnostics().admittedBytes());
             failure(RESOURCE_EXHAUSTED,broker.join(JOIN));
             disk.proceed.countDown();await(first);broker.awaitIdle(WAIT);
             assertEquals(0,broker.membershipDiagnostics().pendingJoins());assertEquals(0,broker.membershipDiagnostics().admittedBytes());

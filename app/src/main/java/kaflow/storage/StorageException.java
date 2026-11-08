@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public final class StorageException extends IOException {
     public enum Code {
-        INVALID_ARGUMENT, LIMIT, CORRUPT, UNSUPPORTED_VERSION, WRONG_IDENTITY,
+        INVALID_ARGUMENT, OUT_OF_RANGE, LIMIT, CORRUPT, UNSUPPORTED_VERSION, WRONG_IDENTITY,
         OWNERSHIP, WRONG_THREAD, CLOSED, FAILED, BUDGET_TOO_SMALL, IO_STALLED
     }
 

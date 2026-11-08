@@ -11,6 +11,7 @@ import kaflow.groups.GroupOptions;
 import kaflow.consumer.ConsumerOptions;
 import kaflow.consumer.WaitOptions;
 import kaflow.storage.DurableOptions;
+import kaflow.storage.LifecycleOptions;
 import net.devh.boot.grpc.server.serverfactory.GrpcServerConfigurer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
@@ -24,7 +25,13 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(name = "kaflow.durable.enabled", havingValue = "true")
 public class DurableBrokerConfiguration {
     @Bean
-    public DurableOptions durableOptions() { return DurableOptions.defaults(); }
+    public DurableOptions durableOptions(@Value("${kaflow.durable.segment-bytes:16777216}") long segmentBytes,
+                                         @Value("${kaflow.durable.max-segments:1024}") int maxSegments) {
+        var d = DurableOptions.defaults(); var s = d.storage();
+        return new DurableOptions(new kaflow.storage.StorageOptions(segmentBytes, maxSegments, s.maxKeyBytes(), s.maxPayloadBytes(),
+                s.indexInterval(), s.maxReadRecords(), s.maxReadBytes(), s.zeroProgressLimit()), d.maxTopics(), d.maxPartitionsPerTopic(),
+                d.maxPartitions(), d.maxCalls(), d.maxBytes(), d.watchdog());
+    }
 
     @Bean
     public GroupOptions groupOptions() { return GroupOptions.defaults(); }
@@ -35,11 +42,25 @@ public class DurableBrokerConfiguration {
     @Bean
     public WaitOptions waitOptions() { return WaitOptions.defaults(); }
 
-    @Bean(destroyMethod = "close")
+    @Bean
+    public LifecycleOptions lifecycleOptions(@Value("${kaflow.durable.retention-bytes:0}") long retention,
+            @Value("${kaflow.durable.max-storage-bytes:8589934592}") long total,
+            @Value("${kaflow.durable.max-partition-bytes:1073741824}") long partition) {
+        return new LifecycleOptions(retention, total, partition);
+    }
+
+    @Bean(destroyMethod = "closeFromContainer")
     public DurableBroker durableBroker(@Value("${kaflow.durable.directory}") String directory,
-                                       DurableOptions options, GroupOptions groups, ConsumerOptions consumers, WaitOptions waits) throws IOException {
+                                       DurableOptions options, GroupOptions groups, ConsumerOptions consumers, WaitOptions waits, LifecycleOptions lifecycle, ThreadPoolExecutor durableTransportExecutor) throws IOException {
         if (directory.isBlank()) throw new IllegalArgumentException("durable directory is required");
-        return DurableBroker.open(Path.of(directory), options, groups, consumers, waits, Clock.systemUTC());
+        var broker = DurableBroker.open(Path.of(directory), options, groups, consumers, waits, lifecycle, Clock.systemUTC());
+        broker.ownTransportExecutor(durableTransportExecutor);
+        return broker;
+    }
+
+    @Bean
+    public static org.springframework.beans.factory.config.BeanPostProcessor durableGrpcLifecycleProcessor() {
+        return new DurableGrpcLifecycleProcessor();
     }
 
     @Bean

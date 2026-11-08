@@ -39,10 +39,19 @@ public final class DurableBroker implements AutoCloseable {
     public record Diagnostics(State state, boolean ready, int admittedCalls, long admittedBytes,
                               int queuedCalls, long activeOperation, boolean watchdogExpired,
                               Map<TopicPartition, Long> published) { }
-    private enum Kind { CREATE, APPEND, INSPECT, GROUP, COMMIT, RESET, CLOSE }
+    private enum Kind { CREATE, APPEND, INSPECT, GROUP, COMMIT, RESET, MAINTAIN, CLOSE }
     private enum ControlKind { JOIN, HEARTBEAT, LEAVE, VALIDATE }
     public record MembershipDiagnostics(int groups, int members, int timerEntries, int admittedControls,
                                         long admittedBytes, int pendingJoins, int queuedControls) { }
+    private final LifecycleOptions lifecycle;
+    private volatile StorageQuota quota;
+    private volatile ThreadPoolExecutor transport;
+    private Runnable stopTransport = () -> { };
+    private java.util.function.BooleanSupplier transportQuiesced = () -> true;
+    private volatile Map<TopicPartition, ReadSnapshot> snapshotView = Map.of();
+    private final java.util.LinkedHashSet<TopicPartition> dirty = new java.util.LinkedHashSet<>();
+    private boolean maintenanceTurn = true, storageClosed;
+    private Throwable closeFailure;
     private final ConsumerOptions consumerOptions;
     private final WaitOptions waitOptions;
     private final FetchWaiters<ConsumerCall<?>> waiters = new FetchWaiters<>();
@@ -92,7 +101,7 @@ public final class DurableBroker implements AutoCloseable {
     private volatile boolean closeRequested, watchdogExpired, readWatchdogExpired;
     private volatile long activeId;
     private int admittedCalls;
-    private long admittedBytes, sequence;
+    private long admittedBytes, sequence, maintenanceSequence = -1;
     private Work<?> active;
     private boolean initializing = true, closeDispatched;
     private long started;
@@ -111,7 +120,11 @@ public final class DurableBroker implements AutoCloseable {
 
     public static DurableBroker open(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers,
                                      WaitOptions waits, Clock clock) throws IOException {
-        DurableBroker broker = start(directory, options, groups, consumers, waits, clock, System::nanoTime, new Persistence(), event -> { });
+        return open(directory, options, groups, consumers, waits, LifecycleOptions.defaults(), clock);
+    }
+    public static DurableBroker open(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers,
+                                     WaitOptions waits, LifecycleOptions lifecycle, Clock clock) throws IOException {
+        DurableBroker broker = start(directory, options, groups, consumers, waits, lifecycle, clock, System::nanoTime, new Persistence(), event -> { });
         try { broker.initialized.get(30, TimeUnit.SECONDS); return broker; }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt(); broker.requestClose(); throw new IOException("durable initialization interrupted; cleanup pending", e);
@@ -137,11 +150,17 @@ public final class DurableBroker implements AutoCloseable {
 
     static DurableBroker start(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers,
                                WaitOptions waits, Clock clock, LongSupplier nanos, Persistence disk, Consumer<String> observer) {
-        return new DurableBroker(directory, options, groups, consumers, waits, clock, nanos, disk, observer);
+        return start(directory, options, groups, consumers, waits, LifecycleOptions.defaults(), clock, nanos, disk, observer);
+    }
+    static DurableBroker start(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumers,
+                               WaitOptions waits, LifecycleOptions lifecycle, Clock clock, LongSupplier nanos, Persistence disk, Consumer<String> observer) {
+        lifecycle.validate(options, groups);
+        return new DurableBroker(directory, options, groups, consumers, waits, lifecycle, clock, nanos, disk, observer);
     }
 
-    private DurableBroker(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumerOptions, WaitOptions waitOptions, Clock clock, LongSupplier nanos,
+    private DurableBroker(Path directory, DurableOptions options, GroupOptions groups, ConsumerOptions consumerOptions, WaitOptions waitOptions, LifecycleOptions lifecycle, Clock clock, LongSupplier nanos,
                           Persistence disk, Consumer<String> observer) {
+        this.lifecycle = Objects.requireNonNull(lifecycle);
         this.consumerOptions = Objects.requireNonNull(consumerOptions); this.disk = disk;
         this.waitOptions = Objects.requireNonNull(waitOptions);
         int consumerCalls = consumerOptions.maxReads() + consumerOptions.maxProgressCalls() + waitOptions.maxRequests();
@@ -244,6 +263,10 @@ public final class DurableBroker implements AutoCloseable {
         while (state != State.CLOSED) {
             Completion done = completion.getAndSet(null);
             if (done != null) complete(done);
+            if (storageClosed && responses.isTerminated() && controlResponses.isTerminated() && readers.isTerminated() && consumerResponses.isTerminated()) {
+                transition(State.CLOSED);
+                if (closeFailure == null) terminated.complete(null); else terminated.completeExceptionally(closeFailure);
+            }
             if (state == State.CLOSED) break;
             if (closeRequested && state != State.CLOSING) { transition(State.CLOSING); membership.invalidate(); }
             membership.expireBatch(nanos.getAsLong());
@@ -271,23 +294,33 @@ public final class DurableBroker implements AutoCloseable {
             serviceWaiters();
             if (state == State.DEGRADED || state == State.CLOSING) rejectQueued();
             if (!initializing && active == null) {
-                if (state == State.CLOSING && !closeDispatched && controls.isEmpty() && consumers.isEmpty() && reading.isEmpty() && waiters.size() == 0) {
+                if (state == State.CLOSING && !storageClosed && !closeDispatched && controls.isEmpty() && consumers.isEmpty() && reading.isEmpty() && waiters.size() == 0 && admissionsDrained()) {
                     closeDispatched = true;
                     dispatch(new Work<>(-1, Kind.CLOSE, null, 0, null, null, 0, 0, null));
-                } else if (state == State.READY) {
-                    Work<?> work = requests.poll();
-                    if (work != null) {
-                        synchronized (gate) {
-                            DurableException invalid = closeRequested ? new DurableException(UNAVAILABLE) : prepare(work);
-                            if (invalid != null) respond(work, null, invalid, true);
-                            else if (work.noWrite) respond(work, work.start, null, true);
-                            else dispatch(work);
-                        }
-                    }
-                }
+                } else if (state == State.READY) dispatchNext();
             }
+
             try { wake.tryAcquire(10, TimeUnit.MILLISECONDS); }
             catch (InterruptedException ignored) { closeRequested = true; }
+        }
+    }
+
+    private void dispatchNext() {
+        synchronized (gate) {
+            if (closeRequested) return;
+            if (!dirty.isEmpty() && (maintenanceTurn || requests.isEmpty())) {
+                if (maintenanceSequence == Long.MIN_VALUE) { transition(State.DEGRADED); return; }
+                var iterator = dirty.iterator(); var partition = iterator.next(); iterator.remove();
+                maintenanceTurn = false;
+                dispatch(new Work<>(--maintenanceSequence, Kind.MAINTAIN, partition.topic(), 0, null, partition, 0, 0, null));
+                return;
+            }
+            Work<?> work = requests.poll(); maintenanceTurn = true;
+            if (work == null) return;
+            DurableException invalid = prepare(work);
+            if (invalid != null) respond(work, null, invalid, true);
+            else if (work.noWrite) respond(work, work.start, null, true);
+            else dispatch(work);
         }
     }
 
@@ -351,11 +384,13 @@ public final class DurableBroker implements AutoCloseable {
             initializing = false;
             if (done.error != null) {
                 initialized.completeExceptionally(done.error);
-                transition(State.CLOSED); responses.shutdown(); controlResponses.shutdown(); readers.shutdown(); consumerResponses.shutdown(); terminated.completeExceptionally(done.error); return;
+                finishStorageClose(done.error); return;
             }
             var recovered = (DurableStore.Recovery) done.value;
             for (var t : recovered.topics()) topics.put(t.id(), new TopicState(t.count(), t.roundRobin()));
-            published.putAll(recovered.ends()); snapshots.putAll(recovered.snapshots()); progress.putAll(recovered.progress()); publishedView = Map.copyOf(published);
+            published.putAll(recovered.ends()); snapshots.putAll(recovered.snapshots()); snapshotView = Map.copyOf(snapshots);
+            if (lifecycle.retentionBytes() > 0) dirty.addAll(snapshots.keySet());
+            progress.putAll(recovered.progress()); publishedView = Map.copyOf(published);
             for (var g : recovered.groups()) membership.define(g.id(), g.topic(), topics.get(g.topic()).count);
             groupCount = membership.groupCount();
             if (!watchdogExpired && !closeRequested) { transition(State.READY); initialized.complete(null); }
@@ -365,12 +400,15 @@ public final class DurableBroker implements AutoCloseable {
         Work<?> work = active; active = null; activeId = 0;
         if (work.kind == Kind.CLOSE) {
             snapshots.clear(); progress.clear(); membership.closed(); barriers = 0;
-            transition(State.CLOSED); responses.shutdown(); controlResponses.shutdown(); readers.shutdown(); consumerResponses.shutdown();
-            if (done.error == null) terminated.complete(null); else terminated.completeExceptionally(done.error);
+            finishStorageClose(done.error);
             return;
         }
         if (done.error == null) {
-            snapshots.putAll(done.snapshots);
+            snapshots.putAll(done.snapshots); snapshotView = Map.copyOf(snapshots);
+            if (work.kind == Kind.MAINTAIN) {
+                if (((DurableStore.Maintenance) done.value).again()) dirty.add(work.partition);
+                observer.accept("retention-complete"); return;
+            }
             if (work.consumer != null) {
                 var call = work.consumer; var next = new ArrayList<>(progress.get(call.group));
                 next.set(call.partition.partition(), (Long) done.value); progress.put(call.group, List.copyOf(next));
@@ -396,16 +434,19 @@ public final class DurableBroker implements AutoCloseable {
             if (state != State.CLOSING) transition(State.DEGRADED);
         }
         if (done.error != null && work.pinned && safeRejection(done.error)) membership.resolve(work.consumer.group, nanos.getAsLong());
+        if (work.kind == Kind.MAINTAIN) return;
+        if (work.kind == Kind.APPEND && lifecycle.retentionBytes() > 0) dirty.add(work.partition);
         respond(work, done.value, done.error == null ? null : mapped(done.error), true);
     }
 
     private static boolean safeRejection(Throwable error) {
         return error instanceof StorageException e && e.getSuppressed().length == 0 && (e.code() == StorageException.Code.INVALID_ARGUMENT
-                || e.code() == StorageException.Code.LIMIT || e.code() == StorageException.Code.BUDGET_TOO_SMALL);
+                || e.code() == StorageException.Code.OUT_OF_RANGE || e.code() == StorageException.Code.LIMIT || e.code() == StorageException.Code.BUDGET_TOO_SMALL);
     }
     private static DurableException mapped(Throwable error) {
         if (error instanceof StorageException e) {
             if (e.code() == StorageException.Code.CORRUPT || e.code() == StorageException.Code.WRONG_IDENTITY || e.code() == StorageException.Code.UNSUPPORTED_VERSION) return new DurableException(DATA_LOSS, e);
+            if (e.code() == StorageException.Code.OUT_OF_RANGE) return new DurableException(OUT_OF_RANGE, e);
             if (e.code() == StorageException.Code.INVALID_ARGUMENT) return new DurableException(INVALID_ARGUMENT, e);
             if (e.code() == StorageException.Code.LIMIT || e.code() == StorageException.Code.BUDGET_TOO_SMALL) return new DurableException(RESOURCE_EXHAUSTED, e);
         }
@@ -419,6 +460,7 @@ public final class DurableBroker implements AutoCloseable {
 
     @SuppressWarnings("unchecked")
     private <T> void respond(Work<T> work, Object value, Throwable error, boolean resolved) {
+        if (work.kind == Kind.MAINTAIN) return;
         if (work.consumer != null) { respondConsumer(work.consumer, value, error, resolved); return; }
         if (work.kind == Kind.GROUP) {
             synchronized (gate) {
@@ -447,7 +489,7 @@ public final class DurableBroker implements AutoCloseable {
 
     private void write(Path directory, Clock clock, Persistence disk) {
         DurableStore store;
-        try { store = DurableStore.open(directory, options, groupOptions, clock, disk); post(0, store.recovery(), null); }
+        try { store = DurableStore.open(directory, options, groupOptions, lifecycle, clock, disk); quota = store.quota; post(0, store.recovery(), null); }
         catch (Throwable error) { post(0, null, error); return; }
         for (;;) {
             Work<?> work;
@@ -461,9 +503,11 @@ public final class DurableBroker implements AutoCloseable {
                     case APPEND -> value = store.append(work.partition, work.command.key(), work.command.payload(), work.unkeyed);
                     case INSPECT -> value = store.inspect(work.partition, work.start, work.count, work.readBytes);
                     case COMMIT, RESET -> value = store.commit(work.consumer.group, work.partition, work.consumer.offset, work.kind == Kind.RESET);
+                    case MAINTAIN -> value = store.maintain(work.partition);
                     case CLOSE -> store.close();
                 }
                 if (work.kind == Kind.CREATE) views = store.snapshots();
+                else if (work.kind == Kind.MAINTAIN) views = Map.of(work.partition, ((DurableStore.Maintenance) value).snapshot());
                 else if (work.kind == Kind.APPEND) views = Map.of(work.partition, store.snapshot(work.partition));
             } catch (Throwable failure) { error = failure; }
             post(work.id, value, error, views);
@@ -479,22 +523,66 @@ public final class DurableBroker implements AutoCloseable {
         signal();
     }
 
+    private boolean admissionsDrained() {
+        synchronized (gate) {
+            if (admittedCalls != 0 || admittedControls != 0 || admittedReads != 0 || admittedProgress != 0 || admittedWaits != 0) return false;
+            if (!transportQuiesced.getAsBoolean()) return false;
+            if (transport != null) transport.shutdown();
+            return transport == null || transport.isTerminated();
+        }
+    }
+    private void finishStorageClose(Throwable error) {
+        storageClosed = true; closeFailure = error; dirty.clear(); snapshotView = Map.of();
+        transition(State.CLOSING);
+        responses.shutdown(); controlResponses.shutdown(); readers.shutdown(); consumerResponses.shutdown();
+    }
+    public record LifecycleDiagnostics(State state, long accountedBytes, long metadataBudget, long reservedBytes,
+                                       int pendingDeletion, int segmentPins, Map<TopicPartition, Long> retainedStarts) { }
+    public LifecycleDiagnostics lifecycleDiagnostics() {
+        var q = quota; var v = q == null ? new StorageQuota.View(0, 0, 0, 0) : q.view();
+        var views = snapshotView; Map<TopicPartition, Long> starts = new HashMap<>(); int pins = 0;
+        for (var entry : views.entrySet()) { starts.put(entry.getKey(), entry.getValue().pins.floor()); pins += entry.getValue().pins.count(); }
+        return new LifecycleDiagnostics(state, v.accountedBytes(), v.metadataBudget(), v.reservedBytes(), v.pendingDeletion(), pins, Map.copyOf(starts));
+    }
+
+    /** Composition-root ownership: included in this broker's single shutdown deadline. */
+    public void ownTransportExecutor(ThreadPoolExecutor executor) {
+        synchronized (gate) {
+            if (transport != null || closeRequested) throw new IllegalStateException("transport ownership already established or closing");
+            transport = Objects.requireNonNull(executor);
+        }
+    }
+    /** Nonblocking listener stop and in-memory termination observation, supplied by the composition root. */
+    public void ownTransportLifecycle(Runnable stop, java.util.function.BooleanSupplier quiesced) {
+        synchronized (gate) {
+            if (closeRequested) throw new IllegalStateException("broker closing");
+            stopTransport = Objects.requireNonNull(stop); transportQuiesced = Objects.requireNonNull(quiesced);
+        }
+    }
     public void requestClose() {
-        synchronized (gate) { closeRequested = true; }
-        signal();
+        Runnable stop;
+        synchronized (gate) { closeRequested = true; stop = stopTransport; }
+        stop.run(); signal();
     }
 
     /** False means ownership/response cleanup is still outstanding. Never interrupts storage. */
     public boolean shutdown(Duration timeout) throws InterruptedException, IOException {
         if (timeout.isNegative()) throw new IllegalArgumentException("negative shutdown timeout");
-        requestClose(); long budget = timeout.toNanos(), start = System.nanoTime();
-        try { terminated.get(budget, TimeUnit.NANOSECONDS); }
+        long budget = timeout.toNanos(), start = System.nanoTime(); requestClose();
+        try { terminated.get(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS); }
         catch (TimeoutException e) { return false; }
         catch (ExecutionException e) { throw new IOException("durable close failed", e.getCause()); }
         boolean dataDone = responses.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS);
         boolean controlDone = controlResponses.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS);
         boolean readDone = readers.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS);
         return consumerResponses.awaitTermination(Math.max(0, budget - (System.nanoTime() - start)), TimeUnit.NANOSECONDS) && dataDone && controlDone && readDone;
+    }
+
+    /** Container fallback for startup failure; an existing lifecycle stop gets no second budget. */
+    public void closeFromContainer() throws IOException {
+        if (!closeRequested) { close(); return; }
+        try { if (!shutdown(Duration.ZERO)) throw new IOException("durable cleanup remains incomplete; ownership retained"); }
+        catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IOException("cleanup interrupted", e); }
     }
 
     @Override public void close() throws IOException {
@@ -523,7 +611,7 @@ public final class DurableBroker implements AutoCloseable {
         return submitControl(ControlKind.VALIDATE, null, identity, generation, partition,
                 identity.group().byteLength() + 72L + 64 + GroupId.validate(partition.topic().value(), 255, false) + 12);
     }
-    private long assignmentCharge() { return 512L + options.maxPartitionsPerTopic() * (255L + 16); }
+    private long assignmentCharge() { return 512L + options.maxPartitionsPerTopic() * (255L + 48); }
 
     public MembershipDiagnostics membershipDiagnostics() {
         synchronized (gate) {
@@ -616,7 +704,9 @@ public final class DurableBroker implements AutoCloseable {
     private MembershipView positions(MembershipView view) {
         var offsets = progress.get(view.identity().group());
         return new MembershipView(view.identity(), view.generation(), view.leaseMillis(), view.assignments(),
-                view.assignments().stream().map(p -> offsets.get(p.partition())).toList());
+                view.assignments().stream().map(p -> offsets.get(p.partition())).toList(),
+                view.assignments().stream().map(p -> snapshots.get(p).pins.floor()).toList(),
+                view.assignments().stream().map(published::get).toList());
     }
 
     public CompletableFuture<FetchResult> fetch(FetchCommand command) { return fetch(command, null); }
@@ -696,6 +786,9 @@ public final class DurableBroker implements AutoCloseable {
         Long end = published.get(call.partition);
         if (end == null) throw new DurableException(FENCED);
         if (call.offset > end) throw new DurableException(OUT_OF_RANGE);
+        long start = snapshots.get(call.partition).pins.floor();
+        boolean noOp = !call.read && !call.reset && call.offset <= progress.get(call.group).get(call.partition.partition());
+        if (!call.snapshotAdmitted && !noOp && call.offset < start) throw new DurableException(OUT_OF_RANGE);
     }
     private void applyConsumer(ConsumerCall<?> call) {
         try {
@@ -747,7 +840,7 @@ public final class DurableBroker implements AutoCloseable {
         }
         ReadSnapshot snapshot = snapshots.get(call.partition);
         if (snapshot.end != published.get(call.partition)) throw new IllegalStateException("read publication invariant");
-        var handle = snapshot.acquire(); call.boundary = snapshot.end; call.started = nanos.getAsLong();
+        var handle = snapshot.acquire(call.offset, call.count); call.snapshotAdmitted = true; call.boundary = snapshot.end; call.started = nanos.getAsLong();
         call.phase = FetchPhase.READING; reading.put(call.id, call);
         readers.execute(() -> {
             Object result = null; Throwable error = null;
@@ -820,9 +913,23 @@ public final class DurableBroker implements AutoCloseable {
         }
     }
 
+    void awaitRetention(TopicPartition partition, long start, int pending, Duration timeout) throws InterruptedException, TimeoutException {
+        if (start < 0 || pending < 0 || timeout.isNegative()) throw new IllegalArgumentException("retention observation bounds");
+        long began = System.nanoTime(), budget = timeout.toNanos();
+        synchronized (gate) {
+            while (lifecycleDiagnostics().retainedStarts().getOrDefault(partition, -1L) != start
+                    || lifecycleDiagnostics().pendingDeletion() != pending) {
+                long remaining = budget - (System.nanoTime() - began);
+                if (remaining <= 0) throw new TimeoutException("retention observation timed out");
+                TimeUnit.NANOSECONDS.timedWait(gate, remaining);
+            }
+        }
+    }
+
     private void finishRead(ReadDone done) {
         var call = done.call;
         reading.remove(call.id);
+        if (lifecycle.retentionBytes() > 0) dirty.add(call.partition);
         Throwable error = done.error;
         if (error != null) {
             if (!safeRejection(error) && state != State.CLOSING) transition(State.DEGRADED);
@@ -876,7 +983,7 @@ public final class DurableBroker implements AutoCloseable {
         final BiConsumer<T, Throwable> delivery;
         final CompletableFuture<T> future = new CompletableFuture<>();
         long id, boundary, started, admittedAt, waitNanos;
-        boolean resolved, delivered, released, responseScheduled, readReserved, waitReserved;
+        boolean resolved, delivered, released, responseScheduled, readReserved, waitReserved, snapshotAdmitted;
         Object barrier;
         FetchPhase phase = FetchPhase.ADMITTED;
         FetchCancellation cancellation;

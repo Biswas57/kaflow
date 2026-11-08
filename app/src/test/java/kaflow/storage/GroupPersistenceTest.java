@@ -130,7 +130,7 @@ class GroupPersistenceTest {
 
     @Test void unknownTemporaryVersionPreventsRepairAndAuthoritativeV2CannotBeMissing() throws Exception {
         try(var store=DurableStore.open(directory,OPTIONS,CLOCK,new Persistence())) {store.createTopic(TOPIC,1);store.createGroup(GROUP,TOPIC);}
-        byte[] catalog=Files.readAllBytes(directory.resolve("catalog"));byte[] temp=catalog.clone();ByteBuffer.wrap(temp).putShort(4,(short)4);
+        byte[] catalog=Files.readAllBytes(directory.resolve("catalog"));byte[] temp=catalog.clone();ByteBuffer.wrap(temp).putShort(4,(short)5);
         Files.write(directory.resolve("catalog.tmp"),temp);
         assertEquals(StorageException.Code.UNSUPPORTED_VERSION,assertThrows(StorageException.class,()->DurableStore.open(directory,OPTIONS,CLOCK,new Persistence())).code());
         assertArrayEquals(temp,Files.readAllBytes(directory.resolve("catalog.tmp")));assertArrayEquals(catalog,Files.readAllBytes(directory.resolve("catalog")));

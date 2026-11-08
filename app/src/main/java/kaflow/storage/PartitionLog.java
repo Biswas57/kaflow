@@ -66,6 +66,8 @@ public final class PartitionLog implements AutoCloseable {
     private StorageIo.File activeLog;
     private StorageIo.File activeIndex;
     private long completedEnd;
+    private long retainedStart;
+    private SegmentPins pins;
     private State state = State.OPEN;
     private IOException failure;
 
@@ -92,8 +94,14 @@ public final class PartitionLog implements AutoCloseable {
     /** Consumes an already acquired lease; used only after durable recovery validation. */
     static PartitionLog openOwned(DirectoryLease lease, TopicPartition identity, byte[] topic,
                                   StorageOptions options, Clock clock, StorageIo io) throws IOException {
+        return openOwned(lease, identity, topic, options, clock, io, 0);
+    }
+    static PartitionLog openOwned(DirectoryLease lease, TopicPartition identity, byte[] topic,
+                                  StorageOptions options, Clock clock, StorageIo io, long start) throws IOException {
         PartitionLog log = new PartitionLog(identity, topic, options, clock, io, lease);
+        log.retainedStart = start; log.pins = new SegmentPins(start);
         try {
+            lease.requireEmpty();
             log.initialize();
             return log;
         } catch (IOException | RuntimeException | Error primary) {
@@ -138,10 +146,11 @@ public final class PartitionLog implements AutoCloseable {
         bases.sort(Comparator.naturalOrder());
         if (!new HashSet<>(bases).containsAll(indexes)) throw LogFormat.corrupt("orphan index");
         if (bases.isEmpty()) {
+            if (retainedStart != 0) throw LogFormat.corrupt("missing retained segments");
             createSegment(0);
             return;
         }
-        long next = 0;
+        long next = retainedStart;
         for (long base : bases) {
             if (base != next) throw LogFormat.corrupt("segment offset gap");
             Segment segment = validateSegment(base, indexes.contains(base));
@@ -288,8 +297,54 @@ public final class PartitionLog implements AutoCloseable {
 
     ReadSnapshot snapshot() throws StorageException {
         ensureOpen();
-        return new ReadSnapshot(identity, completedEnd, lease.directory, segments.stream()
-                .map(s -> new ReadSnapshot.Segment(s.base, s.end, s.bytes, s.headerChecksum)).toList(), options, io);
+        return new ReadSnapshot(identity, completedEnd, lease.directory, segments.stream().filter(s -> s.base >= retainedStart)
+                .map(s -> new ReadSnapshot.Segment(s.base, s.end, s.bytes, s.headerChecksum)).toList(), options, io, pins);
+    }
+
+    long managedBytes() {
+        long bytes = 0;
+        for (var s : segments) bytes = Math.addExact(bytes, s.bytes + indexPosition(s.indexEntries));
+        return bytes;
+    }
+    long appendGrowth(Optional<ImmutableBytes> key, ImmutableBytes payload) throws IOException {
+        ensureOpen();
+        int length = LogFormat.frameLength(key, payload, options);
+        var active = segments.get(segments.size() - 1);
+        boolean rotate = length > options.segmentBytes() - active.bytes;
+        if (length > options.segmentBytes() - headerLength || rotate && segments.size() == options.maxSegments())
+            throw new StorageException(LIMIT, "segment capacity");
+        boolean indexed = rotate || (completedEnd - active.base) % options.indexInterval() == 0;
+        return length + (indexed ? LogFormat.INDEX_ENTRY : 0L) + (rotate ? headerLength + LogFormat.INDEX_HEADER : 0L);
+    }
+    long retentionCandidate(long target) {
+        if (target == 0) return retainedStart;
+        long retained = 0;
+        for (var s : segments) if (s.base >= retainedStart) retained += s.bytes + indexPosition(s.indexEntries);
+        long start = retainedStart;
+        for (int i = 0; i < segments.size() - 1 && retained > target; i++) {
+            var s = segments.get(i);
+            if (s.base < retainedStart) continue;
+            retained -= s.bytes + indexPosition(s.indexEntries); start = s.end;
+        }
+        return start;
+    }
+    void retire(long start) throws StorageException {
+        ensureOpen();
+        pins.advance(start); retainedStart = start;
+    }
+    int pendingDeletion() { int n = 0; for (var s : segments) if (s.base < retainedStart) n++; return n; }
+    boolean deleteRetired(Persistence disk, int batch) throws IOException {
+        ensureOpen();
+        for (int i = 0; i < batch && segments.get(0).base < retainedStart; i++) {
+            var s = segments.get(0);
+            if (pins.pinned(s.base)) return false;
+            disk.event("retention-delete-before");
+            disk.delete(logPath(s.base)); disk.event("retention-log-deleted");
+            disk.delete(indexPath(s.base)); disk.event("retention-index-deleted");
+            disk.syncDirectory(lease.directory); disk.event("retention-delete-synced");
+            segments.remove(0); // Credit only after both unlinks and directory force resolve.
+        }
+        return segments.get(0).base < retainedStart && !pins.pinned(segments.get(0).base);
     }
 
     public ReadBoundary captureBoundary() throws StorageException {
@@ -312,6 +367,7 @@ public final class PartitionLog implements AutoCloseable {
                 || maxBytes < 0 || maxBytes > options.maxReadBytes()) {
             throw new StorageException(INVALID_ARGUMENT, "invalid read bounds or foreign boundary");
         }
+        if (start < retainedStart) throw new StorageException(OUT_OF_RANGE, "expired offset");
         if (start >= boundary.endOffset) return new ReadBatch(List.of(), start);
         List<StoredRecord> result = new ArrayList<>();
         long next = start;
