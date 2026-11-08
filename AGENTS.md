@@ -1,95 +1,67 @@
-# Kaflow agent working agreement
+# Kaflow working agreement
 
-## Product goal
+## Product and source of truth
 
-Evolve Kaflow into a lightweight single-node durable partitioned event-log broker.
-Use Java 17, REST administration, and a versioned custom gRPC API. V1 has fixed
-partition counts, opaque payload bytes, one-topic consumer groups, explicit Fetch
-and Commit, durable append acknowledgements, bounded resource use, and recovery.
-Linux local storage is the reference durability environment; retain macOS development.
-Do not claim Kafka client compatibility, replication, failover, transactions,
+Kaflow is a lightweight single-node durable partitioned log. Java 17, REST diagnostics,
+and the versioned custom gRPC API are supported. V1 uses fixed partitions, opaque payload
+bytes, explicit Fetch and Commit, leased one-topic groups, durable Append acknowledgements,
+bounded resources, and recovery. Linux local storage is the durability reference; retain
+macOS development. Do not claim Kafka compatibility, replication, failover, transactions,
 exactly-once processing, or unverified performance/durability.
 
-## Source of truth
+Read this file and [todo.md](todo.md) before work. The architecture and operations guides
+contain current contracts and procedures. Per-ticket historical evidence lives under
+`docs/history/implementation/`; older prototype notes are historical, not current behavior.
+KF-010 is complete under the user's explicit waiver of Docker validation, as recorded in
+`todo.md`. No container execution or Docker acceptance is claimed. Do not start KF-011 without
+a separate user request.
 
-- Read this file and `todo.md` before work. `todo.md` is the ticket board and Codex
-  working paper: scope, decisions, evidence, blockers, and handoff live there.
-- Inspect the current checkout and user changes. Source and executed checks outrank
-  old README/blog claims. `docs/history/prototype-todo.md` is historical only.
-- Generate Protobuf Java from `app/src/main/proto`; never hand-edit generated code.
-- Keep one canonical lowercase `todo.md`; do not create a second case-only filename.
-- KF-002 ownership, opaque-byte, admission, closure, and staged API contracts are in
-  `docs/design/kf-002-broker-contracts.md`. V1 remains unregistered until durability.
-- KF-003 storage framing, ownership, resource limits and non-durability boundaries are
-  specified in `docs/design/kf-003-partition-log.md`.
-
-- KF-004 opt-in durability, checkpoints, recovery and ownership contracts are in
-  `docs/design/kf-004-durable-publication.md`. Default prototype V1 remains unregistered.
-
-- KF-005 group metadata, membership, leases and fencing contracts are in
-  `docs/design/kf-005-leased-groups.md`.
-
-- KF-006 consumer reads, durable progress and commit/rebalance barriers are specified in
-  `docs/design/kf-006-fetch-commit.md`.
-
-- KF-007 waiter ownership, deadlines and cancellation contracts are in
-  `docs/design/kf-007-long-polling.md`.
-
-- KF-008 retention authority, segment pins, quotas and shutdown are specified in
-  `docs/design/kf-008-retention-lifecycle.md`.
-
-- KF-009's operator experience, examples, metrics, container workflow and
-  measurement contracts are in `docs/design/kf-009-operable-release.md`; check `todo.md`
-  for actual native/container validation status.
+Generate Protobuf Java from `app/src/main/proto`; never edit generated code. Keep one
+canonical lowercase `todo.md`. Inspect branch, user changes, source and test reports before
+changing files. Executed source and checks outrank old README/blog claims.
 
 ## Ticket workflow
 
-1. Select the first eligible ticket whose dependencies are complete. Only one ticket
-   may be IN_PROGRESS. Expand its acceptance criteria before making changes.
-2. Record the branch/base revision, intended changes, and validation commands.
-3. Implement the smallest reviewable change in scope. Preserve unrelated edits.
-   New findings become linked follow-up tickets rather than silent scope expansion.
-4. Update the ticket after meaningful progress: files, decisions, command outcomes,
-   blockers, and the exact next action. Keep enough context for another session.
-5. DONE requires the ticket's acceptance evidence. Distinguish passed, failed,
-   not run, and environment-blocked checks. Never weaken assertions, disable tests,
-   or hide failures to complete a ticket.
-6. If blocked, complete independent work within scope, mark BLOCKED, document the
-   missing prerequisite, and do not start dependent tickets. Resume the same ticket
-   when the prerequisite is available.
-7. Do not push, publish, or open a PR unless the user requests it. Report local
-   branch state honestly. Do not add recurring permission gates for routine edits.
+1. Select the first eligible ticket after dependencies complete; only one may be active.
+2. Record branch/base, scope, acceptance criteria, and exact validation commands.
+3. Implement the smallest reviewable change and preserve unrelated edits. Turn new findings
+   into linked follow-up tickets instead of silently broadening scope.
+4. Keep `todo.md` current with files, decisions, command results, blockers, and handoff.
+5. Mark DONE only with evidence for every acceptance item. Distinguish pass, failure, not run,
+   and environment block. Never weaken assertions, disable checks, or hide failures.
+6. If a required capability is missing, finish independent work and mark BLOCKED with the
+   exact pending command. Resume the same ticket when the capability is available.
+7. Do not commit, push, publish, merge, or open a PR unless the user authorizes it.
 
-## Engineering rules
+## Engineering contracts
 
-- Explain client behaviour and component ownership before implementation details.
-- Prefer incremental replacement of the prototype over an unreviewable rewrite.
-- Inject broker state; do not introduce new global mutable singletons.
-- Keep coordination responsive: no blocking disk I/O or network writes on its loop.
-  Storage completions return to the coordinator; reads use bounded snapshots.
-- Fetch never advances committed progress. Commits represent the next offset and
-  require apply-time session/generation/ownership validation. Administrative resets
-  are separate. Fence reassignment against unresolved applying commits.
-- A timed-out write has unknown outcome. Do not replace a possibly running writer
-  or release its directory lock. Define late-completion handling before storage work.
-- Before durability work, document crash states, publication boundaries, bounded
-  checkpoint costs, corruption policy, and filesystem assumptions.
-- Introduce immediate bounded Fetch before asynchronous long polling. Waiting
-  requests must not occupy read workers. Bound aggregate bytes and object counts.
-- Preserve acknowledged retained data; never silently recover by discarding corrupt
-  acknowledged records. Keep prototype custom crypto outside the active V1 design.
+- Inject broker state; do not add mutable global singletons or dual-write prototype/V1 state.
+- Explain client behavior and component ownership before implementation details.
+- Keep coordinator work responsive: disk I/O and network writes run outside its loop; storage
+  completions return to coordination; reads use bounded snapshots.
+- Fetch never advances committed progress. Commit represents the next offset and validates
+  current session, generation, and ownership when applied. Fence reassignment against commits
+  until real storage completion resolves their barrier.
+- A timed-out write may have an unknown outcome. Do not replace a possibly running writer or
+  release its directory lock. Retain late-completion ownership until actual work unwinds.
+- Preserve acknowledged retained data; fail closed on corruption within published history.
+  Keep prototypes' legacy crypto outside the active V1 design.
+- Long-poll requests must not occupy read workers; bound bytes and object counts.
 
 ## Validation and reporting
 
-Use the Gradle wrapper and Java 17. Baseline commands:
+Use the wrapper and Java 17. Baseline server checks:
 
 ```sh
 ./gradlew clean :app:classes :app:testClasses :app:bootJar --no-daemon
 ./gradlew :app:test --rerun-tasks --no-daemon
 ```
 
-Record environment and startup/shutdown evidence. Behavioural fixes require focused
-tests of observable guarantees; concurrency/recovery tests use clocks and failpoints
-where appropriate. Process-kill tests are not physical power-loss tests.
-Never present test counts as coverage, configuration as runtime proof, or CI authored
-locally as CI executed. Summarize what changed, evidence, limitations, and next ticket.
+For client changes also run `./gradlew :clients:installDist :clients:healthProbeJar --no-daemon`
+and `./gradlew :clients:test --rerun-tasks --no-daemon`. Follow the ticket's packaged smoke
+plan. Record environment, command, exit status, test count, errors/skips, timeout, and report
+location. Process-kill tests are not physical power-loss evidence. A CI workflow or local
+configuration is not an executed CI result.
+
+Summarize changes, evidence, limitations, and the next exact action. Leave publication status
+honest and do not perform it automatically.

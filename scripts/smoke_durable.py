@@ -9,15 +9,13 @@ import argparse
 import json
 import os
 from pathlib import Path
-import socket
 import shutil
 import subprocess
 import tempfile
 import time
 import urllib.error
 import urllib.request
-import zipfile
-from smoke_bootjar import executable_jars, listener_open
+from release_support import executable_jars, extract_boot_jar, listener_open, ports
 
 
 def main():
@@ -35,13 +33,7 @@ def main():
     run = Path(tempfile.mkdtemp(prefix='run-', dir=args.output)).resolve()
     extracted = run / 'packaged'; extracted.mkdir()
     # Only extract known class/dependency entries; do not trust archive traversal paths.
-    with zipfile.ZipFile(jars[0]) as jar:
-        for entry in jar.infolist():
-            if entry.filename.startswith(('BOOT-INF/classes/', 'BOOT-INF/lib/')):
-                destination = (extracted / entry.filename).resolve()
-                if not destination.is_relative_to(extracted):
-                    raise ValueError('Unsafe JAR entry')
-                jar.extract(entry, extracted)
+    extract_boot_jar(jars[0], extracted)
     # Support both standalone and Spring fixtures. Keep protocol DATA
     # frames (which contain session credentials) out of DEBUG logs and stdout confirmations.
     client_logging = extracted / 'client-logback.xml'
@@ -71,9 +63,7 @@ def main():
     try:
         result['seed'] = fixture('seed', data)
         for phase in range(2):
-            with socket.socket() as hs, socket.socket() as gs:
-                hs.bind(('127.0.0.1', 0)); gs.bind(('127.0.0.1', 0))
-                hp, gp = hs.getsockname()[1], gs.getsockname()[1]
+            hp, gp = ports()
             outcome = {'phase': phase, 'http_port': hp, 'grpc_port': gp}
             result['phases'].append(outcome)
             command = [java, '-jar', str(jars[0]), '--server.address=127.0.0.1', f'--server.port={hp}',
